@@ -138,6 +138,16 @@ g2b:
   sync:
     enabled: ${SYNC_ENABLED:false}
 
+  # 공고 검색 색인 적재기 — 나라장터를 주기적으로 훑어 bid_notice 에 쌓는다.
+  # 검색(/api/search/notices)은 이 색인만 조회하므로, 여기가 꺼져 있으면 색인이 낡을 뿐
+  # 검색 자체는 계속 동작한다(그래서 기본값을 꺼 둘 수 있다).
+  # ⚠ 운영에서 이걸 켜는 인스턴스는 하나여야 한다 — 워터마크에 인스턴스 간 잠금이 없다.
+  index:
+    enabled: ${INDEX_SYNC_ENABLED:false}
+    interval-ms: ${INDEX_SYNC_INTERVAL_MS:600000}
+    sweep-ms: ${INDEX_SWEEP_INTERVAL_MS:300000}
+    backfill-days: ${INDEX_BACKFILL_DAYS:7}
+
   # 분석 작업 큐. 큐 자체는 항상 살아 있고(등록·상태 조회는 언제나 동작한다),
   # 실제로 추론을 태우는 워커만 이 스위치로 켠다. 기본은 꺼둔다.
   # 여러 인스턴스에서 켜도 FOR UPDATE SKIP LOCKED 청구가 중복 실행을 막는다.
