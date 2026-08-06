@@ -1,6 +1,6 @@
 # g2bmaster-backend
 
-나라장터(G2B) 입찰정보 백엔드 — Spring Boot 4.1 / Java 21 / MySQL 8.
+나라장터(G2B) 입찰정보 백엔드 — Spring Boot 4.1 / Java 25 / MySQL 8.
 
 모놀리스 [`g2bmastersopen`](https://github.com/Electerior/g2bmastersopen) 를 세 저장소로
 나눈 것 중 하나다.
@@ -19,7 +19,7 @@ AI 저장소가 소유하고 HTTP 로 위임한다. 무엇이 어느 쪽인지�
 
 ## 실행
 
-JDK 21 과 MySQL 8 만 있으면 된다 — Maven 은 저장소의 래퍼(`./mvnw`)를 쓴다.
+JDK 25 와 MySQL 8 만 있으면 된다 — Maven 은 저장소의 래퍼(`./mvnw`)를 쓴다.
 
 DB 를 만들고,
 
