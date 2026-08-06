@@ -46,7 +46,8 @@ class SearchWiringSmokeTest {
 					new G2bProperties.Cors(List.of("http://localhost:5173")),
 					new G2bProperties.Security("", ""),
 					new G2bProperties.Alert("", "", "", ""),
-					new G2bProperties.Sync(false));
+					new G2bProperties.Sync(false),
+					new G2bProperties.Index(false, 600_000, 300_000, 7));
 		}
 	}
 

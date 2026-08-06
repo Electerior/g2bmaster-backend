@@ -18,7 +18,8 @@ public record G2bProperties(
 		Cors cors,
 		Security security,
 		Alert alert,
-		Sync sync) {
+		Sync sync,
+		Index index) {
 
 	/** 나라장터 OpenAPI (조달청 공공데이터). */
 	public record OpenApi(
@@ -57,4 +58,15 @@ public record G2bProperties(
 
 	/** 나라장터 주기 동기화 스케줄러 on/off. */
 	public record Sync(boolean enabled) {}
+
+	/**
+	 * 공고 검색 색인 적재기.
+	 *
+	 * @param enabled      주기 적재 on/off. 기본은 꺼 둔다 — 여러 인스턴스가 같은 일을
+	 *                     동시에 하면 일일 쿼터만 배로 태운다. 운영 인스턴스 하나만 켠다
+	 * @param intervalMs   적재 주기. 나라장터 공고는 분 단위로 올라오므로 10분이면 충분하다
+	 * @param sweepMs      입찰 → 마감 전이 주기. 적재보다 훨씬 싼 UPDATE 하나라 자주 돌린다
+	 * @param backfillDays 워터마크가 없는 첫 회차에 거슬러 올라갈 기간(일)
+	 */
+	public record Index(boolean enabled, long intervalMs, long sweepMs, int backfillDays) {}
 }

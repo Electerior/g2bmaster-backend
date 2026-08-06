@@ -140,6 +140,8 @@ com.electerior.g2bmaster
 
 - [`docs/api-contract.md`](docs/api-contract.md) — 65개 엔드포인트의 계약.
   프론트와 공유하는 것이므로 필드명을 바꾸면 두 저장소가 함께 깨진다.
+- [`docs/notice-search-index.md`](docs/notice-search-index.md) — 공고 검색 색인(`bid_notice`).
+  나라장터를 주기 적재해 쌓고 검색은 로컬만 조회하는 계통의 스키마·파이프라인·API·운영.
 - [`docs/ai-boundary.md`](docs/ai-boundary.md) — AI 저장소와의 경계.
 - [`docs/migration-notes.md`](docs/migration-notes.md) — PostgreSQL → MySQL 변환에서
   의미가 달라진 지점들.

@@ -58,6 +58,12 @@ class OpenApiDocumentTest {
 			"GET /api/bid-result",
 			"GET /api/bid-plan",
 			"GET /api/pre-spec",
+			// 공고 통합 검색 — 로컬 색인(bid_notice) 단독 조회
+			"GET /api/search/notices",
+			"GET /api/search/notices/facets",
+			"GET /api/search/notices/status",
+			"GET /api/search/notices/{id}",
+			"POST /api/search/notices/sync",
 			// 트렌드
 			"GET /api/trends/{kind}",
 			"GET /api/trends/{kind}/keyword-groups",
@@ -113,9 +119,9 @@ class OpenApiDocumentTest {
 			tags.add(tag.path("name").asString());
 		}
 		assertThat(tags).containsExactly(
-				OpenApiConfig.TAG_SEARCH, OpenApiConfig.TAG_TREND, OpenApiConfig.TAG_MARKET,
-				OpenApiConfig.TAG_ANALYSIS, OpenApiConfig.TAG_ATTACHMENT, OpenApiConfig.TAG_SAVED,
-				OpenApiConfig.TAG_SYSTEM);
+				OpenApiConfig.TAG_SEARCH, OpenApiConfig.TAG_INDEX_SEARCH, OpenApiConfig.TAG_TREND,
+				OpenApiConfig.TAG_MARKET, OpenApiConfig.TAG_ANALYSIS, OpenApiConfig.TAG_ATTACHMENT,
+				OpenApiConfig.TAG_SAVED, OpenApiConfig.TAG_SYSTEM);
 	}
 
 	/**
@@ -134,8 +140,13 @@ class OpenApiDocumentTest {
 				.containsExactlyInAnyOrder(OpenApiConfig.APP_KEY_SCHEME, OpenApiConfig.APP_KEY_BEARER_SCHEME);
 		assertThat(schemes(paths, "/api/system/schedules", "post")).isNotEmpty();
 		assertThat(schemes(paths, "/api/system/backfill", "post")).isNotEmpty();
+		// 색인 적재는 나라장터 쿼터를 태우는 경로라 앱 키를 요구한다.
+		assertThat(schemes(paths, "/api/search/notices/sync", "post"))
+				.containsExactlyInAnyOrder(OpenApiConfig.APP_KEY_SCHEME, OpenApiConfig.APP_KEY_BEARER_SCHEME);
 
 		assertThat(schemes(paths, "/api/bid-announce", "get")).isEmpty();
+		// 조회는 로컬 DB만 보므로 비용이 없다 — 잠그지 않는다.
+		assertThat(schemes(paths, "/api/search/notices", "get")).isEmpty();
 		assertThat(schemes(paths, "/api/system/status", "get")).isEmpty();
 		assertThat(schemes(paths, "/api/system/schedules", "get")).isEmpty();
 		assertThat(schemes(paths, "/healthz", "get")).isEmpty();

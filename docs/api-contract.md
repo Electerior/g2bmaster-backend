@@ -67,6 +67,54 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
 `_opportunityGrade`(`S|A|B|C|X`), `_opportunityAction`, `_opportunityReasons[]`,
 `_opportunitySummary`, `_simScore`, `_analysis: {status, error?}`.
 
+### A-2. 공고 통합 검색 (5) — 로컬 색인 단독
+
+> 스키마·적재 파이프라인·운영까지 포함한 전문은 **[`docs/notice-search-index.md`](notice-search-index.md)**.
+> 여기는 프론트와의 계약(경로·파라미터·응답)만 적는다.
+
+§A 의 넷과 **출처가 다르다.** 넷은 요청마다 나라장터를 팬아웃하지만, 여기는 백엔드가 주기적으로
+쌓아 둔 로컬 색인(`bid_notice`)만 조회한다. 그래서 이 계열에는 `sourceErrors`·`sourceCounts`·
+`_cached` 가 **없다** — 부분 실패라는 개념 자체가 없기 때문이다.
+
+계획·사전규격·입찰·마감이 **한 목록에 섞여** 온다. 조달 생애주기를 한 화면에서 훑는 것이 목적이라
+단계(`category`)는 탭이 아니라 필터다.
+
+| 라우트 | 비고 |
+|---|---|
+| `GET /api/search/notices` | 봉투는 §1.1 의 1번(`items`/`totalCount`/`pageNo`/`numOfRows`) |
+| `GET /api/search/notices/facets` | 같은 조건에서 `category`/`division`/`region`/`state` 별 건수 |
+| `GET /api/search/notices/status` | 출처별 워터마크·마지막 결과 + 분류별 색인 건수 |
+| `GET /api/search/notices/{id}` | 상세. 목록의 `bodyPreview`(300자) 대신 `noticeBody` 전문 |
+| `POST /api/search/notices/sync` | 수동 적재. **앱 키 필요**(나라장터 쿼터를 태운다). 진행 중이면 409 |
+
+질의 파라미터: `q`(공백 구분, 모두 포함), `andTerms`/`orTerms`/`notTerms`,
+`category`(`계획|사전규격|입찰|마감`), `state`(`취소|재|다시|정정`),
+`division`(`물품|용역|공사|외자`), `region`, `insttNm`, `insttCd`, `dmndInsttCd`,
+`detailProductCode`(접두 일치), `beforeSpecRgstNo`, `officerName`,
+`fromDate`/`toDate`(공고일), `closeFrom`/`closeTo`(마감일), `activeOnly`,
+`minAmount`/`maxAmount`(추정가격), `sort`, `dir`, `page`, `perPage`(≤500).
+
+정렬 키: `relevance`·`created`·`close`·`name`·`amount`·`updated`.
+**기본값이 조건에 따라 다르다** — 검색어가 있으면 `relevance`, 없으면 `created`.
+
+항목 필드는 ERD 22개 + `noticeName`(표시용) + 서버 계산분이다:
+
+- 코드/이름 짝 — `noticeInstitutionCode`/`noticeInstitutionName`,
+  `demandInstitutionCode`/`demandInstitutionName`. 둘 다 색인에 저장돼 있다(조인 없음).
+  **공고기관과 수요기관이 다른 건이 흔하다** — 조달청 대행 공고가 그렇다
+  (공고기관 `조달청 강원지방조달청`, 수요기관 `강원대학교`). 화면은 다를 때 둘 다 보여준다.
+  **사전규격은 코드가 `null` 이고 이름만 있다** — 원본 오퍼레이션이 코드를 주지 않는다.
+  그래서 기관 표시는 코드가 아니라 이름을 기준으로 그려야 한다.
+  (V8 이전에는 이름을 `dm_institution` 조인으로 얻으려 했으나, 그 표는 비어 있고 채울 API
+  `UsrInfoService/getDminsttInfo` 는 폐기됐다 — 자세한 사정은 V8 마이그레이션 주석 참고.)
+- JSON 으로 펴서 내려주는 것 — `productList[{seq,code,name}]`,
+  `priceDetail{assignedBudget,estimatedPrice,unitPrice,quantity,unit,vat}`,
+  `attachmentUrls[{name,url}]` (문자열이 아니라 값이다)
+- 서버 계산 — `dday`(날짜 단위, 마감 없으면 `null`), `estimatedPrice`, `relevance`
+- `region` 의 **빈 문자열은 '전국'** 이다(지역 제한 없음). 지역으로 좁혀도 전국 공고는 함께 온다 —
+  참여할 수 있기 때문이다. 화면은 이때 반드시 '전국'이라고 적어야 필터 오작동으로 오해받지 않는다.
+- `lowestBidRate` 는 **백분율 그대로**다(88.000 = 88%).
+
 ### B. 트렌드 (3)
 
 `GET /api/trends/product`, `/api/trends/service`, `/api/trends/construction`

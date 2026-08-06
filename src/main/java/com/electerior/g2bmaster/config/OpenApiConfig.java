@@ -32,6 +32,7 @@ public class OpenApiConfig {
 	public static final String APP_KEY_BEARER_SCHEME = "appKeyBearer";
 
 	public static final String TAG_SEARCH = "입찰 검색";
+	public static final String TAG_INDEX_SEARCH = "공고 통합 검색";
 	public static final String TAG_TREND = "트렌드";
 	public static final String TAG_MARKET = "시장 정보";
 	public static final String TAG_ANALYSIS = "AI 분석";
@@ -58,6 +59,9 @@ public class OpenApiConfig {
 								의도된 선택이다(`api-contract.md` §1.1). 오류만 `{code, message}` 로 통일돼 있다."""))
 				.tags(List.of(
 						new Tag().name(TAG_SEARCH).description("발주계획·사전규격·입찰공고·개찰결과 팬아웃 검색"),
+						new Tag().name(TAG_INDEX_SEARCH).description(
+								"로컬 색인(bid_notice) 단독 조회. 계획·사전규격·입찰·마감을 한 테이블에서 검색한다 "
+										+ "— 나라장터를 호출하지 않으므로 응답 시간이 일정하다"),
 						new Tag().name(TAG_TREND).description("물품·용역·공사 일자별 집계"),
 						new Tag().name(TAG_MARKET).description("개찰결과·업체 이력·담당자·담합 매트릭스"),
 						new Tag().name(TAG_ANALYSIS).description("분석 작업 큐 상태. 추론 자체는 g2bmaster-AI 가 한다"),
