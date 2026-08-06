@@ -105,12 +105,26 @@ HTTP 클라이언트로, 자기 서버의 `/api/item-summary` 를 호출하고 �
 → 다른 무엇보다 **먼저 교차 언어 고정값(fixture) 테스트를 만들 것.**
 원본 구현은 `lib/analysis-history.js` 의 `analysisInputHash`.
 
+**해시는 백엔드만 계산한다** (`AnalysisInputHasher`, Node 고정값 대조 테스트 포함).
+AI 서비스는 작업 payload 를 받아 분석만 하므로 이 해시를 구현할 필요가 없다 —
+같은 로직을 두 언어로 유지하는 것 자체가 어긋날 위험이다.
+
 ### 6.3 응답 필드
 
-- `_analysisHistoryId` — 없으면 작업을 완료로 기록하지 않는다.
 - `aiDisabled` / `aiFallback` — **성공으로 치지 않는다.** 폴백 결과가 캐시에 눌러앉으면
   영원히 재분석되지 않는다.
 - `aiError` — 사용자에게 보여줄 한국어 사유.
+- 적재용 메타 — `source`, `summary`, `specName`, `specConfidence`, `nestedTables`,
+  `documentSignals.bidBlockingClauses.excluded`, `llmModel`. 없으면 기본값으로 적재한다.
+  AI 가 필드를 늘려도 백엔드를 다시 배포하지 않아도 되도록, 백엔드는 이 소수만 꺼내 쓰고
+  나머지는 `analysis_history.result` 에 원문 그대로 넣는다.
+
+> **`_analysisHistoryId` 는 계약에서 뺐다.** 초안은 AI 응답이 이 값을 담아 오도록 했지만,
+> 그 id 는 백엔드 소유 테이블 `analysis_history` 의 PK 다. AI 서비스는 MySQL 을 모르고
+> 저장용 엔드포인트도 없어서 만들 방법이 없었다 — 그대로 두면 어떤 분석 작업도 완료되지
+> 않는다. §1 의 소유권 원칙("결과 이력은 백엔드")에 맞춰 적재를 `AnalysisJobRunner` 로
+> 가져왔다. 원본 모놀리스에서는 `server.js` 가 DB 와 추론을 둘 다 가져서 이 이음매가
+> 드러나지 않았다.
 
 ### 6.4 HTTP 200 폴백 계약
 

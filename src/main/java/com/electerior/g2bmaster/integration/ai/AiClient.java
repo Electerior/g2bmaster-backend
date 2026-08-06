@@ -22,9 +22,11 @@ import org.springframework.web.client.RestClientException;
  * <ol>
  *   <li>{@code ITEM_SUMMARY_PROMPT_VERSION} — 분석 재사용 키의 일부. 백엔드가 하드코딩하지 말고
  *       {@link #promptVersion()} 으로 <b>AI 서비스에서 읽어와야 한다</b>.</li>
- *   <li>{@code analysisInputHash} 정규화 — 두 언어에서 바이트 단위로 같아야 한다.
- *       다르면 이관 순간 분석 캐시가 통째로 고아가 된다.</li>
- *   <li>{@code _analysisHistoryId} / {@code aiDisabled} / {@code aiFallback} 응답 필드.</li>
+ *   <li>{@code analysisInputHash} 정규화 — Node 원본과 바이트 단위로 같아야 한다.
+ *       다르면 이관 순간 분석 캐시가 통째로 고아가 된다. 계산은 백엔드({@code AnalysisInputHasher})가
+ *       하므로 AI 저장소는 이 해시를 구현하지 않는다.</li>
+ *   <li>{@code aiDisabled} / {@code aiFallback} 응답 필드 — 폴백은 성공이 아니다.
+ *       결과 이력 적재는 백엔드가 하므로 AI 응답에 {@code _analysisHistoryId} 는 없어도 된다.</li>
  *   <li>워커 용량 — 내보내기 작업의 ETA 계산에 쓰인다.</li>
  * </ol>
  */
@@ -57,9 +59,8 @@ public class AiClient {
 			throw new AiUnavailableException(
 					String.valueOf(body.getOrDefault("aiError", "AI 분석을 사용할 수 없습니다.")));
 		}
-		if (body.get("_analysisHistoryId") == null) {
-			throw new AiUnavailableException("AI 응답에 _analysisHistoryId 가 없습니다.");
-		}
+		// 결과 이력 적재는 AnalysisJobRunner 가 한다 — analysis_history 는 백엔드 소유 테이블이라
+		// AI 서비스가 그 PK 를 만들 수 없다. AI 응답에서 요구하는 것은 폴백이 아니라는 사실뿐이다.
 		return body;
 	}
 

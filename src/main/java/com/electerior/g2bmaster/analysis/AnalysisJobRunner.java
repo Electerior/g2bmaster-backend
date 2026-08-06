@@ -10,6 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -22,8 +23,14 @@ import tools.jackson.databind.json.JsonMapper;
  * 분석 워커 루프 — {@code lib/analysis-job-runner.js} 이식.
  *
  * <p>구조는 원본 그대로다: 청구 → heartbeat 시작 → 실행 → 완료/실패 → heartbeat 정지.
- * <b>추론은 하지 않는다</b> — {@link AiClient#itemSummary} 로 넘기고 결과의
- * {@code _analysisHistoryId} 만 본다(→ {@code docs/ai-boundary.md}).
+ * <b>추론은 하지 않는다</b> — {@link AiClient#itemSummary} 로 넘기고, 돌아온 결과를
+ * {@code analysis_history} 에 적재한 뒤 그 id 로 작업을 완료 처리한다
+ * (→ {@code docs/ai-boundary.md} §1·§6.3).
+ *
+ * <p><b>결과 이력을 백엔드가 저장하는 이유.</b> AI 서비스는 MySQL 을 모른다. 초기 계약 초안은
+ * AI 응답이 {@code _analysisHistoryId} 를 담아 오도록 했지만, 그 id 는 백엔드 소유 테이블의
+ * PK 라서 AI 쪽에서 만들 방법이 없었다(저장용 엔드포인트도 없다). 소유권 원칙(§1)에 맞춰
+ * 적재를 이쪽으로 가져왔다.
  *
  * <p><b>기본은 꺼져 있다</b>({@code g2b.analysis.runner-enabled=false}). 켜지 않으면 큐에 작업이
  * 쌓이기만 하고 아무것도 소비되지 않는다 — AI 저장소가 아직 없는 현 단계의 정상 상태다.
@@ -38,7 +45,12 @@ public class AnalysisJobRunner {
 
 	private static final ObjectMapper MAPPER = JsonMapper.builder().build();
 
+	/** 원본 {@code deep} 판정용. {@code AnalysisInputHasher} 의 것과 같은 정규식이다. */
+	private static final Pattern DEEP_VALUE = Pattern.compile("^(1|true|yes|y|on|deep|full)$",
+			Pattern.CASE_INSENSITIVE);
+
 	private final AnalysisJobRepository jobRepository;
+	private final AnalysisHistoryRepository historyRepository;
 	private final AiClient aiClient;
 	private final AnalysisProperties properties;
 
@@ -51,8 +63,10 @@ public class AnalysisJobRunner {
 	private ExecutorService workers;
 	private ScheduledExecutorService heartbeats;
 
-	public AnalysisJobRunner(AnalysisJobRepository jobRepository, AiClient aiClient, AnalysisProperties properties) {
+	public AnalysisJobRunner(AnalysisJobRepository jobRepository, AnalysisHistoryRepository historyRepository,
+			AiClient aiClient, AnalysisProperties properties) {
 		this.jobRepository = jobRepository;
+		this.historyRepository = historyRepository;
 		this.aiClient = aiClient;
 		this.properties = properties;
 	}
@@ -144,11 +158,12 @@ public class AnalysisJobRunner {
 			Map<String, Object> payload = readPayload(job.getPayload());
 			Map<String, Object> result = aiClient.itemSummary(payload);
 
-			// AiClient 가 이미 _analysisHistoryId 부재와 aiFallback 을 걸러 준다.
-			// 여기서 다시 보는 것은 계약이 바뀌었을 때 조용히 통과하지 않게 하기 위해서다.
-			long historyId = historyId(result);
+			// 결과 이력은 **백엔드가 저장한다**(docs/ai-boundary.md §1: 내구성 있는 상태는 백엔드 소유).
+			// AI 서비스는 MySQL 을 모르므로 analysis_history 의 id 를 만들 수 없다.
+			// 원본 모놀리스에서는 server.js 가 DB 와 추론을 둘 다 가져서 한 곳에서 처리됐다.
+			long historyId = saveHistory(job, payload, result);
 			if (historyId <= 0) {
-				throw new IllegalStateException("분석 이력 ID가 없는 작업 결과입니다.");
+				throw new IllegalStateException("분석 이력을 저장하지 못했습니다.");
 			}
 			if (jobRepository.complete(id, workerId, historyId) == null) {
 				throw new IllegalStateException("분석 작업 " + id + " 완료 소유권을 잃었습니다.");
@@ -191,20 +206,87 @@ public class AnalysisJobRunner {
 		return MAPPER.readValue(payload, Map.class);
 	}
 
-	private static long historyId(Map<String, Object> result) {
-		Object value = result.get("_analysisHistoryId");
-		if (value == null) {
-			value = result.get("analysisHistoryId");
+	/**
+	 * AI 응답을 {@code analysis_history} 에 적재하고 그 id 를 돌려준다.
+	 *
+	 * <p>원본 {@code server.js} 의 {@code saveAnalysisHistory(...)} 호출을 그대로 옮긴 것이다.
+	 * 자연키·입력해시·프롬프트버전은 <b>작업 행</b>에서, 화면 표시용 메타는 <b>요청 payload</b>에서,
+	 * 분석 산출물은 <b>AI 응답</b>에서 가져온다.
+	 *
+	 * <p>AI 응답의 스키마는 AI 저장소가 소유한다. 여기서는 적재에 필요한 소수 필드만 꺼내고
+	 * 없으면 기본값으로 둔다 — AI 쪽이 필드를 늘려도 백엔드를 다시 배포할 필요가 없어야 한다.
+	 */
+	private long saveHistory(AnalysisJob job, Map<String, Object> payload, Map<String, Object> result) {
+		AnalysisIdentity identity = new AnalysisIdentity(
+				job.getEntityType(), job.getEntityId(), job.getEntityOrd() == null ? "" : job.getEntityOrd());
+
+		AnalysisHistory history = AnalysisHistory.of(identity);
+		history.setInputHash(job.getInputHash());
+		history.setPromptVersion(job.getPromptVersion());
+		history.setAnalysisMode(job.getAnalysisMode());
+
+		history.setTitle(text(payload.get("title")));
+		history.setInsttNm(text(payload.get("insttNm")));
+		history.setAmount(digitsOrNull(payload.get("amount")));
+		history.setDeepMode(isDeepValue(payload.get("deep")));
+
+		history.setSource(text(result.get("source")));
+		history.setSummary(text(result.get("summary")));
+		history.setSpecName(nullIfBlank(text(result.get("specName"))));
+		history.setSpecConfidence(nullIfBlank(text(result.get("specConfidence"))));
+		history.setNestedTables(intOrZero(result.get("nestedTables")));
+		history.setBlockingExcluded(blockingExcluded(result));
+		history.setLlmModel(text(result.get("llmModel")));
+		history.setResult(MAPPER.writeValueAsString(result));
+
+		AnalysisHistoryRepository.ReusableAnalysis saved = historyRepository.save(history);
+		return saved == null ? 0L : saved.id();
+	}
+
+	/** 원본: {@code !!analysisPayload?.documentSignals?.bidBlockingClauses?.excluded}. */
+	@SuppressWarnings("unchecked")
+	private static boolean blockingExcluded(Map<String, Object> result) {
+		Object signals = result.get("documentSignals");
+		if (!(signals instanceof Map<?, ?> signalMap)) {
+			return false;
 		}
-		if (value instanceof Number number) {
-			return number.longValue();
+		Object clauses = ((Map<String, Object>) signalMap).get("bidBlockingClauses");
+		if (!(clauses instanceof Map<?, ?> clauseMap)) {
+			return false;
+		}
+		return Boolean.TRUE.equals(((Map<String, Object>) clauseMap).get("excluded"));
+	}
+
+	private static String text(Object value) {
+		return value == null ? "" : String.valueOf(value);
+	}
+
+	/** 원본 {@code /^(1|true|yes|y|on|deep|full)$/i} — {@link AnalysisInputHasher#isDeep} 와 같은 판정이다. */
+	private static boolean isDeepValue(Object value) {
+		return DEEP_VALUE.matcher(text(value).trim()).matches();
+	}
+
+	private static String nullIfBlank(String value) {
+		return value == null || value.isBlank() ? null : value;
+	}
+
+	/** 원본: {@code Number(String(amount).replace(/[^\d]/g, '')) || null}. */
+	private static Long digitsOrNull(Object value) {
+		String digits = text(value).replaceAll("[^0-9]", "");
+		if (digits.isEmpty()) {
+			return null;
 		}
 		try {
-			return value == null ? 0L : Long.parseLong(String.valueOf(value).trim());
+			long parsed = Long.parseLong(digits);
+			return parsed == 0L ? null : parsed;
 		}
 		catch (NumberFormatException e) {
-			return 0L;
+			return null;   // 자릿수가 long 을 넘는 값은 금액이 아니다
 		}
+	}
+
+	private static int intOrZero(Object value) {
+		return value instanceof Number number ? number.intValue() : 0;
 	}
 
 	private static void sleep(long millis) {
