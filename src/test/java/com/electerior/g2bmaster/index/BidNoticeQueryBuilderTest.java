@@ -167,12 +167,42 @@ class BidNoticeQueryBuilderTest {
 
 	/** 스위퍼는 주기적으로 도는 것이라, 방금 마감된 건이 아직 '입찰'로 남아 있을 수 있다. */
 	@Test
-	@DisplayName("'마감 전만'은 category 가 아니라 마감일시를 본다")
+	@DisplayName("'마감 전만'의 마감 판정은 category 가 아니라 마감일시다")
 	void activeOnlyChecksCloseDateNotCategory() {
 		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder().activeOnly(true).build();
 
 		assertThat(where.sql()).contains("n.close_date IS NULL OR n.close_date >= NOW(6)");
-		assertThat(where.sql()).doesNotContain("category");
+		// 마감을 category 로 빼면 스위퍼 지연을 물려받는다 — 아래 IN 스코프와는 다른 조건이다.
+		assertThat(where.sql()).doesNotContain("category <>").doesNotContain("category !=");
+	}
+
+	/**
+	 * 계획은 마감일시가 아예 없어(NULL) 마감일시 조건을 무조건 통과하고, 사전규격의 마감일시는
+	 * 입찰마감이 아니라 <b>의견등록</b>마감이다. 스코프 없이는 "지금 참여할 수 있는 공고"의
+	 * 다섯에 하나가 참여 대상이 아닌 문서였다(실측 21.5%).
+	 */
+	@Test
+	@DisplayName("단계 미지정 + '마감 전만'은 입찰 문서(입찰·마감)로 좁힌다")
+	void activeOnlyWithoutCategoryScopesToBidDocuments() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder().activeOnly(true).build();
+
+		assertThat(where.sql()).contains("n.category IN ('입찰', '마감')");
+	}
+
+	/** 화면의 단계 칩은 activeOnly 기본 ON 과 함께 온다 — 스코프가 이기면 '계획' 칩이 항상 0건이 된다. */
+	@Test
+	@DisplayName("단계를 직접 고르면 스코프를 걸지 않는다 — '계획'+마감 전만이 0건이 되면 안 된다")
+	void activeOnlyKeepsExplicitCategory() {
+		// activeOnly 를 category 보다 먼저 불러도 같아야 한다 — 조립이 build() 에 있어 순서 무관.
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.activeOnly(true)
+				.category(NoticeCategory.계획)
+				.build();
+
+		assertThat(where.sql()).doesNotContain("IN ('입찰', '마감')");
+		assertThat(where.sql()).contains("n.category = :");
+		assertThat(where.sql()).contains("n.close_date IS NULL OR n.close_date >= NOW(6)");
+		assertThat(where.params()).containsValue("계획");
 	}
 
 	@Test
@@ -202,14 +232,24 @@ class BidNoticeQueryBuilderTest {
 		assertThat(where.sql()).isEmpty();
 	}
 
+	/**
+	 * 금액 조건이 <b>생성 컬럼을 그대로</b> 참조하는지 고정한다.
+	 *
+	 * <p>V11 이전에는 {@code CAST(JSON_UNQUOTE(JSON_EXTRACT(...)))} 를 식으로 걸었고, 그래서
+	 * 금액 필터가 인덱스를 못 타 전수 스캔이었다. 컬럼을 다시 함수로 감싸는 순간 같은 상태로
+	 * 돌아가는데 증상이 '느려짐' 뿐이라 리뷰로는 잡히지 않는다 — 그래서 SQL 문자열을 직접 본다.
+	 */
 	@Test
-	@DisplayName("금액 구간은 price_detail JSON 에서 뽑는다")
-	void amountRangeReadsJson() {
+	@DisplayName("금액 구간은 생성 컬럼 estimated_price 를 함수 없이 참조한다")
+	void amountRangeUsesGeneratedColumn() {
 		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
 				.estimatedPriceBetween(1_000_000L, 5_000_000L)
 				.build();
 
-		assertThat(where.sql()).contains("JSON_EXTRACT(n.price_detail, '$.estimatedPrice')");
+		assertThat(where.sql()).contains("n.estimated_price >= :minAmount")
+				.contains("n.estimated_price <= :maxAmount");
+		// 함수로 감싸면 인덱스를 못 쓴다 — 되돌아가는 것을 여기서 막는다.
+		assertThat(where.sql()).doesNotContain("JSON_EXTRACT").doesNotContain("CAST(");
 		assertThat(where.params()).containsEntry("minAmount", 1_000_000L)
 				.containsEntry("maxAmount", 5_000_000L);
 	}

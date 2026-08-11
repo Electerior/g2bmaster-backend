@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
  */
 public record BidNoticeRow(
 		String id,
+		/** 공고 출처. PK 의 두 번째 성분(V13) — 소스가 달라도 같은 번호가 공존한다. */
+		NoticeSource source,
 		String noticeOrder,
 		String noticeName,
 		NoticeCategory category,
@@ -44,11 +46,21 @@ public record BidNoticeRow(
 		String noticeBody,
 		/** JSON 배열 문자열 {@code [{name,url}]}, 없으면 null */
 		String attachmentUrls,
-		String sourceUrl) {
+		String sourceUrl,
+		/** 소스 특화 표시 필드 JSON 객체 문자열(V13 {@code source_ext}), 없으면 null */
+		String sourceExt,
+		/** D2B 전용 — 나라장터 교차 게시 공고번호/차수(V13). 그 외 소스는 null */
+		String g2bPblancNo,
+		String g2bPblancOdr) {
 
 	/** ENUM 컬럼에 바인딩할 문자열. null 이면 그대로 null(= 상태 없음). */
 	public String categoryName() {
 		return category == null ? null : category.name();
+	}
+
+	/** ENUM 컬럼에 바인딩할 문자열. 적재기는 소스를 항상 알므로 null 이 없다. */
+	public String sourceName() {
+		return source == null ? NoticeSource.G2B.name() : source.name();
 	}
 
 	public String stateName() {

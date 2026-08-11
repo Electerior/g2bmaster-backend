@@ -1,0 +1,925 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "방위사업청 국방전자조달시스템(D2B)에서 제공하는 군수품 조달 계약정보 데이터입니다. 본 데이터는 군수품 조달 과정에서 체결되는 시설계약정보, 국내계약정보, 국외계약정보를 포함하며, 계약 건별로 발주기관(기관명/기관코드), 요구년도, 계약방법, 입찰방법, 업무구분(물품/용역/시설), 진행상태 등 계약 추진 및 관리에 필요한 핵심 정보를 제공합니다. 또한 계약 금액, 예정가격, 낙찰률·낙찰금액, 계약기간(시작일/종료일) 등 계약성과 및 일정 분석에 활용할 수 있는 항목도 포함되어 있어 기관별·연도별 계약현황 분석, 조달 집행 모니터링, 계약 추이 분석 등에 활용 가능합니다.",
+    "version": "1.0.0",
+    "title": "방위사업청_군수품조달정보 계약정보_GW"
+  },
+  "host": "apis.data.go.kr/1690000/CntrctInfoService",
+  "basePath": "",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/getFcltyCntrctInfoList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "cntrctDate": {
+                              "type": "string",
+                              "description": "계약일자",
+                              "properties": {}
+                            },
+                            "cntrctNo": {
+                              "type": "string",
+                              "description": "계약번호",
+                              "properties": {}
+                            },
+                            "cntrwkNo": {
+                              "type": "string",
+                              "description": "공사번호",
+                              "properties": {}
+                            },
+                            "cntrctNm": {
+                              "type": "string",
+                              "description": "계약명",
+                              "properties": {}
+                            },
+                            "ornt": {
+                              "type": "string",
+                              "description": "발주기관",
+                              "properties": {}
+                            },
+                            "cntrctMth": {
+                              "type": "string",
+                              "description": "계약방법",
+                              "properties": {}
+                            },
+                            "bidMth": {
+                              "type": "string",
+                              "description": "입찰방법",
+                              "properties": {}
+                            },
+                            "cntrctEntrpsNm": {
+                              "type": "string",
+                              "description": "계약업체명",
+                              "properties": {}
+                            },
+                            "cntrctSttus": {
+                              "type": "string",
+                              "description": "계약상태",
+                              "properties": {}
+                            },
+                            "cntrctAmnt": {
+                              "type": "string",
+                              "description": "계약금액",
+                              "properties": {}
+                            },
+                            "cntrctPlanaAmnt": {
+                              "type": "string",
+                              "description": "예정가격",
+                              "properties": {}
+                            },
+                            "csrtDivs": {
+                              "type": "string",
+                              "description": "공사구분",
+                              "properties": {}
+                            },
+                            "cntrctDivs": {
+                              "type": "string",
+                              "description": "업무구분",
+                              "properties": {}
+                            },
+                            "cntrctLtmDegr": {
+                              "type": "string",
+                              "description": "장기차수",
+                              "properties": {}
+                            },
+                            "cntrctTotlCsrtBokpAmnt": {
+                              "type": "string",
+                              "description": "총부기금액",
+                              "properties": {}
+                            },
+                            "cntrctContGrntAmnt": {
+                              "type": "string",
+                              "description": "계약보증금",
+                              "properties": {}
+                            },
+                            "cntrctDelyaCmpsRate": {
+                              "type": "string",
+                              "description": "지체상금률",
+                              "properties": {}
+                            },
+                            "cntrctStrtCstrDate": {
+                              "type": "string",
+                              "description": "착공년월일",
+                              "properties": {}
+                            },
+                            "cntrctCmptDate": {
+                              "type": "string",
+                              "description": "준공년월일",
+                              "properties": {}
+                            },
+                            "cntrctContStdt": {
+                              "type": "string",
+                              "description": "계약시작일자",
+                              "properties": {}
+                            },
+                            "cntrctContCldt": {
+                              "type": "string",
+                              "description": "계약종료일자",
+                              "properties": {}
+                            },
+                            "cntrctBidnRate": {
+                              "type": "string",
+                              "description": "낙찰률",
+                              "properties": {}
+                            },
+                            "cntrctSccsBidAmnt": {
+                              "type": "string",
+                              "description": "낙찰금액",
+                              "properties": {}
+                            },
+                            "cntrctSbdrStlmDate": {
+                              "type": "string",
+                              "description": "낙찰자확정일자",
+                              "properties": {}
+                            },
+                            "cntrctBidxDate": {
+                              "type": "string",
+                              "description": "입찰일자",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시설 계약정보 목록",
+        "description": "시설 계약정보 목록",
+        "operationId": "getFcltyCntrctInfoList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "cntrctDateBegin",
+          "description": "계약일자시작",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "cntrctDateEnd",
+          "description": "계약일자종료",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "발주기관코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "cntrctNm",
+          "description": "계약명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getDmstcCntrctInfoList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "cntrctDate": {
+                              "type": "string",
+                              "description": "계약일자",
+                              "properties": {}
+                            },
+                            "cntrctNo": {
+                              "type": "string",
+                              "description": "계약번호",
+                              "properties": {}
+                            },
+                            "dcsNo": {
+                              "type": "string",
+                              "description": "판단번호",
+                              "properties": {}
+                            },
+                            "cntrctNm": {
+                              "type": "string",
+                              "description": "계약명",
+                              "properties": {}
+                            },
+                            "ornt": {
+                              "type": "string",
+                              "description": "발주기관",
+                              "properties": {}
+                            },
+                            "cntrctMth": {
+                              "type": "string",
+                              "description": "계약방법",
+                              "properties": {}
+                            },
+                            "bidMth": {
+                              "type": "string",
+                              "description": "입찰방법",
+                              "properties": {}
+                            },
+                            "cntrctEntrpsNm": {
+                              "type": "string",
+                              "description": "계약업체명",
+                              "properties": {}
+                            },
+                            "cntrctSttus": {
+                              "type": "string",
+                              "description": "계약상태",
+                              "properties": {}
+                            },
+                            "cntrctAmnt": {
+                              "type": "string",
+                              "description": "계약금액",
+                              "properties": {}
+                            },
+                            "cntrctPlanaAmnt": {
+                              "type": "string",
+                              "description": "예정가격",
+                              "properties": {}
+                            },
+                            "cntrctDivs": {
+                              "type": "string",
+                              "description": "업무구분",
+                              "properties": {}
+                            },
+                            "cntrctBidnRate": {
+                              "type": "string",
+                              "description": "낙찰률",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국내 계약정보 목록",
+        "description": "국내 계약정보 목록",
+        "operationId": "getDmstcCntrctInfoList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "cntrctDateBegin",
+          "description": "계약일자시작",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "cntrctDateEnd",
+          "description": "계약일자종료",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "발주기관코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "cntrctNm",
+          "description": "계약명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getOutnatnCntrctInfoList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "cntrctNo": {
+                              "type": "string",
+                              "description": "계약번호",
+                              "properties": {}
+                            },
+                            "cntrctEntrpsNm": {
+                              "type": "string",
+                              "description": "계약업체명",
+                              "properties": {}
+                            },
+                            "cntrctDate": {
+                              "type": "string",
+                              "description": "계약일자",
+                              "properties": {}
+                            },
+                            "cntrctDivs": {
+                              "type": "string",
+                              "description": "물품/용역",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "페이지당항목수",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국외 계약정보 목록",
+        "description": "국외 계약정보 목록",
+        "operationId": "getOutnatnCntrctInfoList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "cntrctDateBegin",
+          "description": "계약일자시작",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "cntrctDateEnd",
+          "description": "계약일자종료",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "getFcltyCntrctInfoList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "cntrctDate": {
+                      "type": "string",
+                      "description": "계약일자"
+                    },
+                    "cntrctNo": {
+                      "type": "string",
+                      "description": "계약번호"
+                    },
+                    "cntrwkNo": {
+                      "type": "string",
+                      "description": "공사번호"
+                    },
+                    "cntrctNm": {
+                      "type": "string",
+                      "description": "계약명"
+                    },
+                    "ornt": {
+                      "type": "string",
+                      "description": "발주기관"
+                    },
+                    "cntrctMth": {
+                      "type": "string",
+                      "description": "계약방법"
+                    },
+                    "bidMth": {
+                      "type": "string",
+                      "description": "입찰방법"
+                    },
+                    "cntrctEntrpsNm": {
+                      "type": "string",
+                      "description": "계약업체명"
+                    },
+                    "cntrctSttus": {
+                      "type": "string",
+                      "description": "계약상태"
+                    },
+                    "cntrctAmnt": {
+                      "type": "string",
+                      "description": "계약금액"
+                    },
+                    "cntrctPlanaAmnt": {
+                      "type": "string",
+                      "description": "예정가격"
+                    },
+                    "csrtDivs": {
+                      "type": "string",
+                      "description": "공사구분"
+                    },
+                    "cntrctDivs": {
+                      "type": "string",
+                      "description": "업무구분"
+                    },
+                    "cntrctLtmDegr": {
+                      "type": "string",
+                      "description": "장기차수"
+                    },
+                    "cntrctTotlCsrtBokpAmnt": {
+                      "type": "string",
+                      "description": "총부기금액"
+                    },
+                    "cntrctContGrntAmnt": {
+                      "type": "string",
+                      "description": "계약보증금"
+                    },
+                    "cntrctDelyaCmpsRate": {
+                      "type": "string",
+                      "description": "지체상금률"
+                    },
+                    "cntrctStrtCstrDate": {
+                      "type": "string",
+                      "description": "착공년월일"
+                    },
+                    "cntrctCmptDate": {
+                      "type": "string",
+                      "description": "준공년월일"
+                    },
+                    "cntrctContStdt": {
+                      "type": "string",
+                      "description": "계약시작일자"
+                    },
+                    "cntrctContCldt": {
+                      "type": "string",
+                      "description": "계약종료일자"
+                    },
+                    "cntrctBidnRate": {
+                      "type": "string",
+                      "description": "낙찰률"
+                    },
+                    "cntrctSccsBidAmnt": {
+                      "type": "string",
+                      "description": "낙찰금액"
+                    },
+                    "cntrctSbdrStlmDate": {
+                      "type": "string",
+                      "description": "낙찰자확정일자"
+                    },
+                    "cntrctBidxDate": {
+                      "type": "string",
+                      "description": "입찰일자"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getDmstcCntrctInfoList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "cntrctDate": {
+                      "type": "string",
+                      "description": "계약일자"
+                    },
+                    "cntrctNo": {
+                      "type": "string",
+                      "description": "계약번호"
+                    },
+                    "dcsNo": {
+                      "type": "string",
+                      "description": "판단번호"
+                    },
+                    "cntrctNm": {
+                      "type": "string",
+                      "description": "계약명"
+                    },
+                    "ornt": {
+                      "type": "string",
+                      "description": "발주기관"
+                    },
+                    "cntrctMth": {
+                      "type": "string",
+                      "description": "계약방법"
+                    },
+                    "bidMth": {
+                      "type": "string",
+                      "description": "입찰방법"
+                    },
+                    "cntrctEntrpsNm": {
+                      "type": "string",
+                      "description": "계약업체명"
+                    },
+                    "cntrctSttus": {
+                      "type": "string",
+                      "description": "계약상태"
+                    },
+                    "cntrctAmnt": {
+                      "type": "string",
+                      "description": "계약금액"
+                    },
+                    "cntrctPlanaAmnt": {
+                      "type": "string",
+                      "description": "예정가격"
+                    },
+                    "cntrctDivs": {
+                      "type": "string",
+                      "description": "업무구분"
+                    },
+                    "cntrctBidnRate": {
+                      "type": "string",
+                      "description": "낙찰률"
+                    }
+                  }
+                }
+              }
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            }
+          }
+        }
+      }
+    },
+    "getOutnatnCntrctInfoList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "cntrctNo": {
+                      "type": "string",
+                      "description": "계약번호"
+                    },
+                    "cntrctEntrpsNm": {
+                      "type": "string",
+                      "description": "계약업체명"
+                    },
+                    "cntrctDate": {
+                      "type": "string",
+                      "description": "계약일자"
+                    },
+                    "cntrctDivs": {
+                      "type": "string",
+                      "description": "물품/용역"
+                    }
+                  }
+                }
+              }
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "페이지당항목수"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,5145 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "방위사업청 국방전자조달시스템(D2B)에서 제공하는 군수품조달 입찰공고 정보 데이터입니다. 본 데이터는 국내·국외 경쟁입찰공고 및 공개수의 협상계획을 포함하여 조달 공고를 기간 조건으로 조회할 수 있으며, 공고별 요구년도, 공고일자, 공고번호, 입찰명, 발주기관(기관명/기관코드), 입찰참가등록·입찰서제출 마감일시, 개찰일시, 계약방법, 입찰형태, 업무구분(물품/용역) 등의 주요 항목을 제공합니다. 또한 품목명세서 조회를 통해 입찰 대상 품목 정보를 확인할 수 있어 입찰 참여 준비, 공고 모니터링, 기관별·분야별 입찰 동향 분석 등에 활용 가능합니다.",
+    "version": "1.0.0",
+    "title": "방위사업청_군수품조달정보 입찰공고_GW"
+  },
+  "host": "apis.data.go.kr/1690000/BidPblancInfoService",
+  "basePath": "",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/getDmstcCmpetBidPblancList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "pblancSeCode": {
+                              "type": "string",
+                              "description": "공고구분코드",
+                              "properties": {}
+                            },
+                            "pblancSe": {
+                              "type": "string",
+                              "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…",
+                              "properties": {}
+                            },
+                            "demandYear": {
+                              "type": "string",
+                              "description": "요구년도",
+                              "properties": {}
+                            },
+                            "pblancDate": {
+                              "type": "string",
+                              "description": "공고일자",
+                              "properties": {}
+                            },
+                            "pblancNo": {
+                              "type": "string",
+                              "description": "공고번호",
+                              "properties": {}
+                            },
+                            "pblancOdr": {
+                              "type": "string",
+                              "description": "공고차수",
+                              "properties": {}
+                            },
+                            "g2bPblancNo": {
+                              "type": "string",
+                              "description": "G2B공고번호",
+                              "properties": {}
+                            },
+                            "g2bPblancOdr": {
+                              "type": "string",
+                              "description": "G2B공고차수",
+                              "properties": {}
+                            },
+                            "dcsNo": {
+                              "type": "string",
+                              "description": "판단번호",
+                              "properties": {}
+                            },
+                            "bidNm": {
+                              "type": "string",
+                              "description": "입찰명",
+                              "properties": {}
+                            },
+                            "orntCode": {
+                              "type": "string",
+                              "description": "발주기관코드",
+                              "properties": {}
+                            },
+                            "ornt": {
+                              "type": "string",
+                              "description": "발주기관",
+                              "properties": {}
+                            },
+                            "prdctnAbltyPresentnClosDt": {
+                              "type": "string",
+                              "description": "생산능력제출마감일시",
+                              "properties": {}
+                            },
+                            "bidPartcptRegistClosDt": {
+                              "type": "string",
+                              "description": "입찰참가등록마감일시",
+                              "properties": {}
+                            },
+                            "biddocPresentnClosDt": {
+                              "type": "string",
+                              "description": "입찰서제출마감일시",
+                              "properties": {}
+                            },
+                            "opengDt": {
+                              "type": "string",
+                              "description": "개찰일시",
+                              "properties": {}
+                            },
+                            "excutTyCode": {
+                              "type": "string",
+                              "description": "집행유형코드",
+                              "properties": {}
+                            },
+                            "excutTy": {
+                              "type": "string",
+                              "description": "집행유형",
+                              "properties": {}
+                            },
+                            "cntrctMth": {
+                              "type": "string",
+                              "description": "계약방법",
+                              "properties": {}
+                            },
+                            "bidStle": {
+                              "type": "string",
+                              "description": "입찰형태",
+                              "properties": {}
+                            },
+                            "bsisPrdprcApplcAt": {
+                              "type": "string",
+                              "description": "기초예가적용여부",
+                              "properties": {}
+                            },
+                            "bsicExpt": {
+                              "type": "string",
+                              "description": "기초예비가격",
+                              "properties": {}
+                            },
+                            "bsisPrdprcOthbcAt": {
+                              "type": "string",
+                              "description": "기초예가공개여부",
+                              "properties": {}
+                            },
+                            "busiDivs": {
+                              "type": "string",
+                              "description": "물품/용역",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국내 경쟁입찰공고 목록",
+        "description": "국내 경쟁입찰공고 목록",
+        "operationId": "getDmstcCmpetBidPblancList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "opengDateBegin",
+          "description": "개찰일자시작",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "opengDateEnd",
+          "description": "개찰일자종료",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "발주기관코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "bidNm",
+          "description": "입찰명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "g2bPblancNoOdr",
+          "description": "G2B공고번호차수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "anmtDateBegin",
+          "description": "공고일자시작",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "anmtDateEnd",
+          "description": "공고일자종료",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getDmstcCmpetBidPblancDetail": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "item": {
+                      "type": "object",
+                      "description": "item",
+                      "properties": {
+                        "pblancOdr": {
+                          "type": "string",
+                          "description": "공고차수",
+                          "properties": {}
+                        },
+                        "pblancDate": {
+                          "type": "string",
+                          "description": "공고일자",
+                          "properties": {}
+                        },
+                        "pblictInstt": {
+                          "type": "string",
+                          "description": "게재기관",
+                          "properties": {}
+                        },
+                        "bidNm": {
+                          "type": "string",
+                          "description": "입찰명",
+                          "properties": {}
+                        },
+                        "excutTy": {
+                          "type": "string",
+                          "description": "집행유형",
+                          "properties": {}
+                        },
+                        "dcsNo": {
+                          "type": "string",
+                          "description": "판단번호",
+                          "properties": {}
+                        },
+                        "ornt": {
+                          "type": "string",
+                          "description": "발주기관",
+                          "properties": {}
+                        },
+                        "bidStle": {
+                          "type": "string",
+                          "description": "일반입찰/전자입찰",
+                          "properties": {}
+                        },
+                        "cntrctMth": {
+                          "type": "string",
+                          "description": "계약방법",
+                          "properties": {}
+                        },
+                        "bidMth": {
+                          "type": "string",
+                          "description": "총액제단가제",
+                          "properties": {}
+                        },
+                        "cntrctKnd": {
+                          "type": "string",
+                          "description": "계약종류",
+                          "properties": {}
+                        },
+                        "sucbidrDecsnMth": {
+                          "type": "string",
+                          "description": "적격심사제/최저가격제",
+                          "properties": {}
+                        },
+                        "budgetAmount": {
+                          "type": "string",
+                          "description": "예산금액",
+                          "properties": {}
+                        },
+                        "bidPartcptRegistClosDt": {
+                          "type": "string",
+                          "description": "입찰참가등록마감일시",
+                          "properties": {}
+                        },
+                        "biddocPresentnClosDt": {
+                          "type": "string",
+                          "description": "입찰서제출마감일시",
+                          "properties": {}
+                        },
+                        "opengDt": {
+                          "type": "string",
+                          "description": "개찰일시",
+                          "properties": {}
+                        },
+                        "bidPlace": {
+                          "type": "string",
+                          "description": "입찰장소",
+                          "properties": {}
+                        },
+                        "bsnsDcMeetngDt": {
+                          "type": "string",
+                          "description": "사업설명회일시",
+                          "properties": {}
+                        },
+                        "bsnsDcMeetngPlace": {
+                          "type": "string",
+                          "description": "사업설명회장소",
+                          "properties": {}
+                        },
+                        "registJdgmnPnttm": {
+                          "type": "string",
+                          "description": "등록심사시점(Y:입찰참가등록 후 등록심사 없이 입찰서제출, N:입찰참가등록  후 등록심사에 확정 된 참여 조달업체만 입찰서 제출가능)",
+                          "properties": {}
+                        },
+                        "bsisPrdprcApplcAt": {
+                          "type": "string",
+                          "description": "적용/미적용",
+                          "properties": {}
+                        },
+                        "g2bPblancNo": {
+                          "type": "string",
+                          "description": "G2B공고번호",
+                          "properties": {}
+                        },
+                        "g2bPblancOdr": {
+                          "type": "string",
+                          "description": "G2B공고차수",
+                          "properties": {}
+                        },
+                        "copertnOutsrcFlflMthd": {
+                          "type": "string",
+                          "description": "분담이행/공동이행/공동[분담]이행/단독",
+                          "properties": {}
+                        },
+                        "compnoEntrpsRsrchTrgetAt": {
+                          "type": "string",
+                          "description": "대상/비대상",
+                          "properties": {}
+                        },
+                        "orgnlbudgtDedt": {
+                          "type": "string",
+                          "description": "본조납기",
+                          "properties": {}
+                        },
+                        "ntndbtDedt": {
+                          "type": "string",
+                          "description": "국채납기",
+                          "properties": {}
+                        },
+                        "chargerNm": {
+                          "type": "string",
+                          "description": "담당자명",
+                          "properties": {}
+                        },
+                        "chargerCttpc": {
+                          "type": "string",
+                          "description": "담당자연락처",
+                          "properties": {}
+                        },
+                        "pblancSe": {
+                          "type": "string",
+                          "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…",
+                          "properties": {}
+                        },
+                        "pblancNo": {
+                          "type": "string",
+                          "description": "공고번호",
+                          "properties": {}
+                        },
+                        "untpcSystemTy": {
+                          "type": "string",
+                          "description": "단가제도유형",
+                          "properties": {}
+                        },
+                        "prdctnAbltyPresentnClosDt": {
+                          "type": "string",
+                          "description": "생산능력제출마감일시",
+                          "properties": {}
+                        },
+                        "prdlstCode": {
+                          "type": "string",
+                          "description": "품목코드",
+                          "properties": {}
+                        },
+                        "prdlstNm": {
+                          "type": "string",
+                          "description": "품목명",
+                          "properties": {}
+                        },
+                        "industClList": {
+                          "type": "string",
+                          "description": "산업분류목록",
+                          "properties": {}
+                        },
+                        "estmPrce": {
+                          "type": "string",
+                          "description": "추정가격",
+                          "properties": {}
+                        },
+                        "asessRtLwlt": {
+                          "type": "string",
+                          "description": "사정률하한",
+                          "properties": {}
+                        },
+                        "asessRtUplmt": {
+                          "type": "string",
+                          "description": "사정률상한",
+                          "properties": {}
+                        },
+                        "scsbidLwltRt": {
+                          "type": "string",
+                          "description": "낙찰하한율",
+                          "properties": {}
+                        },
+                        "lcnsLmttList": {
+                          "type": "string",
+                          "description": "면허제한목록",
+                          "properties": {}
+                        },
+                        "areaLmttList": {
+                          "type": "string",
+                          "description": "지역제한목록",
+                          "properties": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국내 경쟁입찰공고 상세",
+        "description": "국내 경쟁입찰공고 상세",
+        "operationId": "getDmstcCmpetBidPblancDetail",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "demandYear",
+          "description": "요구년도",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "발주기관코드",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "dcsNo",
+          "description": "판단번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancNo",
+          "description": "공고번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancOdr",
+          "description": "공고차수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        }
+      ]
+    },
+    "/getDmstcOthbcVltrnNtatPlanList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "demandYear": {
+                              "type": "string",
+                              "description": "요구년도",
+                              "properties": {}
+                            },
+                            "prqudoPresentnClosDt": {
+                              "type": "string",
+                              "description": "견적서제출마감일시",
+                              "properties": {}
+                            },
+                            "opengDt": {
+                              "type": "string",
+                              "description": "개찰일시",
+                              "properties": {}
+                            },
+                            "orntCode": {
+                              "type": "string",
+                              "description": "발주기관코드",
+                              "properties": {}
+                            },
+                            "dcsNo": {
+                              "type": "string",
+                              "description": "판단번호",
+                              "properties": {}
+                            },
+                            "iemNo": {
+                              "type": "string",
+                              "description": "항목번호",
+                              "properties": {}
+                            },
+                            "pblancOdr": {
+                              "type": "string",
+                              "description": "공고차수",
+                              "properties": {}
+                            },
+                            "ntatPlanDate": {
+                              "type": "string",
+                              "description": "협상계획일자",
+                              "properties": {}
+                            },
+                            "pblancNo": {
+                              "type": "string",
+                              "description": "공고번호",
+                              "properties": {}
+                            },
+                            "othbcNtatNm": {
+                              "type": "string",
+                              "description": "공개협상명",
+                              "properties": {}
+                            },
+                            "ornt": {
+                              "type": "string",
+                              "description": "발주기관",
+                              "properties": {}
+                            },
+                            "bidMth": {
+                              "type": "string",
+                              "description": "총액제단가제",
+                              "properties": {}
+                            },
+                            "budgetAmount": {
+                              "type": "string",
+                              "description": "예산금액",
+                              "properties": {}
+                            },
+                            "progrsSttus": {
+                              "type": "string",
+                              "description": "진행상태",
+                              "properties": {}
+                            },
+                            "bsicExpt": {
+                              "type": "string",
+                              "description": "기초예비가격",
+                              "properties": {}
+                            },
+                            "bsisPrdprcApplcAt": {
+                              "type": "string",
+                              "description": "적용/미적용",
+                              "properties": {}
+                            },
+                            "busiDivs": {
+                              "type": "string",
+                              "description": "물품/용역",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국내 공개수의협상계획 목록",
+        "description": "국내 공개수의협상계획 목록",
+        "operationId": "getDmstcOthbcVltrnNtatPlanList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "발주기관코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "othbcNtatNm",
+          "description": "공개협상명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "pblancOrDcsNo",
+          "description": "공고또는판단번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prqudoPresentnClosDateBegin",
+          "description": "견적서제출마감일자시작",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prqudoPresentnClosDateEnd",
+          "description": "견적서제출마감일자종료",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getDmstcOthbcVltrnNtatPlanDetail": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "item": {
+                      "type": "object",
+                      "description": "item",
+                      "properties": {
+                        "bsisPreparPc": {
+                          "type": "string",
+                          "description": "기초예비가격",
+                          "properties": {}
+                        },
+                        "asessRtLwlt": {
+                          "type": "string",
+                          "description": "사정률하한",
+                          "properties": {}
+                        },
+                        "asessRtUplmt": {
+                          "type": "string",
+                          "description": "사정률상한",
+                          "properties": {}
+                        },
+                        "scsbidLwltRt": {
+                          "type": "string",
+                          "description": "낙찰하한율",
+                          "properties": {}
+                        },
+                        "chargerNm": {
+                          "type": "string",
+                          "description": "담당자명",
+                          "properties": {}
+                        },
+                        "chargerCttpc": {
+                          "type": "string",
+                          "description": "담당자연락처",
+                          "properties": {}
+                        },
+                        "demandYear": {
+                          "type": "string",
+                          "description": "요구년도",
+                          "properties": {}
+                        },
+                        "pblancNo": {
+                          "type": "string",
+                          "description": "공고번호",
+                          "properties": {}
+                        },
+                        "pblancOdr": {
+                          "type": "string",
+                          "description": "공고차수",
+                          "properties": {}
+                        },
+                        "ornt": {
+                          "type": "string",
+                          "description": "발주기관",
+                          "properties": {}
+                        },
+                        "othbcNtatNm": {
+                          "type": "string",
+                          "description": "공개협상명",
+                          "properties": {}
+                        },
+                        "dcsNo": {
+                          "type": "string",
+                          "description": "판단번호",
+                          "properties": {}
+                        },
+                        "cntrctMth": {
+                          "type": "string",
+                          "description": "계약방법",
+                          "properties": {}
+                        },
+                        "budgetAmount": {
+                          "type": "string",
+                          "description": "예산금액",
+                          "properties": {}
+                        },
+                        "sucbidrDecsnMth": {
+                          "type": "string",
+                          "description": "적격심사제/최저가격제",
+                          "properties": {}
+                        },
+                        "bidMth": {
+                          "type": "string",
+                          "description": "총액제단가제",
+                          "properties": {}
+                        },
+                        "bsisPrdprcApplcAt": {
+                          "type": "string",
+                          "description": "적용/미적용",
+                          "properties": {}
+                        },
+                        "prqudoPresentnClosDt": {
+                          "type": "string",
+                          "description": "견적서제출마감일시",
+                          "properties": {}
+                        },
+                        "othbcNtatPlace": {
+                          "type": "string",
+                          "description": "공개협상장소",
+                          "properties": {}
+                        },
+                        "ntatStle": {
+                          "type": "string",
+                          "description": "일반협상/전자협상",
+                          "properties": {}
+                        },
+                        "opengDt": {
+                          "type": "string",
+                          "description": "개찰일시",
+                          "properties": {}
+                        },
+                        "areaLmttList": {
+                          "type": "string",
+                          "description": "지역제한목록",
+                          "properties": {}
+                        },
+                        "estmPrce": {
+                          "type": "string",
+                          "description": "추정가격",
+                          "properties": {}
+                        },
+                        "lcnsLmttList": {
+                          "type": "string",
+                          "description": "면허제한목록",
+                          "properties": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국내 공개수의협상계획 상세",
+        "description": "국내 공개수의협상계획 상세",
+        "operationId": "getDmstcOthbcVltrnNtatPlanDetail",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "demandYear",
+          "description": "요구년도",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "발주기관코드",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "dcsNo",
+          "description": "판단번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "iemNo",
+          "description": "항목번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancNo",
+          "description": "공고번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancOdr",
+          "description": "공고차수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "ntatPlanDate",
+          "description": "협상계획일자",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        }
+      ]
+    },
+    "/getOutnatnCmpetBidPblancList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "pblancSe": {
+                              "type": "string",
+                              "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…",
+                              "properties": {}
+                            },
+                            "pblancYear": {
+                              "type": "string",
+                              "description": "공고년도",
+                              "properties": {}
+                            },
+                            "pblancNo": {
+                              "type": "string",
+                              "description": "공고번호",
+                              "properties": {}
+                            },
+                            "pblancOdr": {
+                              "type": "string",
+                              "description": "공고차수",
+                              "properties": {}
+                            },
+                            "g2bPblancNo": {
+                              "type": "string",
+                              "description": "G2B공고번호",
+                              "properties": {}
+                            },
+                            "g2bPblancOdr": {
+                              "type": "string",
+                              "description": "G2B공고차수",
+                              "properties": {}
+                            },
+                            "dcsNo": {
+                              "type": "string",
+                              "description": "판단번호",
+                              "properties": {}
+                            },
+                            "groupNo": {
+                              "type": "string",
+                              "description": "그룹번호",
+                              "properties": {}
+                            },
+                            "bsnsNm": {
+                              "type": "string",
+                              "description": "사업명",
+                              "properties": {}
+                            },
+                            "prdlstCo": {
+                              "type": "string",
+                              "description": "품목수",
+                              "properties": {}
+                            },
+                            "bidMedia": {
+                              "type": "string",
+                              "description": "서류입찰/전자입찰…",
+                              "properties": {}
+                            },
+                            "cntrctMth": {
+                              "type": "string",
+                              "description": "계약방법",
+                              "properties": {}
+                            },
+                            "bidRegistClosDt": {
+                              "type": "string",
+                              "description": "입찰등록마감일시",
+                              "properties": {}
+                            },
+                            "biddocPresentnClosDt": {
+                              "type": "string",
+                              "description": "입찰서제출마감일시",
+                              "properties": {}
+                            },
+                            "opengDt": {
+                              "type": "string",
+                              "description": "개찰일시",
+                              "properties": {}
+                            },
+                            "pblancCanclAt": {
+                              "type": "string",
+                              "description": "Y : 취소",
+                              "properties": {}
+                            },
+                            "purchsRequstNo": {
+                              "type": "string",
+                              "description": "구매요청번호",
+                              "properties": {}
+                            },
+                            "busiDivs": {
+                              "type": "string",
+                              "description": "물품/용역",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국외 경쟁입찰공고 목록",
+        "description": "국외 경쟁입찰공고 목록",
+        "operationId": "getOutnatnCmpetBidPblancList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "opengDateBegin",
+          "description": "개찰일자시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "opengDateEnd",
+          "description": "개찰일자종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancNo",
+          "description": "공고번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "g2bPblancNo",
+          "description": "G2B공고번호 ",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "anmtDateBegin",
+          "description": "공고일자시작",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "anmtDateEnd",
+          "description": "공고일자종료",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getOutnatnCmpetBidPblancDetail": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "item": {
+                      "type": "object",
+                      "description": "item",
+                      "properties": {
+                        "groupNo": {
+                          "type": "string",
+                          "description": "그룹번호",
+                          "properties": {}
+                        },
+                        "bsnsNm": {
+                          "type": "string",
+                          "description": "사업명",
+                          "properties": {}
+                        },
+                        "prdlstCo": {
+                          "type": "string",
+                          "description": "품목수",
+                          "properties": {}
+                        },
+                        "bidMedia": {
+                          "type": "string",
+                          "description": "서류입찰/전자입찰…",
+                          "properties": {}
+                        },
+                        "pblancSe": {
+                          "type": "string",
+                          "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…",
+                          "properties": {}
+                        },
+                        "cntrctMth": {
+                          "type": "string",
+                          "description": "계약방법",
+                          "properties": {}
+                        },
+                        "bidMth": {
+                          "type": "string",
+                          "description": "총액제단가제",
+                          "properties": {}
+                        },
+                        "bidRegistClosDt": {
+                          "type": "string",
+                          "description": "입찰등록마감일시",
+                          "properties": {}
+                        },
+                        "biddocPresentnClosDt": {
+                          "type": "string",
+                          "description": "입찰서제출마감일시",
+                          "properties": {}
+                        },
+                        "opengDt": {
+                          "type": "string",
+                          "description": "개찰일시",
+                          "properties": {}
+                        },
+                        "ehgtApplcDate": {
+                          "type": "string",
+                          "description": "환율적용일자",
+                          "properties": {}
+                        },
+                        "ornt": {
+                          "type": "string",
+                          "description": "발주기관",
+                          "properties": {}
+                        },
+                        "chargerNm": {
+                          "type": "string",
+                          "description": "담당자명",
+                          "properties": {}
+                        },
+                        "totAmount": {
+                          "type": "string",
+                          "description": "총금액",
+                          "properties": {}
+                        },
+                        "pblancYear": {
+                          "type": "string",
+                          "description": "공고년도",
+                          "properties": {}
+                        },
+                        "pblancNo": {
+                          "type": "string",
+                          "description": "공고번호",
+                          "properties": {}
+                        },
+                        "pblancOdr": {
+                          "type": "string",
+                          "description": "공고차수",
+                          "properties": {}
+                        },
+                        "pblancDate": {
+                          "type": "string",
+                          "description": "공고일자",
+                          "properties": {}
+                        },
+                        "dcsNo": {
+                          "type": "string",
+                          "description": "판단번호",
+                          "properties": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국외 경쟁입찰공고 상세",
+        "description": "국외 경쟁입찰공고 상세",
+        "operationId": "getOutnatnCmpetBidPblancDetail",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "pblancYear",
+          "description": "공고년도",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancNo",
+          "description": "공고번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancOdr",
+          "description": "공고차수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "dcsNo",
+          "description": "판단번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "groupNo",
+          "description": "그룹번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        }
+      ]
+    },
+    "/getFcltyCmpetBidPblancList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "pblancYear": {
+                              "type": "string",
+                              "description": "공고년도",
+                              "properties": {}
+                            },
+                            "pblancDate": {
+                              "type": "string",
+                              "description": "공고일자",
+                              "properties": {}
+                            },
+                            "pblancSeCode": {
+                              "type": "string",
+                              "description": "공고구분코드",
+                              "properties": {}
+                            },
+                            "pblancSe": {
+                              "type": "string",
+                              "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…",
+                              "properties": {}
+                            },
+                            "pblancNo": {
+                              "type": "string",
+                              "description": "공고번호",
+                              "properties": {}
+                            },
+                            "pblancOdr": {
+                              "type": "string",
+                              "description": "공고차수",
+                              "properties": {}
+                            },
+                            "g2bPblancNo": {
+                              "type": "string",
+                              "description": "G2B공고번호",
+                              "properties": {}
+                            },
+                            "g2bPblancOdr": {
+                              "type": "string",
+                              "description": "G2B공고차수",
+                              "properties": {}
+                            },
+                            "cntrwkNo": {
+                              "type": "string",
+                              "description": "공사번호",
+                              "properties": {}
+                            },
+                            "cntrwkNm": {
+                              "type": "string",
+                              "description": "공사명",
+                              "properties": {}
+                            },
+                            "ornt": {
+                              "type": "string",
+                              "description": "발주기관",
+                              "properties": {}
+                            },
+                            "orntCode": {
+                              "type": "string",
+                              "description": "발주기관코드",
+                              "properties": {}
+                            },
+                            "bidPartcptRegistClosDt": {
+                              "type": "string",
+                              "description": "입찰참가등록마감일시",
+                              "properties": {}
+                            },
+                            "biddocPresentnClosDt": {
+                              "type": "string",
+                              "description": "입찰서제출마감일시",
+                              "properties": {}
+                            },
+                            "opengDt": {
+                              "type": "string",
+                              "description": "개찰일시",
+                              "properties": {}
+                            },
+                            "cntrctMth": {
+                              "type": "string",
+                              "description": "계약방법",
+                              "properties": {}
+                            },
+                            "bidStle": {
+                              "type": "string",
+                              "description": "일반입찰/전자입찰",
+                              "properties": {}
+                            },
+                            "baseAmnt": {
+                              "type": "string",
+                              "description": "기초예비가격",
+                              "properties": {}
+                            },
+                            "bsisPrdprcApplcAt": {
+                              "type": "string",
+                              "description": "적용/미적용",
+                              "properties": {}
+                            },
+                            "busiDivs": {
+                              "type": "string",
+                              "description": "공사/용역",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시설 경쟁입찰공고 목록",
+        "description": "시설 경쟁입찰공고 목록",
+        "operationId": "getFcltyCmpetBidPblancList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "opengDateBegin",
+          "description": "개찰일자시작",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "opengDateEnd",
+          "description": "개찰일자종료",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "발주기관코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "g2bPblancNo",
+          "description": "G2B공고번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "cntrwkNm",
+          "description": "공사명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "anmtDateBegin",
+          "description": "공고일자시작",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "anmtDateEnd",
+          "description": "공고일자시작",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getFcltyCmpetBidPblancDetail": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "item": {
+                      "type": "object",
+                      "description": "item",
+                      "properties": {
+                        "pblancSe": {
+                          "type": "string",
+                          "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…",
+                          "properties": {}
+                        },
+                        "pblancNo": {
+                          "type": "string",
+                          "description": "공고번호",
+                          "properties": {}
+                        },
+                        "pblancOdr": {
+                          "type": "string",
+                          "description": "공고차수",
+                          "properties": {}
+                        },
+                        "pblancDate": {
+                          "type": "string",
+                          "description": "공고일자",
+                          "properties": {}
+                        },
+                        "pblictInstt": {
+                          "type": "string",
+                          "description": "게재기관",
+                          "properties": {}
+                        },
+                        "cntrwkNm": {
+                          "type": "string",
+                          "description": "공사명",
+                          "properties": {}
+                        },
+                        "cntrwkSe": {
+                          "type": "string",
+                          "description": "공사구분",
+                          "properties": {}
+                        },
+                        "cntrwkNo": {
+                          "type": "string",
+                          "description": "공사번호",
+                          "properties": {}
+                        },
+                        "ornt": {
+                          "type": "string",
+                          "description": "발주기관",
+                          "properties": {}
+                        },
+                        "bidStle": {
+                          "type": "string",
+                          "description": "일반입찰/전자입찰",
+                          "properties": {}
+                        },
+                        "budgetAmount": {
+                          "type": "string",
+                          "description": "예산금액",
+                          "properties": {}
+                        },
+                        "lc": {
+                          "type": "string",
+                          "description": "위치",
+                          "properties": {}
+                        },
+                        "cntrctMth": {
+                          "type": "string",
+                          "description": "계약방법",
+                          "properties": {}
+                        },
+                        "bidMth": {
+                          "type": "string",
+                          "description": "총액제단가제",
+                          "properties": {}
+                        },
+                        "bsisPrdprcApplcAt": {
+                          "type": "string",
+                          "description": "적용/미적용",
+                          "properties": {}
+                        },
+                        "preaudtTrgetAt": {
+                          "type": "string",
+                          "description": "대상/비대상",
+                          "properties": {}
+                        },
+                        "sucbidrDecsnMth": {
+                          "type": "string",
+                          "description": "적격심사제/최저가격제",
+                          "properties": {}
+                        },
+                        "copertnOutsrcFlflMthd": {
+                          "type": "string",
+                          "description": "분담이행/공동이행/공동[분담]이행/단독",
+                          "properties": {}
+                        },
+                        "bidPartcptReqstClosDt": {
+                          "type": "string",
+                          "description": "입찰참가신청마감일시",
+                          "properties": {}
+                        },
+                        "biddocPresentnClosDt": {
+                          "type": "string",
+                          "description": "입찰서제출마감일시",
+                          "properties": {}
+                        },
+                        "opengDt": {
+                          "type": "string",
+                          "description": "개찰일시",
+                          "properties": {}
+                        },
+                        "bidPlace": {
+                          "type": "string",
+                          "description": "입찰장소",
+                          "properties": {}
+                        },
+                        "g2bPblancNo": {
+                          "type": "string",
+                          "description": "G2B공고번호",
+                          "properties": {}
+                        },
+                        "g2bPblancOdr": {
+                          "type": "string",
+                          "description": "G2B공고차수",
+                          "properties": {}
+                        },
+                        "registJdgmnPnttm": {
+                          "type": "string",
+                          "description": "등록심사시점(Y:입찰참가등록 후 등록심사 없이 입찰서제출, N:입찰참가등록  후 등록심사에 확정 된 참여 조달업체만 입찰서 제출가능)",
+                          "properties": {}
+                        },
+                        "chargerNm": {
+                          "type": "string",
+                          "description": "담당자명",
+                          "properties": {}
+                        },
+                        "chargerCttpc": {
+                          "type": "string",
+                          "description": "담당자연락처",
+                          "properties": {}
+                        },
+                        "sptDcMeetngDt": {
+                          "type": "string",
+                          "description": "현장설명회일시",
+                          "properties": {}
+                        },
+                        "sptDcMeetngPlace": {
+                          "type": "string",
+                          "description": "현장설명회장소",
+                          "properties": {}
+                        },
+                        "areaLmttList": {
+                          "type": "string",
+                          "description": "지역제한목록",
+                          "properties": {}
+                        },
+                        "lcnsLmttList": {
+                          "type": "string",
+                          "description": "면허제한목록",
+                          "properties": {}
+                        },
+                        "estmPrce": {
+                          "type": "string",
+                          "description": "추정가격",
+                          "properties": {}
+                        },
+                        "asessRtLwlt": {
+                          "type": "string",
+                          "description": "사정률하한",
+                          "properties": {}
+                        },
+                        "asessRtUplmt": {
+                          "type": "string",
+                          "description": "사정률상한",
+                          "properties": {}
+                        },
+                        "scsbidLwltRt": {
+                          "type": "string",
+                          "description": "낙찰하한율",
+                          "properties": {}
+                        },
+                        "cobaAmnt": {
+                          "type": "string",
+                          "description": "평가기준금액",
+                          "properties": {}
+                        },
+                        "baseEnam": {
+                          "type": "string",
+                          "description": "토목기초금액",
+                          "properties": {}
+                        },
+                        "baseCoam": {
+                          "type": "string",
+                          "description": "건축기초금액",
+                          "properties": {}
+                        },
+                        "inheAmnt": {
+                          "type": "string",
+                          "description": "국민건강보험료",
+                          "properties": {}
+                        },
+                        "inanAmnt": {
+                          "type": "string",
+                          "description": "국민연금보험료",
+                          "properties": {}
+                        },
+                        "laboRate": {
+                          "type": "string",
+                          "description": "노무기준율",
+                          "properties": {}
+                        },
+                        "etctRate": {
+                          "type": "string",
+                          "description": "기타경비기준율",
+                          "properties": {}
+                        },
+                        "nomlRate": {
+                          "type": "string",
+                          "description": "일반관리비기준율",
+                          "properties": {}
+                        },
+                        "protRate": {
+                          "type": "string",
+                          "description": "이용기준율",
+                          "properties": {}
+                        },
+                        "diffCoef": {
+                          "type": "string",
+                          "description": "적용난이도계수",
+                          "properties": {}
+                        },
+                        "treaAmnt": {
+                          "type": "string",
+                          "description": "요양보험료",
+                          "properties": {}
+                        },
+                        "safeAmnt": {
+                          "type": "string",
+                          "description": "산업안전보건관리비",
+                          "properties": {}
+                        },
+                        "safeCost": {
+                          "type": "string",
+                          "description": "안전관리비",
+                          "properties": {}
+                        },
+                        "retiFund": {
+                          "type": "string",
+                          "description": "퇴직급여충당금",
+                          "properties": {}
+                        },
+                        "retiDedu": {
+                          "type": "string",
+                          "description": "퇴직공제부금",
+                          "properties": {}
+                        },
+                        "mateCost": {
+                          "type": "string",
+                          "description": "재료비",
+                          "properties": {}
+                        },
+                        "laboCost": {
+                          "type": "string",
+                          "description": "노무비",
+                          "properties": {}
+                        },
+                        "geneCost": {
+                          "type": "string",
+                          "description": "경비",
+                          "properties": {}
+                        },
+                        "vtaxCost": {
+                          "type": "string",
+                          "description": "부가가치세",
+                          "properties": {}
+                        },
+                        "quasCost": {
+                          "type": "string",
+                          "description": "품질관리비",
+                          "properties": {}
+                        },
+                        "cntrwkPd": {
+                          "type": "string",
+                          "description": "공사기간",
+                          "properties": {}
+                        },
+                        "cntrwkSumry": {
+                          "type": "string",
+                          "description": "공사개요",
+                          "properties": {}
+                        },
+                        "preaudtClosDt": {
+                          "type": "string",
+                          "description": "사전심사마감일시",
+                          "properties": {}
+                        },
+                        "scale": {
+                          "type": "string",
+                          "description": "규모",
+                          "properties": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시설 경쟁입찰공고 상세",
+        "description": "시설 경쟁입찰공고 상세",
+        "operationId": "getFcltyCmpetBidPblancDetail",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "pblancYear",
+          "description": "공고년도",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancSeCode",
+          "description": "공고구분코드",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancNo",
+          "description": "공고번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancOdr",
+          "description": "공고차수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "cntrwkNo",
+          "description": "공사번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "발주기관코드",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        }
+      ]
+    },
+    "/getFcltyOthbcVltrnNtatPlanList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "prqudoPresentnClosDt": {
+                              "type": "string",
+                              "description": "견적서제출마감일시",
+                              "properties": {}
+                            },
+                            "opengDt": {
+                              "type": "string",
+                              "description": "개찰일시",
+                              "properties": {}
+                            },
+                            "cntrwkNo": {
+                              "type": "string",
+                              "description": "공사번호",
+                              "properties": {}
+                            },
+                            "pblancNo": {
+                              "type": "string",
+                              "description": "공고번호",
+                              "properties": {}
+                            },
+                            "pblancOdr": {
+                              "type": "string",
+                              "description": "차수",
+                              "properties": {}
+                            },
+                            "cntrwkNm": {
+                              "type": "string",
+                              "description": "공개협상건명",
+                              "properties": {}
+                            },
+                            "ornt": {
+                              "type": "string",
+                              "description": "발주기관",
+                              "properties": {}
+                            },
+                            "orntCode": {
+                              "type": "string",
+                              "description": "발주기관코드",
+                              "properties": {}
+                            },
+                            "budgetAmount": {
+                              "type": "string",
+                              "description": "예산금액",
+                              "properties": {}
+                            },
+                            "bidMth": {
+                              "type": "string",
+                              "description": "입찰방법",
+                              "properties": {}
+                            },
+                            "progrsSttus": {
+                              "type": "string",
+                              "description": "진행상태",
+                              "properties": {}
+                            },
+                            "baseAmnt": {
+                              "type": "string",
+                              "description": "기초예비가격",
+                              "properties": {}
+                            },
+                            "ntatPlanDate": {
+                              "type": "string",
+                              "description": "협상계획일자",
+                              "properties": {}
+                            },
+                            "busiDivs": {
+                              "type": "string",
+                              "description": "공사/용역",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시설 공개수의협상계획 목록",
+        "description": "시설 공개수의협상계획 목록",
+        "operationId": "getFcltyOthbcVltrnNtatPlanList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prqudoPresentnClosDateBegin",
+          "description": "null",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "prqudoPresentnClosDateEnd",
+          "description": "null",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "othbcNtatNm",
+          "description": "null",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "null",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "pblancNoOrCntrwkNo",
+          "description": "null",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getFcltyOthbcVltrnNtatPlanDetail": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "item": {
+                      "type": "object",
+                      "description": "item",
+                      "properties": {
+                        "bidMth": {
+                          "type": "string",
+                          "description": "총액제단가제",
+                          "properties": {}
+                        },
+                        "bsisPrdprcApplcAt": {
+                          "type": "string",
+                          "description": "적용/미적용",
+                          "properties": {}
+                        },
+                        "prqudoPresentnClosDt": {
+                          "type": "string",
+                          "description": "견적서제출마감일시",
+                          "properties": {}
+                        },
+                        "ntatPlace": {
+                          "type": "string",
+                          "description": "협상장소",
+                          "properties": {}
+                        },
+                        "ntatStle": {
+                          "type": "string",
+                          "description": "일반협상/전자협상",
+                          "properties": {}
+                        },
+                        "opengDt": {
+                          "type": "string",
+                          "description": "개찰일시",
+                          "properties": {}
+                        },
+                        "bsisPreparPc": {
+                          "type": "string",
+                          "description": "기초예비가격",
+                          "properties": {}
+                        },
+                        "asessRtLwlt": {
+                          "type": "string",
+                          "description": "사정률하한",
+                          "properties": {}
+                        },
+                        "asessRtUplmt": {
+                          "type": "string",
+                          "description": "사정률상한",
+                          "properties": {}
+                        },
+                        "scsbidLwltRt": {
+                          "type": "string",
+                          "description": "낙찰하한율",
+                          "properties": {}
+                        },
+                        "chargerNm": {
+                          "type": "string",
+                          "description": "담당자명",
+                          "properties": {}
+                        },
+                        "chargerCttpc": {
+                          "type": "string",
+                          "description": "담당자연락처",
+                          "properties": {}
+                        },
+                        "areaLmttList": {
+                          "type": "string",
+                          "description": "지역제한목록",
+                          "properties": {}
+                        },
+                        "lcnsLmttList": {
+                          "type": "string",
+                          "description": "[면허코드] 면허명^[면허코드] 면허명",
+                          "properties": {}
+                        },
+                        "demandYear": {
+                          "type": "string",
+                          "description": "요구년도",
+                          "properties": {}
+                        },
+                        "pblancNo": {
+                          "type": "string",
+                          "description": "공고번호",
+                          "properties": {}
+                        },
+                        "pblancOdr": {
+                          "type": "string",
+                          "description": "공고차수",
+                          "properties": {}
+                        },
+                        "ornt": {
+                          "type": "string",
+                          "description": "발주기관",
+                          "properties": {}
+                        },
+                        "cntrwkNm": {
+                          "type": "string",
+                          "description": "공사명",
+                          "properties": {}
+                        },
+                        "cntrwkSe": {
+                          "type": "string",
+                          "description": "공사구분",
+                          "properties": {}
+                        },
+                        "cntrwkNo": {
+                          "type": "string",
+                          "description": "공사번호",
+                          "properties": {}
+                        },
+                        "cntrctMth": {
+                          "type": "string",
+                          "description": "계약방법",
+                          "properties": {}
+                        },
+                        "bidStle": {
+                          "type": "string",
+                          "description": "일반입찰/전자입찰",
+                          "properties": {}
+                        },
+                        "budgetAmount": {
+                          "type": "string",
+                          "description": "예산금액",
+                          "properties": {}
+                        },
+                        "lc": {
+                          "type": "string",
+                          "description": "위치",
+                          "properties": {}
+                        },
+                        "sucbidrDecsnMth": {
+                          "type": "string",
+                          "description": "적격심사제/최저가격제",
+                          "properties": {}
+                        },
+                        "cntrwkSumry": {
+                          "type": "string",
+                          "description": "공사개요",
+                          "properties": {}
+                        },
+                        "scale": {
+                          "type": "string",
+                          "description": "규모",
+                          "properties": {}
+                        },
+                        "cntrwkPd": {
+                          "type": "string",
+                          "description": "공사기간",
+                          "properties": {}
+                        },
+                        "estmPrce": {
+                          "type": "string",
+                          "description": "추정가격",
+                          "properties": {}
+                        },
+                        "cobaAmnt": {
+                          "type": "string",
+                          "description": "평가기준금액",
+                          "properties": {}
+                        },
+                        "baseEnam": {
+                          "type": "string",
+                          "description": "토목기초금액",
+                          "properties": {}
+                        },
+                        "baseCoam": {
+                          "type": "string",
+                          "description": "건축기초금액",
+                          "properties": {}
+                        },
+                        "inheAmnt": {
+                          "type": "string",
+                          "description": "국민건강보험료",
+                          "properties": {}
+                        },
+                        "inanAmnt": {
+                          "type": "string",
+                          "description": "국민연금보험료",
+                          "properties": {}
+                        },
+                        "laboRate": {
+                          "type": "string",
+                          "description": "노무기준율",
+                          "properties": {}
+                        },
+                        "etctRate": {
+                          "type": "string",
+                          "description": "기타경비기준율",
+                          "properties": {}
+                        },
+                        "nomlRate": {
+                          "type": "string",
+                          "description": "일반관리비기준율",
+                          "properties": {}
+                        },
+                        "protRate": {
+                          "type": "string",
+                          "description": "이용기준율",
+                          "properties": {}
+                        },
+                        "diffCoef": {
+                          "type": "string",
+                          "description": "적용난이도계수",
+                          "properties": {}
+                        },
+                        "treaAmnt": {
+                          "type": "string",
+                          "description": "요양보험료",
+                          "properties": {}
+                        },
+                        "safeAmnt": {
+                          "type": "string",
+                          "description": "산업안전보건관리비",
+                          "properties": {}
+                        },
+                        "safeCost": {
+                          "type": "string",
+                          "description": "안전관리비",
+                          "properties": {}
+                        },
+                        "retiFund": {
+                          "type": "string",
+                          "description": "퇴직급여충당금",
+                          "properties": {}
+                        },
+                        "retiDedu": {
+                          "type": "string",
+                          "description": "퇴직공제부금",
+                          "properties": {}
+                        },
+                        "mateCost": {
+                          "type": "string",
+                          "description": "재료비",
+                          "properties": {}
+                        },
+                        "laboCost": {
+                          "type": "string",
+                          "description": "노무비",
+                          "properties": {}
+                        },
+                        "geneCost": {
+                          "type": "string",
+                          "description": "경비",
+                          "properties": {}
+                        },
+                        "vtaxCost": {
+                          "type": "string",
+                          "description": "부가가치세",
+                          "properties": {}
+                        },
+                        "quasCost": {
+                          "type": "string",
+                          "description": "품질관리비",
+                          "properties": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시설 공개수의협상계획 상세",
+        "description": "시설 공개수의협상계획 상세",
+        "operationId": "getFcltyOthbcVltrnNtatPlanDetail",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "발주기관코드",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "cntrwkNo",
+          "description": "공사번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "ntatPlanDate",
+          "description": "협상계획일자",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancNo",
+          "description": "공고번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancOdr",
+          "description": "공고차수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        }
+      ]
+    },
+    "/getDmstcCmpetBidPblancItem": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "dmstItnb": {
+                              "type": "string",
+                              "description": "항목번호",
+                              "properties": {}
+                            },
+                            "prcmRnum": {
+                              "type": "string",
+                              "description": "조달요구번호",
+                              "properties": {}
+                            },
+                            "fsc": {
+                              "type": "string",
+                              "description": "군급",
+                              "properties": {}
+                            },
+                            "niin": {
+                              "type": "string",
+                              "description": "국가품목식별번호",
+                              "properties": {}
+                            },
+                            "stnbTycd": {
+                              "type": "string",
+                              "description": "재고번호형태부호",
+                              "properties": {}
+                            },
+                            "itemName": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "apeqName": {
+                              "type": "string",
+                              "description": "apeqCode의 명",
+                              "properties": {}
+                            },
+                            "specNumb": {
+                              "type": "string",
+                              "description": "규격번호",
+                              "properties": {}
+                            },
+                            "specClas": {
+                              "type": "string",
+                              "description": "A:KDS(국방/표준)B:KDS(국방/정식)C:KDC(국방/약식)",
+                              "properties": {}
+                            },
+                            "codeVld1": {
+                              "type": "string",
+                              "description": "규격종류명",
+                              "properties": {}
+                            },
+                            "partNumb": {
+                              "type": "string",
+                              "description": "부품번호",
+                              "properties": {}
+                            },
+                            "refcNumb": {
+                              "type": "string",
+                              "description": "참조번호",
+                              "properties": {}
+                            },
+                            "bugtDivs": {
+                              "type": "string",
+                              "description": "01:추가경정예산10:일반예산A1:일반예산B1:국고채무부담C1:사고이월U0:세입/세출 외 현금U1:계속소요비",
+                              "properties": {}
+                            },
+                            "codeVld2": {
+                              "type": "string",
+                              "description": "예산구분명",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "AB:종AC:건(ACTIVITY)AT:구색AX:이십UN:낱개(UNIT)WT:와트(WATT)YD:야드(YARD)YE:식",
+                              "properties": {}
+                            },
+                            "ordrUtpr": {
+                              "type": "string",
+                              "description": "단가",
+                              "properties": {}
+                            },
+                            "dlvrRegn": {
+                              "type": "string",
+                              "description": "납지",
+                              "properties": {}
+                            },
+                            "dlvrDate": {
+                              "type": "string",
+                              "description": "납기",
+                              "properties": {}
+                            },
+                            "dlvrQnty": {
+                              "type": "string",
+                              "description": "수량",
+                              "properties": {}
+                            },
+                            "dlvrPrrk": {
+                              "type": "string",
+                              "description": "납지순위 3",
+                              "properties": {}
+                            },
+                            "codeVld3": {
+                              "type": "string",
+                              "description": "품보형태",
+                              "properties": {}
+                            },
+                            "apeqCode": {
+                              "type": "string",
+                              "description": "apeqName의 코드",
+                              "properties": {}
+                            },
+                            "miltDivs": {
+                              "type": "string",
+                              "description": "DA 방위사업청MB:육군MD:공군ME 국방전산소MP 해군MV 합동조사단MY 통신사령부MZ 국방부본부",
+                              "properties": {}
+                            },
+                            "codeVld4": {
+                              "type": "string",
+                              "description": "miltDivs의 명칭",
+                              "properties": {}
+                            },
+                            "aprvDate": {
+                              "type": "string",
+                              "description": "승인일자",
+                              "properties": {}
+                            },
+                            "totlAmnt": {
+                              "type": "string",
+                              "description": "금액",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국내 품목명세서",
+        "description": "국내 품목명세서",
+        "operationId": "getDmstcCmpetBidPblancItem",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "demandYear",
+          "description": "국내 경쟁입찰공고 목록 확인(getDmstcCmpetBidPblancList)국내 공개수의협상계획 목록 확인(getDmstcOthbcVltrnNtatPlanList)",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "dcsNo",
+          "description": "국내 경쟁입찰공고 목록 확인(getDmstcCmpetBidPblancList)국내 공개수의협상계획 목록 확인(getDmstcOthbcVltrnNtatPlanList)",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "orntCode",
+          "description": "국내 경쟁입찰공고 목록 확인(getDmstcCmpetBidPblancList)국내 공개수의협상계획 목록 확인(getDmstcOthbcVltrnNtatPlanList)",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "페이지당항목수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getOutnatnCmpetBidPblancItem": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "itemNumb": {
+                              "type": "string",
+                              "description": "항목번호",
+                              "properties": {}
+                            },
+                            "fsc": {
+                              "type": "string",
+                              "description": "군급분류부호",
+                              "properties": {}
+                            },
+                            "niin": {
+                              "type": "string",
+                              "description": "재고번호",
+                              "properties": {}
+                            },
+                            "jeagoNumb": {
+                              "type": "string",
+                              "description": "Fsc  + niin",
+                              "properties": {}
+                            },
+                            "partNumb": {
+                              "type": "string",
+                              "description": "부품번호",
+                              "properties": {}
+                            },
+                            "specNumb": {
+                              "type": "string",
+                              "description": "규격번호",
+                              "properties": {}
+                            },
+                            "bidxUnit": {
+                              "type": "string",
+                              "description": "AB:종AC:건(ACTIVITY)AT:구색AX:이십UN:낱개(UNIT)WT:와트(WATT)YD:야드(YARD)YE:식EA:개",
+                              "properties": {}
+                            },
+                            "bidxUtpr": {
+                              "type": "string",
+                              "description": "지시단가",
+                              "properties": {}
+                            },
+                            "bidxKrnm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "apeqCode": {
+                              "type": "string",
+                              "description": "24132300:선반 그라인딩24132301:선반 그라인딩24132401:리프트,자동차용24132402:4주식 리프트 (소형)24132403:4주식 리프트(대형)24132405:다용도 리프트24132406:리프트, 차량정비용24132407:리프트,자동차용",
+                              "properties": {}
+                            },
+                            "apeqName": {
+                              "type": "string",
+                              "description": "적용장비명",
+                              "properties": {}
+                            },
+                            "dlvrStdt": {
+                              "type": "string",
+                              "description": "납기일자",
+                              "properties": {}
+                            },
+                            "sumBonjo": {
+                              "type": "string",
+                              "description": "본조수량합계",
+                              "properties": {}
+                            },
+                            "sumDanggukche": {
+                              "type": "string",
+                              "description": "당국수량합계",
+                              "properties": {}
+                            },
+                            "sumJanggukche": {
+                              "type": "string",
+                              "description": "장국수량합계",
+                              "properties": {}
+                            },
+                            "amntBonjo": {
+                              "type": "string",
+                              "description": "본조금액합계",
+                              "properties": {}
+                            },
+                            "amntDanggukche": {
+                              "type": "string",
+                              "description": "당국금액합계",
+                              "properties": {}
+                            },
+                            "amntJanggukche": {
+                              "type": "string",
+                              "description": "장국금액합계",
+                              "properties": {}
+                            },
+                            "sumAll": {
+                              "type": "string",
+                              "description": "총수량",
+                              "properties": {}
+                            },
+                            "sumDoll": {
+                              "type": "string",
+                              "description": "총금액합계",
+                              "properties": {}
+                            },
+                            "bidxDate": {
+                              "type": "string",
+                              "description": "입찰일자",
+                              "properties": {}
+                            },
+                            "dgNumb": {
+                              "type": "string",
+                              "description": "구매요청번호",
+                              "properties": {}
+                            },
+                            "inspType": {
+                              "type": "string",
+                              "description": "1:단순품질보증형(I형)2:선택품질보증형(Ⅱ형)3:표준품질보증형(Ⅲ형)4:체계품질보증형(Ⅳ형)5:5형(특수검사)6:소요군검사7:소요군검수8:연구개발A:공급자 1년 보증형태B:공급자 2년 보증형태C:제작자 사후 확인형태D:제작자 사전 확인형태E:표준 품질 보증형태G:설치/통합시험 보증형태H:국제 협정 보증형태",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국외 품목명세서",
+        "description": "국외 품목명세서",
+        "operationId": "getOutnatnCmpetBidPblancItem",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "pblancYear",
+          "description": "국외 경쟁입찰공고 목록 확인(getOutnatnCmpetBidPblancList)",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancNo",
+          "description": "국외 경쟁입찰공고 목록 확인(getOutnatnCmpetBidPblancList)",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pblancOdr",
+          "description": "국외 경쟁입찰공고 목록 확인(getOutnatnCmpetBidPblancList)",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "dcsNo",
+          "description": "국외 경쟁입찰공고 목록 확인(getOutnatnCmpetBidPblancList)",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "groupNo",
+          "description": "국외 경쟁입찰공고 목록 확인(getOutnatnCmpetBidPblancList)",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "getDmstcCmpetBidPblancList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "pblancSeCode": {
+                      "type": "string",
+                      "description": "공고구분코드"
+                    },
+                    "pblancSe": {
+                      "type": "string",
+                      "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…"
+                    },
+                    "demandYear": {
+                      "type": "string",
+                      "description": "요구년도"
+                    },
+                    "pblancDate": {
+                      "type": "string",
+                      "description": "공고일자"
+                    },
+                    "pblancNo": {
+                      "type": "string",
+                      "description": "공고번호"
+                    },
+                    "pblancOdr": {
+                      "type": "string",
+                      "description": "공고차수"
+                    },
+                    "g2bPblancNo": {
+                      "type": "string",
+                      "description": "G2B공고번호"
+                    },
+                    "g2bPblancOdr": {
+                      "type": "string",
+                      "description": "G2B공고차수"
+                    },
+                    "dcsNo": {
+                      "type": "string",
+                      "description": "판단번호"
+                    },
+                    "bidNm": {
+                      "type": "string",
+                      "description": "입찰명"
+                    },
+                    "orntCode": {
+                      "type": "string",
+                      "description": "발주기관코드"
+                    },
+                    "ornt": {
+                      "type": "string",
+                      "description": "발주기관"
+                    },
+                    "prdctnAbltyPresentnClosDt": {
+                      "type": "string",
+                      "description": "생산능력제출마감일시"
+                    },
+                    "bidPartcptRegistClosDt": {
+                      "type": "string",
+                      "description": "입찰참가등록마감일시"
+                    },
+                    "biddocPresentnClosDt": {
+                      "type": "string",
+                      "description": "입찰서제출마감일시"
+                    },
+                    "opengDt": {
+                      "type": "string",
+                      "description": "개찰일시"
+                    },
+                    "excutTyCode": {
+                      "type": "string",
+                      "description": "집행유형코드"
+                    },
+                    "excutTy": {
+                      "type": "string",
+                      "description": "집행유형"
+                    },
+                    "cntrctMth": {
+                      "type": "string",
+                      "description": "계약방법"
+                    },
+                    "bidStle": {
+                      "type": "string",
+                      "description": "입찰형태"
+                    },
+                    "bsisPrdprcApplcAt": {
+                      "type": "string",
+                      "description": "기초예가적용여부"
+                    },
+                    "bsicExpt": {
+                      "type": "string",
+                      "description": "기초예비가격"
+                    },
+                    "bsisPrdprcOthbcAt": {
+                      "type": "string",
+                      "description": "기초예가공개여부"
+                    },
+                    "busiDivs": {
+                      "type": "string",
+                      "description": "물품/용역"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getDmstcCmpetBidPblancDetail_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "item": {
+              "type": "object",
+              "description": "item",
+              "properties": {
+                "pblancOdr": {
+                  "type": "string",
+                  "description": "공고차수"
+                },
+                "pblancDate": {
+                  "type": "string",
+                  "description": "공고일자"
+                },
+                "pblictInstt": {
+                  "type": "string",
+                  "description": "게재기관"
+                },
+                "bidNm": {
+                  "type": "string",
+                  "description": "입찰명"
+                },
+                "excutTy": {
+                  "type": "string",
+                  "description": "집행유형"
+                },
+                "dcsNo": {
+                  "type": "string",
+                  "description": "판단번호"
+                },
+                "ornt": {
+                  "type": "string",
+                  "description": "발주기관"
+                },
+                "bidStle": {
+                  "type": "string",
+                  "description": "일반입찰/전자입찰"
+                },
+                "cntrctMth": {
+                  "type": "string",
+                  "description": "계약방법"
+                },
+                "bidMth": {
+                  "type": "string",
+                  "description": "총액제단가제"
+                },
+                "cntrctKnd": {
+                  "type": "string",
+                  "description": "계약종류"
+                },
+                "sucbidrDecsnMth": {
+                  "type": "string",
+                  "description": "적격심사제/최저가격제"
+                },
+                "budgetAmount": {
+                  "type": "string",
+                  "description": "예산금액"
+                },
+                "bidPartcptRegistClosDt": {
+                  "type": "string",
+                  "description": "입찰참가등록마감일시"
+                },
+                "biddocPresentnClosDt": {
+                  "type": "string",
+                  "description": "입찰서제출마감일시"
+                },
+                "opengDt": {
+                  "type": "string",
+                  "description": "개찰일시"
+                },
+                "bidPlace": {
+                  "type": "string",
+                  "description": "입찰장소"
+                },
+                "bsnsDcMeetngDt": {
+                  "type": "string",
+                  "description": "사업설명회일시"
+                },
+                "bsnsDcMeetngPlace": {
+                  "type": "string",
+                  "description": "사업설명회장소"
+                },
+                "registJdgmnPnttm": {
+                  "type": "string",
+                  "description": "등록심사시점(Y:입찰참가등록 후 등록심사 없이 입찰서제출, N:입찰참가등록  후 등록심사에 확정 된 참여 조달업체만 입찰서 제출가능)"
+                },
+                "bsisPrdprcApplcAt": {
+                  "type": "string",
+                  "description": "적용/미적용"
+                },
+                "g2bPblancNo": {
+                  "type": "string",
+                  "description": "G2B공고번호"
+                },
+                "g2bPblancOdr": {
+                  "type": "string",
+                  "description": "G2B공고차수"
+                },
+                "copertnOutsrcFlflMthd": {
+                  "type": "string",
+                  "description": "분담이행/공동이행/공동[분담]이행/단독"
+                },
+                "compnoEntrpsRsrchTrgetAt": {
+                  "type": "string",
+                  "description": "대상/비대상"
+                },
+                "orgnlbudgtDedt": {
+                  "type": "string",
+                  "description": "본조납기"
+                },
+                "ntndbtDedt": {
+                  "type": "string",
+                  "description": "국채납기"
+                },
+                "chargerNm": {
+                  "type": "string",
+                  "description": "담당자명"
+                },
+                "chargerCttpc": {
+                  "type": "string",
+                  "description": "담당자연락처"
+                },
+                "pblancSe": {
+                  "type": "string",
+                  "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…"
+                },
+                "pblancNo": {
+                  "type": "string",
+                  "description": "공고번호"
+                },
+                "untpcSystemTy": {
+                  "type": "string",
+                  "description": "단가제도유형"
+                },
+                "prdctnAbltyPresentnClosDt": {
+                  "type": "string",
+                  "description": "생산능력제출마감일시"
+                },
+                "prdlstCode": {
+                  "type": "string",
+                  "description": "품목코드"
+                },
+                "prdlstNm": {
+                  "type": "string",
+                  "description": "품목명"
+                },
+                "industClList": {
+                  "type": "string",
+                  "description": "산업분류목록"
+                },
+                "estmPrce": {
+                  "type": "string",
+                  "description": "추정가격"
+                },
+                "asessRtLwlt": {
+                  "type": "string",
+                  "description": "사정률하한"
+                },
+                "asessRtUplmt": {
+                  "type": "string",
+                  "description": "사정률상한"
+                },
+                "scsbidLwltRt": {
+                  "type": "string",
+                  "description": "낙찰하한율"
+                },
+                "lcnsLmttList": {
+                  "type": "string",
+                  "description": "면허제한목록"
+                },
+                "areaLmttList": {
+                  "type": "string",
+                  "description": "지역제한목록"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getDmstcOthbcVltrnNtatPlanList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "demandYear": {
+                      "type": "string",
+                      "description": "요구년도"
+                    },
+                    "prqudoPresentnClosDt": {
+                      "type": "string",
+                      "description": "견적서제출마감일시"
+                    },
+                    "opengDt": {
+                      "type": "string",
+                      "description": "개찰일시"
+                    },
+                    "orntCode": {
+                      "type": "string",
+                      "description": "발주기관코드"
+                    },
+                    "dcsNo": {
+                      "type": "string",
+                      "description": "판단번호"
+                    },
+                    "iemNo": {
+                      "type": "string",
+                      "description": "항목번호"
+                    },
+                    "pblancOdr": {
+                      "type": "string",
+                      "description": "공고차수"
+                    },
+                    "ntatPlanDate": {
+                      "type": "string",
+                      "description": "협상계획일자"
+                    },
+                    "pblancNo": {
+                      "type": "string",
+                      "description": "공고번호"
+                    },
+                    "othbcNtatNm": {
+                      "type": "string",
+                      "description": "공개협상명"
+                    },
+                    "ornt": {
+                      "type": "string",
+                      "description": "발주기관"
+                    },
+                    "bidMth": {
+                      "type": "string",
+                      "description": "총액제단가제"
+                    },
+                    "budgetAmount": {
+                      "type": "string",
+                      "description": "예산금액"
+                    },
+                    "progrsSttus": {
+                      "type": "string",
+                      "description": "진행상태"
+                    },
+                    "bsicExpt": {
+                      "type": "string",
+                      "description": "기초예비가격"
+                    },
+                    "bsisPrdprcApplcAt": {
+                      "type": "string",
+                      "description": "적용/미적용"
+                    },
+                    "busiDivs": {
+                      "type": "string",
+                      "description": "물품/용역"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getDmstcOthbcVltrnNtatPlanDetail_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "item": {
+              "type": "object",
+              "description": "item",
+              "properties": {
+                "bsisPreparPc": {
+                  "type": "string",
+                  "description": "기초예비가격"
+                },
+                "asessRtLwlt": {
+                  "type": "string",
+                  "description": "사정률하한"
+                },
+                "asessRtUplmt": {
+                  "type": "string",
+                  "description": "사정률상한"
+                },
+                "scsbidLwltRt": {
+                  "type": "string",
+                  "description": "낙찰하한율"
+                },
+                "chargerNm": {
+                  "type": "string",
+                  "description": "담당자명"
+                },
+                "chargerCttpc": {
+                  "type": "string",
+                  "description": "담당자연락처"
+                },
+                "demandYear": {
+                  "type": "string",
+                  "description": "요구년도"
+                },
+                "pblancNo": {
+                  "type": "string",
+                  "description": "공고번호"
+                },
+                "pblancOdr": {
+                  "type": "string",
+                  "description": "공고차수"
+                },
+                "ornt": {
+                  "type": "string",
+                  "description": "발주기관"
+                },
+                "othbcNtatNm": {
+                  "type": "string",
+                  "description": "공개협상명"
+                },
+                "dcsNo": {
+                  "type": "string",
+                  "description": "판단번호"
+                },
+                "cntrctMth": {
+                  "type": "string",
+                  "description": "계약방법"
+                },
+                "budgetAmount": {
+                  "type": "string",
+                  "description": "예산금액"
+                },
+                "sucbidrDecsnMth": {
+                  "type": "string",
+                  "description": "적격심사제/최저가격제"
+                },
+                "bidMth": {
+                  "type": "string",
+                  "description": "총액제단가제"
+                },
+                "bsisPrdprcApplcAt": {
+                  "type": "string",
+                  "description": "적용/미적용"
+                },
+                "prqudoPresentnClosDt": {
+                  "type": "string",
+                  "description": "견적서제출마감일시"
+                },
+                "othbcNtatPlace": {
+                  "type": "string",
+                  "description": "공개협상장소"
+                },
+                "ntatStle": {
+                  "type": "string",
+                  "description": "일반협상/전자협상"
+                },
+                "opengDt": {
+                  "type": "string",
+                  "description": "개찰일시"
+                },
+                "areaLmttList": {
+                  "type": "string",
+                  "description": "지역제한목록"
+                },
+                "estmPrce": {
+                  "type": "string",
+                  "description": "추정가격"
+                },
+                "lcnsLmttList": {
+                  "type": "string",
+                  "description": "면허제한목록"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getOutnatnCmpetBidPblancList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "pblancSe": {
+                      "type": "string",
+                      "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…"
+                    },
+                    "pblancYear": {
+                      "type": "string",
+                      "description": "공고년도"
+                    },
+                    "pblancNo": {
+                      "type": "string",
+                      "description": "공고번호"
+                    },
+                    "pblancOdr": {
+                      "type": "string",
+                      "description": "공고차수"
+                    },
+                    "g2bPblancNo": {
+                      "type": "string",
+                      "description": "G2B공고번호"
+                    },
+                    "g2bPblancOdr": {
+                      "type": "string",
+                      "description": "G2B공고차수"
+                    },
+                    "dcsNo": {
+                      "type": "string",
+                      "description": "판단번호"
+                    },
+                    "groupNo": {
+                      "type": "string",
+                      "description": "그룹번호"
+                    },
+                    "bsnsNm": {
+                      "type": "string",
+                      "description": "사업명"
+                    },
+                    "prdlstCo": {
+                      "type": "string",
+                      "description": "품목수"
+                    },
+                    "bidMedia": {
+                      "type": "string",
+                      "description": "서류입찰/전자입찰…"
+                    },
+                    "cntrctMth": {
+                      "type": "string",
+                      "description": "계약방법"
+                    },
+                    "bidRegistClosDt": {
+                      "type": "string",
+                      "description": "입찰등록마감일시"
+                    },
+                    "biddocPresentnClosDt": {
+                      "type": "string",
+                      "description": "입찰서제출마감일시"
+                    },
+                    "opengDt": {
+                      "type": "string",
+                      "description": "개찰일시"
+                    },
+                    "pblancCanclAt": {
+                      "type": "string",
+                      "description": "Y : 취소"
+                    },
+                    "purchsRequstNo": {
+                      "type": "string",
+                      "description": "구매요청번호"
+                    },
+                    "busiDivs": {
+                      "type": "string",
+                      "description": "물품/용역"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getOutnatnCmpetBidPblancDetail_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "item": {
+              "type": "object",
+              "description": "item",
+              "properties": {
+                "groupNo": {
+                  "type": "string",
+                  "description": "그룹번호"
+                },
+                "bsnsNm": {
+                  "type": "string",
+                  "description": "사업명"
+                },
+                "prdlstCo": {
+                  "type": "string",
+                  "description": "품목수"
+                },
+                "bidMedia": {
+                  "type": "string",
+                  "description": "서류입찰/전자입찰…"
+                },
+                "pblancSe": {
+                  "type": "string",
+                  "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…"
+                },
+                "cntrctMth": {
+                  "type": "string",
+                  "description": "계약방법"
+                },
+                "bidMth": {
+                  "type": "string",
+                  "description": "총액제단가제"
+                },
+                "bidRegistClosDt": {
+                  "type": "string",
+                  "description": "입찰등록마감일시"
+                },
+                "biddocPresentnClosDt": {
+                  "type": "string",
+                  "description": "입찰서제출마감일시"
+                },
+                "opengDt": {
+                  "type": "string",
+                  "description": "개찰일시"
+                },
+                "ehgtApplcDate": {
+                  "type": "string",
+                  "description": "환율적용일자"
+                },
+                "ornt": {
+                  "type": "string",
+                  "description": "발주기관"
+                },
+                "chargerNm": {
+                  "type": "string",
+                  "description": "담당자명"
+                },
+                "totAmount": {
+                  "type": "string",
+                  "description": "총금액"
+                },
+                "pblancYear": {
+                  "type": "string",
+                  "description": "공고년도"
+                },
+                "pblancNo": {
+                  "type": "string",
+                  "description": "공고번호"
+                },
+                "pblancOdr": {
+                  "type": "string",
+                  "description": "공고차수"
+                },
+                "pblancDate": {
+                  "type": "string",
+                  "description": "공고일자"
+                },
+                "dcsNo": {
+                  "type": "string",
+                  "description": "판단번호"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getFcltyCmpetBidPblancList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "pblancYear": {
+                      "type": "string",
+                      "description": "공고년도"
+                    },
+                    "pblancDate": {
+                      "type": "string",
+                      "description": "공고일자"
+                    },
+                    "pblancSeCode": {
+                      "type": "string",
+                      "description": "공고구분코드"
+                    },
+                    "pblancSe": {
+                      "type": "string",
+                      "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…"
+                    },
+                    "pblancNo": {
+                      "type": "string",
+                      "description": "공고번호"
+                    },
+                    "pblancOdr": {
+                      "type": "string",
+                      "description": "공고차수"
+                    },
+                    "g2bPblancNo": {
+                      "type": "string",
+                      "description": "G2B공고번호"
+                    },
+                    "g2bPblancOdr": {
+                      "type": "string",
+                      "description": "G2B공고차수"
+                    },
+                    "cntrwkNo": {
+                      "type": "string",
+                      "description": "공사번호"
+                    },
+                    "cntrwkNm": {
+                      "type": "string",
+                      "description": "공사명"
+                    },
+                    "ornt": {
+                      "type": "string",
+                      "description": "발주기관"
+                    },
+                    "orntCode": {
+                      "type": "string",
+                      "description": "발주기관코드"
+                    },
+                    "bidPartcptRegistClosDt": {
+                      "type": "string",
+                      "description": "입찰참가등록마감일시"
+                    },
+                    "biddocPresentnClosDt": {
+                      "type": "string",
+                      "description": "입찰서제출마감일시"
+                    },
+                    "opengDt": {
+                      "type": "string",
+                      "description": "개찰일시"
+                    },
+                    "cntrctMth": {
+                      "type": "string",
+                      "description": "계약방법"
+                    },
+                    "bidStle": {
+                      "type": "string",
+                      "description": "일반입찰/전자입찰"
+                    },
+                    "baseAmnt": {
+                      "type": "string",
+                      "description": "기초예비가격"
+                    },
+                    "bsisPrdprcApplcAt": {
+                      "type": "string",
+                      "description": "적용/미적용"
+                    },
+                    "busiDivs": {
+                      "type": "string",
+                      "description": "공사/용역"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getFcltyCmpetBidPblancDetail_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "item": {
+              "type": "object",
+              "description": "item",
+              "properties": {
+                "pblancSe": {
+                  "type": "string",
+                  "description": "정상공고/긴급공고/정정공고/취소공고/연기공고…"
+                },
+                "pblancNo": {
+                  "type": "string",
+                  "description": "공고번호"
+                },
+                "pblancOdr": {
+                  "type": "string",
+                  "description": "공고차수"
+                },
+                "pblancDate": {
+                  "type": "string",
+                  "description": "공고일자"
+                },
+                "pblictInstt": {
+                  "type": "string",
+                  "description": "게재기관"
+                },
+                "cntrwkNm": {
+                  "type": "string",
+                  "description": "공사명"
+                },
+                "cntrwkSe": {
+                  "type": "string",
+                  "description": "공사구분"
+                },
+                "cntrwkNo": {
+                  "type": "string",
+                  "description": "공사번호"
+                },
+                "ornt": {
+                  "type": "string",
+                  "description": "발주기관"
+                },
+                "bidStle": {
+                  "type": "string",
+                  "description": "일반입찰/전자입찰"
+                },
+                "budgetAmount": {
+                  "type": "string",
+                  "description": "예산금액"
+                },
+                "lc": {
+                  "type": "string",
+                  "description": "위치"
+                },
+                "cntrctMth": {
+                  "type": "string",
+                  "description": "계약방법"
+                },
+                "bidMth": {
+                  "type": "string",
+                  "description": "총액제단가제"
+                },
+                "bsisPrdprcApplcAt": {
+                  "type": "string",
+                  "description": "적용/미적용"
+                },
+                "preaudtTrgetAt": {
+                  "type": "string",
+                  "description": "대상/비대상"
+                },
+                "sucbidrDecsnMth": {
+                  "type": "string",
+                  "description": "적격심사제/최저가격제"
+                },
+                "copertnOutsrcFlflMthd": {
+                  "type": "string",
+                  "description": "분담이행/공동이행/공동[분담]이행/단독"
+                },
+                "bidPartcptReqstClosDt": {
+                  "type": "string",
+                  "description": "입찰참가신청마감일시"
+                },
+                "biddocPresentnClosDt": {
+                  "type": "string",
+                  "description": "입찰서제출마감일시"
+                },
+                "opengDt": {
+                  "type": "string",
+                  "description": "개찰일시"
+                },
+                "bidPlace": {
+                  "type": "string",
+                  "description": "입찰장소"
+                },
+                "g2bPblancNo": {
+                  "type": "string",
+                  "description": "G2B공고번호"
+                },
+                "g2bPblancOdr": {
+                  "type": "string",
+                  "description": "G2B공고차수"
+                },
+                "registJdgmnPnttm": {
+                  "type": "string",
+                  "description": "등록심사시점(Y:입찰참가등록 후 등록심사 없이 입찰서제출, N:입찰참가등록  후 등록심사에 확정 된 참여 조달업체만 입찰서 제출가능)"
+                },
+                "chargerNm": {
+                  "type": "string",
+                  "description": "담당자명"
+                },
+                "chargerCttpc": {
+                  "type": "string",
+                  "description": "담당자연락처"
+                },
+                "sptDcMeetngDt": {
+                  "type": "string",
+                  "description": "현장설명회일시"
+                },
+                "sptDcMeetngPlace": {
+                  "type": "string",
+                  "description": "현장설명회장소"
+                },
+                "areaLmttList": {
+                  "type": "string",
+                  "description": "지역제한목록"
+                },
+                "lcnsLmttList": {
+                  "type": "string",
+                  "description": "면허제한목록"
+                },
+                "estmPrce": {
+                  "type": "string",
+                  "description": "추정가격"
+                },
+                "asessRtLwlt": {
+                  "type": "string",
+                  "description": "사정률하한"
+                },
+                "asessRtUplmt": {
+                  "type": "string",
+                  "description": "사정률상한"
+                },
+                "scsbidLwltRt": {
+                  "type": "string",
+                  "description": "낙찰하한율"
+                },
+                "cobaAmnt": {
+                  "type": "string",
+                  "description": "평가기준금액"
+                },
+                "baseEnam": {
+                  "type": "string",
+                  "description": "토목기초금액"
+                },
+                "baseCoam": {
+                  "type": "string",
+                  "description": "건축기초금액"
+                },
+                "inheAmnt": {
+                  "type": "string",
+                  "description": "국민건강보험료"
+                },
+                "inanAmnt": {
+                  "type": "string",
+                  "description": "국민연금보험료"
+                },
+                "laboRate": {
+                  "type": "string",
+                  "description": "노무기준율"
+                },
+                "etctRate": {
+                  "type": "string",
+                  "description": "기타경비기준율"
+                },
+                "nomlRate": {
+                  "type": "string",
+                  "description": "일반관리비기준율"
+                },
+                "protRate": {
+                  "type": "string",
+                  "description": "이용기준율"
+                },
+                "diffCoef": {
+                  "type": "string",
+                  "description": "적용난이도계수"
+                },
+                "treaAmnt": {
+                  "type": "string",
+                  "description": "요양보험료"
+                },
+                "safeAmnt": {
+                  "type": "string",
+                  "description": "산업안전보건관리비"
+                },
+                "safeCost": {
+                  "type": "string",
+                  "description": "안전관리비"
+                },
+                "retiFund": {
+                  "type": "string",
+                  "description": "퇴직급여충당금"
+                },
+                "retiDedu": {
+                  "type": "string",
+                  "description": "퇴직공제부금"
+                },
+                "mateCost": {
+                  "type": "string",
+                  "description": "재료비"
+                },
+                "laboCost": {
+                  "type": "string",
+                  "description": "노무비"
+                },
+                "geneCost": {
+                  "type": "string",
+                  "description": "경비"
+                },
+                "vtaxCost": {
+                  "type": "string",
+                  "description": "부가가치세"
+                },
+                "quasCost": {
+                  "type": "string",
+                  "description": "품질관리비"
+                },
+                "cntrwkPd": {
+                  "type": "string",
+                  "description": "공사기간"
+                },
+                "cntrwkSumry": {
+                  "type": "string",
+                  "description": "공사개요"
+                },
+                "preaudtClosDt": {
+                  "type": "string",
+                  "description": "사전심사마감일시"
+                },
+                "scale": {
+                  "type": "string",
+                  "description": "규모"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getFcltyOthbcVltrnNtatPlanList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "prqudoPresentnClosDt": {
+                      "type": "string",
+                      "description": "견적서제출마감일시"
+                    },
+                    "opengDt": {
+                      "type": "string",
+                      "description": "개찰일시"
+                    },
+                    "cntrwkNo": {
+                      "type": "string",
+                      "description": "공사번호"
+                    },
+                    "pblancNo": {
+                      "type": "string",
+                      "description": "공고번호"
+                    },
+                    "pblancOdr": {
+                      "type": "string",
+                      "description": "차수"
+                    },
+                    "cntrwkNm": {
+                      "type": "string",
+                      "description": "공개협상건명"
+                    },
+                    "ornt": {
+                      "type": "string",
+                      "description": "발주기관"
+                    },
+                    "orntCode": {
+                      "type": "string",
+                      "description": "발주기관코드"
+                    },
+                    "budgetAmount": {
+                      "type": "string",
+                      "description": "예산금액"
+                    },
+                    "bidMth": {
+                      "type": "string",
+                      "description": "입찰방법"
+                    },
+                    "progrsSttus": {
+                      "type": "string",
+                      "description": "진행상태"
+                    },
+                    "baseAmnt": {
+                      "type": "string",
+                      "description": "기초예비가격"
+                    },
+                    "ntatPlanDate": {
+                      "type": "string",
+                      "description": "협상계획일자"
+                    },
+                    "busiDivs": {
+                      "type": "string",
+                      "description": "공사/용역"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getFcltyOthbcVltrnNtatPlanDetail_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "item": {
+              "type": "object",
+              "description": "item",
+              "properties": {
+                "bidMth": {
+                  "type": "string",
+                  "description": "총액제단가제"
+                },
+                "bsisPrdprcApplcAt": {
+                  "type": "string",
+                  "description": "적용/미적용"
+                },
+                "prqudoPresentnClosDt": {
+                  "type": "string",
+                  "description": "견적서제출마감일시"
+                },
+                "ntatPlace": {
+                  "type": "string",
+                  "description": "협상장소"
+                },
+                "ntatStle": {
+                  "type": "string",
+                  "description": "일반협상/전자협상"
+                },
+                "opengDt": {
+                  "type": "string",
+                  "description": "개찰일시"
+                },
+                "bsisPreparPc": {
+                  "type": "string",
+                  "description": "기초예비가격"
+                },
+                "asessRtLwlt": {
+                  "type": "string",
+                  "description": "사정률하한"
+                },
+                "asessRtUplmt": {
+                  "type": "string",
+                  "description": "사정률상한"
+                },
+                "scsbidLwltRt": {
+                  "type": "string",
+                  "description": "낙찰하한율"
+                },
+                "chargerNm": {
+                  "type": "string",
+                  "description": "담당자명"
+                },
+                "chargerCttpc": {
+                  "type": "string",
+                  "description": "담당자연락처"
+                },
+                "areaLmttList": {
+                  "type": "string",
+                  "description": "지역제한목록"
+                },
+                "lcnsLmttList": {
+                  "type": "string",
+                  "description": "[면허코드] 면허명^[면허코드] 면허명"
+                },
+                "demandYear": {
+                  "type": "string",
+                  "description": "요구년도"
+                },
+                "pblancNo": {
+                  "type": "string",
+                  "description": "공고번호"
+                },
+                "pblancOdr": {
+                  "type": "string",
+                  "description": "공고차수"
+                },
+                "ornt": {
+                  "type": "string",
+                  "description": "발주기관"
+                },
+                "cntrwkNm": {
+                  "type": "string",
+                  "description": "공사명"
+                },
+                "cntrwkSe": {
+                  "type": "string",
+                  "description": "공사구분"
+                },
+                "cntrwkNo": {
+                  "type": "string",
+                  "description": "공사번호"
+                },
+                "cntrctMth": {
+                  "type": "string",
+                  "description": "계약방법"
+                },
+                "bidStle": {
+                  "type": "string",
+                  "description": "일반입찰/전자입찰"
+                },
+                "budgetAmount": {
+                  "type": "string",
+                  "description": "예산금액"
+                },
+                "lc": {
+                  "type": "string",
+                  "description": "위치"
+                },
+                "sucbidrDecsnMth": {
+                  "type": "string",
+                  "description": "적격심사제/최저가격제"
+                },
+                "cntrwkSumry": {
+                  "type": "string",
+                  "description": "공사개요"
+                },
+                "scale": {
+                  "type": "string",
+                  "description": "규모"
+                },
+                "cntrwkPd": {
+                  "type": "string",
+                  "description": "공사기간"
+                },
+                "estmPrce": {
+                  "type": "string",
+                  "description": "추정가격"
+                },
+                "cobaAmnt": {
+                  "type": "string",
+                  "description": "평가기준금액"
+                },
+                "baseEnam": {
+                  "type": "string",
+                  "description": "토목기초금액"
+                },
+                "baseCoam": {
+                  "type": "string",
+                  "description": "건축기초금액"
+                },
+                "inheAmnt": {
+                  "type": "string",
+                  "description": "국민건강보험료"
+                },
+                "inanAmnt": {
+                  "type": "string",
+                  "description": "국민연금보험료"
+                },
+                "laboRate": {
+                  "type": "string",
+                  "description": "노무기준율"
+                },
+                "etctRate": {
+                  "type": "string",
+                  "description": "기타경비기준율"
+                },
+                "nomlRate": {
+                  "type": "string",
+                  "description": "일반관리비기준율"
+                },
+                "protRate": {
+                  "type": "string",
+                  "description": "이용기준율"
+                },
+                "diffCoef": {
+                  "type": "string",
+                  "description": "적용난이도계수"
+                },
+                "treaAmnt": {
+                  "type": "string",
+                  "description": "요양보험료"
+                },
+                "safeAmnt": {
+                  "type": "string",
+                  "description": "산업안전보건관리비"
+                },
+                "safeCost": {
+                  "type": "string",
+                  "description": "안전관리비"
+                },
+                "retiFund": {
+                  "type": "string",
+                  "description": "퇴직급여충당금"
+                },
+                "retiDedu": {
+                  "type": "string",
+                  "description": "퇴직공제부금"
+                },
+                "mateCost": {
+                  "type": "string",
+                  "description": "재료비"
+                },
+                "laboCost": {
+                  "type": "string",
+                  "description": "노무비"
+                },
+                "geneCost": {
+                  "type": "string",
+                  "description": "경비"
+                },
+                "vtaxCost": {
+                  "type": "string",
+                  "description": "부가가치세"
+                },
+                "quasCost": {
+                  "type": "string",
+                  "description": "품질관리비"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getDmstcCmpetBidPblancItem_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "dmstItnb": {
+                      "type": "string",
+                      "description": "항목번호"
+                    },
+                    "prcmRnum": {
+                      "type": "string",
+                      "description": "조달요구번호"
+                    },
+                    "fsc": {
+                      "type": "string",
+                      "description": "군급"
+                    },
+                    "niin": {
+                      "type": "string",
+                      "description": "국가품목식별번호"
+                    },
+                    "stnbTycd": {
+                      "type": "string",
+                      "description": "재고번호형태부호"
+                    },
+                    "itemName": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "apeqName": {
+                      "type": "string",
+                      "description": "apeqCode의 명"
+                    },
+                    "specNumb": {
+                      "type": "string",
+                      "description": "규격번호"
+                    },
+                    "specClas": {
+                      "type": "string",
+                      "description": "A:KDS(국방/표준)B:KDS(국방/정식)C:KDC(국방/약식)"
+                    },
+                    "codeVld1": {
+                      "type": "string",
+                      "description": "규격종류명"
+                    },
+                    "partNumb": {
+                      "type": "string",
+                      "description": "부품번호"
+                    },
+                    "refcNumb": {
+                      "type": "string",
+                      "description": "참조번호"
+                    },
+                    "bugtDivs": {
+                      "type": "string",
+                      "description": "01:추가경정예산10:일반예산A1:일반예산B1:국고채무부담C1:사고이월U0:세입/세출 외 현금U1:계속소요비"
+                    },
+                    "codeVld2": {
+                      "type": "string",
+                      "description": "예산구분명"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "AB:종AC:건(ACTIVITY)AT:구색AX:이십UN:낱개(UNIT)WT:와트(WATT)YD:야드(YARD)YE:식"
+                    },
+                    "ordrUtpr": {
+                      "type": "string",
+                      "description": "단가"
+                    },
+                    "dlvrRegn": {
+                      "type": "string",
+                      "description": "납지"
+                    },
+                    "dlvrDate": {
+                      "type": "string",
+                      "description": "납기"
+                    },
+                    "dlvrQnty": {
+                      "type": "string",
+                      "description": "수량"
+                    },
+                    "dlvrPrrk": {
+                      "type": "string",
+                      "description": "납지순위 3"
+                    },
+                    "codeVld3": {
+                      "type": "string",
+                      "description": "품보형태"
+                    },
+                    "apeqCode": {
+                      "type": "string",
+                      "description": "apeqName의 코드"
+                    },
+                    "miltDivs": {
+                      "type": "string",
+                      "description": "DA 방위사업청MB:육군MD:공군ME 국방전산소MP 해군MV 합동조사단MY 통신사령부MZ 국방부본부"
+                    },
+                    "codeVld4": {
+                      "type": "string",
+                      "description": "miltDivs의 명칭"
+                    },
+                    "aprvDate": {
+                      "type": "string",
+                      "description": "승인일자"
+                    },
+                    "totlAmnt": {
+                      "type": "string",
+                      "description": "금액"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getOutnatnCmpetBidPblancItem_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "itemNumb": {
+                      "type": "string",
+                      "description": "항목번호"
+                    },
+                    "fsc": {
+                      "type": "string",
+                      "description": "군급분류부호"
+                    },
+                    "niin": {
+                      "type": "string",
+                      "description": "재고번호"
+                    },
+                    "jeagoNumb": {
+                      "type": "string",
+                      "description": "Fsc  + niin"
+                    },
+                    "partNumb": {
+                      "type": "string",
+                      "description": "부품번호"
+                    },
+                    "specNumb": {
+                      "type": "string",
+                      "description": "규격번호"
+                    },
+                    "bidxUnit": {
+                      "type": "string",
+                      "description": "AB:종AC:건(ACTIVITY)AT:구색AX:이십UN:낱개(UNIT)WT:와트(WATT)YD:야드(YARD)YE:식EA:개"
+                    },
+                    "bidxUtpr": {
+                      "type": "string",
+                      "description": "지시단가"
+                    },
+                    "bidxKrnm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "apeqCode": {
+                      "type": "string",
+                      "description": "24132300:선반 그라인딩24132301:선반 그라인딩24132401:리프트,자동차용24132402:4주식 리프트 (소형)24132403:4주식 리프트(대형)24132405:다용도 리프트24132406:리프트, 차량정비용24132407:리프트,자동차용"
+                    },
+                    "apeqName": {
+                      "type": "string",
+                      "description": "적용장비명"
+                    },
+                    "dlvrStdt": {
+                      "type": "string",
+                      "description": "납기일자"
+                    },
+                    "sumBonjo": {
+                      "type": "string",
+                      "description": "본조수량합계"
+                    },
+                    "sumDanggukche": {
+                      "type": "string",
+                      "description": "당국수량합계"
+                    },
+                    "sumJanggukche": {
+                      "type": "string",
+                      "description": "장국수량합계"
+                    },
+                    "amntBonjo": {
+                      "type": "string",
+                      "description": "본조금액합계"
+                    },
+                    "amntDanggukche": {
+                      "type": "string",
+                      "description": "당국금액합계"
+                    },
+                    "amntJanggukche": {
+                      "type": "string",
+                      "description": "장국금액합계"
+                    },
+                    "sumAll": {
+                      "type": "string",
+                      "description": "총수량"
+                    },
+                    "sumDoll": {
+                      "type": "string",
+                      "description": "총금액합계"
+                    },
+                    "bidxDate": {
+                      "type": "string",
+                      "description": "입찰일자"
+                    },
+                    "dgNumb": {
+                      "type": "string",
+                      "description": "구매요청번호"
+                    },
+                    "inspType": {
+                      "type": "string",
+                      "description": "1:단순품질보증형(I형)2:선택품질보증형(Ⅱ형)3:표준품질보증형(Ⅲ형)4:체계품질보증형(Ⅳ형)5:5형(특수검사)6:소요군검사7:소요군검수8:연구개발A:공급자 1년 보증형태B:공급자 2년 보증형태C:제작자 사후 확인형태D:제작자 사전 확인형태E:표준 품질 보증형태G:설치/통합시험 보증형태H:국제 협정 보증형태"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

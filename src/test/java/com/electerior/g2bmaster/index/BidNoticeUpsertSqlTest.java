@@ -76,8 +76,9 @@ class BidNoticeUpsertSqlTest {
 
 		assertThat(columns.split(",")).hasSameSizeAs(values.split(","));
 		// ERD 22개 중 ai_summary(적재 제외)와 updated_at(NOW())을 뺀 20개
-		// + 공고명 1개 + 기관명 2개(V8 — dm_institution 조인이 성립하지 않아 색인에 담는다).
-		assertThat(columns.split(",")).hasSize(23);
+		// + 공고명 1개 + 기관명 2개(V8 — dm_institution 조인이 성립하지 않아 색인에 담는다)
+		// + V13 의 소스 차원 4개(source, source_ext, g2b_pblanc_no, g2b_pblanc_odr).
+		assertThat(columns.split(",")).hasSize(27);
 	}
 
 	@Test

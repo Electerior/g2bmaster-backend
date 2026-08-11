@@ -1,0 +1,492 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "조달청에서 고시하는 물품에 대한 내용연수 정보 물품분류번호,내용년수,등록일자,종료일자,변경사유를 제공하는 조달청물품관리서비스이며, 조회하고자 하는 물품분류번호시작번호.조회하고자 하는 물품분류번호 종료번호를 통해 데이터 조회 제공\n\n조달청 고시 '내용연수' 규정에 따른 내용연수표 관련 내용에 대한 데이터 조회를 제공합니다.\n※ 별도 조건을 설정하지 않는 경우 전체 데이터가 제공됩니다.\n※ 모든 물품분류번호에 내용연수 정보가 반드시 존재하는 것은 아니며 조달청 고시 내용연수 규정을 참고하여 주시기 바랍니다.",
+    "version": "1.0.0",
+    "title": "조달청_물품관리정보서비스"
+  },
+  "host": "apis.data.go.kr/1230000/ao/PrdctMngInfoService",
+  "basePath": "",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/getPrdctClsfcNoUslfsvc": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "endDate": {
+                              "type": "string",
+                              "description": "종료일자",
+                              "properties": {}
+                            },
+                            "chgRsn": {
+                              "type": "string",
+                              "description": "변경사유",
+                              "properties": {}
+                            },
+                            "prdctClsfcNo": {
+                              "type": "string",
+                              "description": "물품분류번호",
+                              "properties": {}
+                            },
+                            "prdctClsfcNoNm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "uslfsvc": {
+                              "type": "string",
+                              "description": "내용년수",
+                              "properties": {}
+                            },
+                            "rgstDate": {
+                              "type": "string",
+                              "description": "등록일자",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "물품분류번호별 내용연수조회",
+        "description": "조달청에서 고시하는 물품분류번호별 내용연수(service life, 견적된 가능 연수)를 제공하는 오퍼레이션으로 검색조건(물품분류번호시작번호, 물품분류번호종료번호, 품명)을 입력하면 물품분류번호, 품명, 내용년수, 등록일자 등이 조회된다 ▶ 조건 입력을 하지 않을 경우 전체 조회",
+        "operationId": "getPrdctClsfcNoUslfsvc",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNoBgnNo",
+          "description": "물품분류번호시작번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNoEndNo",
+          "description": "물품분류번호종료번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNoNm",
+          "description": "품명 (샘플예시: ﻿전동드릴)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "getPrdctClsfcNoUslfsvc_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "endDate": {
+                      "type": "string",
+                      "description": "종료일자"
+                    },
+                    "chgRsn": {
+                      "type": "string",
+                      "description": "변경사유"
+                    },
+                    "prdctClsfcNo": {
+                      "type": "string",
+                      "description": "물품분류번호"
+                    },
+                    "prdctClsfcNoNm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "uslfsvc": {
+                      "type": "string",
+                      "description": "내용년수"
+                    },
+                    "rgstDate": {
+                      "type": "string",
+                      "description": "등록일자"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    }
+  },
+  "swaggerOprtinVOs": [
+    {
+      "oprtinUrl": "https://nopenapi.g2b.go.kr/ao/PrdctMngInfoService/getPrdctClsfcNoUslfsvc",
+      "oprtinNm": "물품분류번호별 내용연수조회",
+      "oprtinDc": "조달청에서 고시하는 물품분류번호별 내용연수(service life, 견적된 가능 연수)를 제공하는 오퍼레이션으로 검색조건(물품분류번호시작번호, 물품분류번호종료번호, 품명)을 입력하면 물품분류번호, 품명, 내용년수, 등록일자 등이 조회된다 ▶ 조건 입력을 하지 않을 경우 전체 조회",
+      "gwSvcNm": "getPrdctClsfcNoUslfsvc",
+      "operationId": "getPrdctClsfcNoUslfsvc",
+      "publicDataTyDetailCode": "PRDE02",
+      "reqList": [
+        {
+          "paramtrNm": "serviceKey",
+          "paramtrDc": "공공데이터포털에서 받은 인증키",
+          "paramtrBassValue": "-",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "pageNo",
+          "paramtrDc": "페이지번호",
+          "paramtrBassValue": "1",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "numOfRows",
+          "paramtrDc": "한 페이지 결과 수",
+          "paramtrBassValue": "10",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "prdctClsfcNoBgnNo",
+          "paramtrDc": "물품분류번호시작번호",
+          "paramtrBassValue": "27112703",
+          "paramtrTy": "string",
+          "paramtrDivision": "옵션",
+          "ck": true
+        },
+        {
+          "paramtrNm": "prdctClsfcNoEndNo",
+          "paramtrDc": "물품분류번호종료번호",
+          "paramtrBassValue": "27112703",
+          "paramtrTy": "string",
+          "paramtrDivision": "옵션",
+          "ck": true
+        },
+        {
+          "paramtrNm": "prdctClsfcNoNm",
+          "paramtrDc": "품명 (샘플예시: ﻿전동드릴)",
+          "paramtrBassValue": "",
+          "paramtrTy": "string",
+          "paramtrDivision": "옵션",
+          "ck": true
+        },
+        {
+          "paramtrNm": "type",
+          "paramtrDc": "타입",
+          "paramtrBassValue": "json",
+          "paramtrTy": "string",
+          "paramtrDivision": "옵션",
+          "ck": true
+        }
+      ],
+      "resList": [
+        {
+          "paramtrNm": "header",
+          "paramtrDc": "header",
+          "arrayYn": "N",
+          "paramtrDefNm": "#/definitions/header",
+          "subDefNm": "header",
+          "paramtrTy": "object",
+          "paramtrDivision": "필수",
+          "ck": true,
+          "subParam": [
+            {
+              "paramtrNm": "resultMsg",
+              "paramtrDc": "결과메세지",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            },
+            {
+              "paramtrNm": "resultCode",
+              "paramtrDc": "결과코드",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            }
+          ]
+        },
+        {
+          "paramtrNm": "body",
+          "paramtrDc": "body",
+          "arrayYn": "N",
+          "paramtrDefNm": "#/definitions/body",
+          "subDefNm": "body",
+          "paramtrTy": "object",
+          "paramtrDivision": "필수",
+          "ck": true,
+          "subParam": [
+            {
+              "paramtrNm": "items",
+              "paramtrDc": "items",
+              "arrayYn": "N",
+              "paramtrDefNm": "#/definitions/items",
+              "subDefNm": "items",
+              "paramtrTy": "object",
+              "paramtrDivision": "필수",
+              "ck": true,
+              "subParam": [
+                {
+                  "paramtrNm": "item",
+                  "paramtrDc": "item",
+                  "arrayYn": "N",
+                  "paramtrDefNm": "#/definitions/item",
+                  "subDefNm": "item",
+                  "paramtrTy": "object",
+                  "paramtrDivision": "옵션",
+                  "ck": true,
+                  "subParam": [
+                    {
+                      "paramtrNm": "endDate",
+                      "paramtrDc": "종료일자",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "chgRsn",
+                      "paramtrDc": "변경사유",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "prdctClsfcNo",
+                      "paramtrDc": "물품분류번호",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "prdctClsfcNoNm",
+                      "paramtrDc": "품명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "uslfsvc",
+                      "paramtrDc": "내용년수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "rgstDate",
+                      "paramtrDc": "등록일자",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "paramtrNm": "totalCount",
+              "paramtrDc": "전체 결과 수",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            },
+            {
+              "paramtrNm": "numOfRows",
+              "paramtrDc": "한 페이지 결과 수",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            },
+            {
+              "paramtrNm": "pageNo",
+              "paramtrDc": "페이지번호",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

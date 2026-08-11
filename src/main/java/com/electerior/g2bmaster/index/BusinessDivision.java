@@ -16,7 +16,9 @@ public enum BusinessDivision {
 	물품,
 	용역,
 	공사,
-	외자;
+	외자,
+	/** 누리장터 전용(민간기타). V13 에서 ENUM 말미에 추가됐다 — 순서를 바꾸면 COPY 리빌드다. */
+	기타;
 
 	/**
 	 * 어떤 표기로 와도 하나로 모은다.
@@ -44,6 +46,10 @@ public enum BusinessDivision {
 		}
 		if (v.contains("공사") || v.contains("Cnstwk")) {
 			return 공사;
+		}
+		// 누리장터의 네 번째 축. '민간기타' 도 여기로 모인다. 오퍼레이션 약칭은 Etc.
+		if (v.contains("기타") || v.contains("Etc")) {
+			return 기타;
 		}
 		return null;
 	}

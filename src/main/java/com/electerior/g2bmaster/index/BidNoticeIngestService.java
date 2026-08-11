@@ -3,6 +3,8 @@ package com.electerior.g2bmaster.index;
 import com.electerior.g2bmaster.common.G2bDates;
 import com.electerior.g2bmaster.common.G2bDates.DateWindow;
 import com.electerior.g2bmaster.config.G2bProperties;
+import com.electerior.g2bmaster.integration.d2b.D2bClient;
+import com.electerior.g2bmaster.integration.d2b.D2bNormalizer;
 import com.electerior.g2bmaster.integration.g2b.G2bApiClient;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -63,24 +65,34 @@ public class BidNoticeIngestService {
 
 	public record IngestResult(List<SourceResult> sources, int totalIndexed, int sweptToClosed) {}
 
-	/** 출처 하나 — 오퍼레이션 URL 과 그것이 뜻하는 분류·업종. */
-	record Source(String key, String url, NoticeCategory category, BusinessDivision division) {}
+	/** 출처 하나 — 오퍼레이션 URL 과 그것이 뜻하는 소스·분류·업종. */
+	record Source(String key, String url, NoticeSource origin, NoticeCategory category,
+			BusinessDivision division) {}
+
+	/** D2B 출처 하나 — URL 이 아니라 오퍼레이션 이름으로 부른다(D2bClient 규약). */
+	record D2bSource(String key, String operation, BusinessDivision division) {}
 
 	private final G2bApiClient client;
+	private final D2bClient d2bClient;
 	private final BidNoticeIndexRepository repository;
 	private final List<Source> sources;
+	private final List<D2bSource> d2bSources;
 	private final String regionUrl;
+	private final String nuriRegionUrl;
 
 	/** 워터마크가 아직 없는 출처가 처음 돌 때 거슬러 올라갈 기간(일). */
 	private final int firstRunBackfillDays;
 
-	public BidNoticeIngestService(G2bApiClient client, BidNoticeIndexRepository repository,
-			G2bProperties properties) {
+	public BidNoticeIngestService(G2bApiClient client, D2bClient d2bClient,
+			BidNoticeIndexRepository repository, G2bProperties properties) {
 		this.client = client;
+		this.d2bClient = d2bClient;
 		this.repository = repository;
 		String base = trimTrailingSlash(properties.openapi().baseUrl());
 		this.sources = buildSources(base);
+		this.d2bSources = buildD2bSources();
 		this.regionUrl = base + "/ad/BidPublicInfoService/getBidPblancListInfoPrtcptPsblRgn";
+		this.nuriRegionUrl = base + "/ao/PrvtBidNtceService/getPrvtBidPblancListInfoPrtcptPsblRgn";
 		// 설정이 없는 경로(일부 테스트)에서도 뜨도록 기본값을 둔다.
 		this.firstRunBackfillDays = properties.index() == null || properties.index().backfillDays() <= 0
 				? DEFAULT_BACKFILL_DAYS
@@ -98,29 +110,53 @@ public class BidNoticeIngestService {
 		String announce = base + "/ad/BidPublicInfoService/getBidPblancListInfo";
 		String plan = base + "/ao/PrcrmntReqInfoService/getPrcrmntReqInfoList";
 		String preSpec = base + "/ao/HrcspSsstndrdInfoService/getPublicPrcureThngInfo";
+		String prvt = base + "/ao/PrvtBidNtceService/getPrvtBidPblancListInfo";
 
 		List<Source> list = new ArrayList<>();
 		// 입찰공고 — category 는 마감일시를 보고 매퍼가 입찰/마감으로 가른다.
-		list.add(new Source("bid-announce:물품", announce + "ThngPPSSrch", NoticeCategory.입찰, BusinessDivision.물품));
-		list.add(new Source("bid-announce:용역", announce + "ServcPPSSrch", NoticeCategory.입찰, BusinessDivision.용역));
-		list.add(new Source("bid-announce:공사", announce + "CnstwkPPSSrch", NoticeCategory.입찰, BusinessDivision.공사));
-		list.add(new Source("bid-announce:외자", announce + "FrgcptPPSSrch", NoticeCategory.입찰, BusinessDivision.외자));
+		list.add(new Source("bid-announce:물품", announce + "ThngPPSSrch", NoticeSource.G2B, NoticeCategory.입찰, BusinessDivision.물품));
+		list.add(new Source("bid-announce:용역", announce + "ServcPPSSrch", NoticeSource.G2B, NoticeCategory.입찰, BusinessDivision.용역));
+		list.add(new Source("bid-announce:공사", announce + "CnstwkPPSSrch", NoticeSource.G2B, NoticeCategory.입찰, BusinessDivision.공사));
+		list.add(new Source("bid-announce:외자", announce + "FrgcptPPSSrch", NoticeSource.G2B, NoticeCategory.입찰, BusinessDivision.외자));
 		// 발주계획
-		list.add(new Source("bid-plan:물품", plan + "Thng", NoticeCategory.계획, BusinessDivision.물품));
-		list.add(new Source("bid-plan:용역", plan + "GnrlServc", NoticeCategory.계획, BusinessDivision.용역));
-		list.add(new Source("bid-plan:공사", plan + "Cnstwk", NoticeCategory.계획, BusinessDivision.공사));
-		list.add(new Source("bid-plan:외자", plan + "Frgcpt", NoticeCategory.계획, BusinessDivision.외자));
+		list.add(new Source("bid-plan:물품", plan + "Thng", NoticeSource.G2B, NoticeCategory.계획, BusinessDivision.물품));
+		list.add(new Source("bid-plan:용역", plan + "GnrlServc", NoticeSource.G2B, NoticeCategory.계획, BusinessDivision.용역));
+		list.add(new Source("bid-plan:공사", plan + "Cnstwk", NoticeSource.G2B, NoticeCategory.계획, BusinessDivision.공사));
+		list.add(new Source("bid-plan:외자", plan + "Frgcpt", NoticeSource.G2B, NoticeCategory.계획, BusinessDivision.외자));
 		// 사전규격 — 외자 오퍼레이션이 없다(원본 API 에 없음).
-		list.add(new Source("pre-spec:물품", preSpec + "Thng", NoticeCategory.사전규격, BusinessDivision.물품));
-		list.add(new Source("pre-spec:용역", preSpec + "Servc", NoticeCategory.사전규격, BusinessDivision.용역));
-		list.add(new Source("pre-spec:공사", preSpec + "Cnstwk", NoticeCategory.사전규격, BusinessDivision.공사));
+		list.add(new Source("pre-spec:물품", preSpec + "Thng", NoticeSource.G2B, NoticeCategory.사전규격, BusinessDivision.물품));
+		list.add(new Source("pre-spec:용역", preSpec + "Servc", NoticeSource.G2B, NoticeCategory.사전규격, BusinessDivision.용역));
+		list.add(new Source("pre-spec:공사", preSpec + "Cnstwk", NoticeSource.G2B, NoticeCategory.사전규격, BusinessDivision.공사));
+		// 누리장터(민간) 입찰공고 — 구분이 넷이다(기타를 빼면 민간 공고 상당수가 사라진다,
+		// PrivateNoticeService 머리주석 참고). PPSSrch 가 아닌 기본 목록 오퍼레이션을 쓴다:
+		// 기본 목록의 inqryDiv=1 이 '등록일시' 라서 정정·취소 재수집이 걸리기 때문이다
+		// (PPSSrch 는 1=공고게시일시로 재정의돼 있다 — docs/nuri-openapi.md §4-(1)).
+		list.add(new Source("nuri:bid-announce:물품", prvt + "Thng", NoticeSource.NURI, NoticeCategory.입찰, BusinessDivision.물품));
+		list.add(new Source("nuri:bid-announce:용역", prvt + "Servc", NoticeSource.NURI, NoticeCategory.입찰, BusinessDivision.용역));
+		list.add(new Source("nuri:bid-announce:공사", prvt + "Cnstwk", NoticeSource.NURI, NoticeCategory.입찰, BusinessDivision.공사));
+		list.add(new Source("nuri:bid-announce:기타", prvt + "Etc", NoticeSource.NURI, NoticeCategory.입찰, BusinessDivision.기타));
 		return List.copyOf(list);
+	}
+
+	/**
+	 * D2B 오퍼레이션 표 — 팬아웃(D2bBidAnnounceService)과 같은 네 오퍼레이션이다.
+	 * 국내(Dmstc)는 응답의 busiDivs(물품/용역)가 업종을 정하므로 division 을 null 로 두고,
+	 * 시설(Fclty)은 busiDivs 가 비어 와도 '공사'다 — 오퍼레이션이 곧 업종이다.
+	 */
+	private static List<D2bSource> buildD2bSources() {
+		return List.of(
+				new D2bSource("d2b:bid-announce:국내경쟁", "getDmstcCmpetBidPblancList", null),
+				new D2bSource("d2b:bid-announce:시설경쟁", "getFcltyCmpetBidPblancList", BusinessDivision.공사),
+				new D2bSource("d2b:bid-announce:국내수의", "getDmstcOthbcVltrnNtatPlanList", null),
+				new D2bSource("d2b:bid-announce:시설수의", "getFcltyOthbcVltrnNtatPlanList", BusinessDivision.공사));
 	}
 
 	/** 운영 화면이 목록을 보여줄 수 있도록 공개한다. */
 	public List<String> sourceKeys() {
 		List<String> keys = new ArrayList<>(sources.stream().map(Source::key).toList());
 		keys.add("region");
+		keys.add("nuri:region");
+		keys.addAll(d2bSources.stream().map(D2bSource::key).toList());
 		return List.copyOf(keys);
 	}
 
@@ -146,9 +182,16 @@ public class BidNoticeIngestService {
 			totalIndexed += result.indexed();
 		}
 
+		for (D2bSource source : d2bSources) {
+			SourceResult result = ingestD2bOne(source, now, backfillDays);
+			results.add(result);
+			totalIndexed += result.indexed();
+		}
+
 		// 지역은 입찰공고가 색인된 뒤에 돌아야 붙을 대상이 있다 — 순서가 의미를 갖는다.
-		SourceResult region = ingestRegions(now, backfillDays);
-		results.add(region);
+		// 나라장터·누리장터가 각각 참가가능지역 오퍼레이션을 따로 갖는다(D2B 는 없다).
+		results.add(ingestRegions("region", regionUrl, NoticeSource.G2B, now, backfillDays));
+		results.add(ingestRegions("nuri:region", nuriRegionUrl, NoticeSource.NURI, now, backfillDays));
 
 		int swept = repository.sweepClosed();
 		if (swept > 0) {
@@ -188,30 +231,75 @@ public class BidNoticeIngestService {
 		}
 	}
 
-	/** 참가가능지역 보강. 이미 색인된 공고의 {@code region} 만 채운다. */
-	SourceResult ingestRegions(LocalDateTime now, int backfillDays) {
-		String key = "region";
+	/** 참가가능지역 보강. 이미 색인된 공고의 {@code region} 만 채운다(소스별 오퍼레이션). */
+	SourceResult ingestRegions(String key, String url, NoticeSource origin, LocalDateTime now,
+			int backfillDays) {
 		LocalDateTime from = startOf(key, now, backfillDays);
 		try {
-			List<Map<String, Object>> items = fetchWindows(regionUrl, from, now);
+			List<Map<String, Object>> items = fetchWindows(url, from, now);
 			Map<String, String> regions = BidNoticeMapper.foldRegions(items);
-			int updated = repository.updateRegions(regions);
+			int updated = repository.updateRegions(regions, origin);
 			repository.recordSuccess(key, now, updated,
 					"성공: %d건 조회 / %d개 공고 / %d건 갱신".formatted(items.size(), regions.size(), updated));
-			log.info("색인 지역 — 조회 {}건, 공고 {}개, 갱신 {}건", items.size(), regions.size(), updated);
+			log.info("색인 지역({}) — 조회 {}건, 공고 {}개, 갱신 {}건", key, items.size(), regions.size(), updated);
 			return new SourceResult(key, items.size(), updated, true, "ok");
 		}
 		catch (RuntimeException ex) {
 			String reason = ex.getMessage() == null ? ex.toString() : ex.getMessage();
 			repository.recordFailure(key, reason);
-			log.warn("색인 실패 지역 — {}", reason);
+			log.warn("색인 실패 {} — {}", key, reason);
 			return new SourceResult(key, 0, 0, false, reason);
+		}
+	}
+
+	/**
+	 * D2B 출처 하나. 나라장터 경로와 달리 {@link D2bClient} 를 쓰고 날짜 창을 나누지 않는다 —
+	 * D2B 는 일 단위 공고일({@code anmtDateBegin/End}) 필터라 31일 상한 문제가 없고,
+	 * 공개수의 오퍼레이션은 날짜 파라미터 자체를 받지 않아 조회 후 걸러야 한다
+	 * (D2bNormalizer.d2bParamsForOperation 주석 참고).
+	 */
+	SourceResult ingestD2bOne(D2bSource source, LocalDateTime now, int backfillDays) {
+		LocalDateTime from = startOf(source.key(), now, backfillDays);
+		String fromDate = from.format(DateTimeFormatter.BASIC_ISO_DATE);
+		String toDate = now.format(DateTimeFormatter.BASIC_ISO_DATE);
+		try {
+			List<Map<String, Object>> raw = d2bClient.call(source.operation(),
+					D2bNormalizer.d2bParamsForOperation(source.operation(), null, fromDate, toDate));
+
+			List<BidNoticeRow> rows = new ArrayList<>(raw.size());
+			for (Map<String, Object> item : raw) {
+				Map<String, Object> normalized = D2bNormalizer.normalizeD2bItem(
+						new LinkedHashMap<>(item), source.operation());
+				// 공개수의는 서버측 날짜 필터가 없어 여기서 거른다(팬아웃 경로와 동일 규칙).
+				if (!D2bNormalizer.isDateInRange(normalized.get("bidNtceDt"), fromDate, toDate)) {
+					continue;
+				}
+				BidNoticeRow row = BidNoticeMapper.fromD2b(normalized, source.division(), now);
+				if (row != null) {
+					rows.add(row);
+				}
+			}
+			List<BidNoticeRow> deduped = dedupeKeepLatest(rows);
+			repository.upsertAll(deduped);
+			repository.recordSuccess(source.key(), now, deduped.size(),
+					"성공: %d건 조회 / %d건 색인".formatted(raw.size(), deduped.size()));
+			log.info("색인 {} — 조회 {}건, 색인 {}건", source.key(), raw.size(), deduped.size());
+			return new SourceResult(source.key(), raw.size(), deduped.size(), true, "ok");
+		}
+		catch (RuntimeException ex) {
+			String reason = ex.getMessage() == null ? ex.toString() : ex.getMessage();
+			repository.recordFailure(source.key(), reason);
+			log.warn("색인 실패 {} — {}", source.key(), reason);
+			return new SourceResult(source.key(), 0, 0, false, reason);
 		}
 	}
 
 	// ── 내부 ────────────────────────────────────────────────────────────────
 
 	private BidNoticeRow map(Source source, Map<String, Object> item, LocalDateTime now) {
+		if (source.origin() == NoticeSource.NURI) {
+			return BidNoticeMapper.fromPrivateNotice(item, source.division(), now);
+		}
 		return switch (source.category()) {
 			case 입찰, 마감 -> BidNoticeMapper.fromBidAnnounce(item, source.division(), now);
 			case 계획 -> BidNoticeMapper.fromProcurementPlan(item, source.division());
@@ -272,13 +360,15 @@ public class BidNoticeIngestService {
 		return all;
 	}
 
-	/** 같은 공고번호가 여럿이면 차수가 가장 높은 것만 남긴다(순서 무관하게 결정적). */
+	/** 같은 (소스, 공고번호)가 여럿이면 차수가 가장 높은 것만 남긴다(순서 무관하게 결정적). */
 	static List<BidNoticeRow> dedupeKeepLatest(List<BidNoticeRow> rows) {
 		Map<String, BidNoticeRow> latest = new LinkedHashMap<>();
 		for (BidNoticeRow row : rows) {
-			BidNoticeRow existing = latest.get(row.id());
+			// PK 와 같은 (id, source) 로 접는다 — id 만 쓰면 소스가 다른 동번호가 서로를 지운다.
+			String key = row.sourceName() + "|" + row.id();
+			BidNoticeRow existing = latest.get(key);
 			if (existing == null || row.noticeOrder().compareTo(existing.noticeOrder()) >= 0) {
-				latest.put(row.id(), row);
+				latest.put(key, row);
 			}
 		}
 		return List.copyOf(latest.values());

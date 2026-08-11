@@ -23,6 +23,8 @@ public record NoticeSearchRequest(
 		String category,
 		String state,
 		String division,
+		/** 공고 출처 필터. DB 값(G2B/NURI/D2B)과 팬아웃 {@code _source} 값 어느 쪽도 받는다. */
+		String source,
 		String region,
 		String insttNm,
 		String insttCd,
@@ -69,6 +71,10 @@ public record NoticeSearchRequest(
 
 	public BusinessDivision divisionValue() {
 		return BusinessDivision.of(division);
+	}
+
+	public NoticeSource sourceValue() {
+		return NoticeSource.of(source);
 	}
 
 	public boolean activeOnlyEnabled() {

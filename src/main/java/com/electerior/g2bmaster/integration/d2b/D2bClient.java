@@ -136,6 +136,10 @@ public class D2bClient {
 		all.put("numOfRows", String.valueOf(PAGE_SIZE));
 		all.put("pageNo", "1");
 		all.put("type", "json");
+		// 공공데이터포털 게이트웨이(apis.data.go.kr/1690000)는 'type' 이 아니라 '_type' 으로
+		// JSON 을 켠다(실측: type=json 은 XML 그대로, _type=json 은 JSON). 구 직접 호출형
+		// 호스트는 'type' 을 보므로 둘 다 보낸다 — 어느 쪽이든 모르는 파라미터는 무시한다.
+		all.put("_type", "json");
 		if (params != null) {
 			all.putAll(params);
 		}

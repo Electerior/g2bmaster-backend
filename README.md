@@ -88,6 +88,33 @@ SPRINGDOC_APIDOCS_ENABLED=false SPRINGDOC_SWAGGERUI_ENABLED=false ./mvnw spring-
 mysql -u root -p -e "CREATE USER 'g2b'@'localhost' IDENTIFIED BY '비밀번호'; GRANT ALL ON g2b.* TO 'g2b'@'localhost';"
 ```
 
+### 마이그레이션 추가
+
+**버전 번호를 손으로 고르지 않는다.** 스크립트가 초 단위 타임스탬프로 만들어 준다.
+
+```bash
+./tools/new-migration.sh d2b_staging_layer
+```
+
+`src/main/resources/db/migration/V20260812093015__d2b_staging_layer.sql` 이 생긴다.
+
+순번(V15, V16…)을 쓰지 않는 이유는 실제로 겪은 사고 때문이다 — `feat/price-catalog` 가
+V9/V10 을, `feat/notice-search-index` 가 V11~V14 를 서로 모른 채 잡았다. 번호는 머지하는
+순간에야 부딪히고 그때는 이미 main 이 깨진 뒤다. 타임스탬프는 같은 초에 두 사람이 파일을
+만들지 않는 한 충돌하지 않는다. CI 가 이 형식을 강제한다.
+
+**기존 V1~V14 는 개명하지 않았다.** 이미 적용된 DB 의 `flyway_schema_history` 와 파일명이
+어긋나면 Flyway 가 `Detected applied migration not resolved locally` 로 기동을 막는다.
+Flyway 는 버전을 숫자로 비교하므로 `20260812093015` 는 `14` 뒤에 붙는다 — 섞여 있어도 순서는
+정확하다.
+
+지켜야 할 것 두 가지가 더 있다.
+
+- **머지된 마이그레이션은 고치지 않는다.** 체크섬이 박혀 있어서, 이미 적용한 사람의 앱이
+  기동하지 않는다. 정정은 새 파일로 한다. Flyway Community 에는 undo 가 없다 — 앞으로만 간다.
+- **되돌릴 일이 생기면 로컬 DB 를 지우고 다시 만든다.** `flyway repair` 는 체크섬 정정과
+  실패 기록 제거용이지, 빠진 버전을 적용해 주지 않는다.
+
 ---
 
 ## 환경 변수

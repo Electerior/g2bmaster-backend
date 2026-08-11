@@ -1,0 +1,2293 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "조달청_나라장터 사용자정보 서비스",
+    "description": "나라장터에 등록된 조달업체와 수요기관에 대한 정보를 제공하는 서비스로 조달업체정보에는 사업자등록번호, 업체명, 업체주소, 업체의 등록업종정보, 업체의 공급물품정보가 포함되며 수요기관정보에는 수요기관코드(행안부코드가 기본으로 제공되며 행안부코드가 없을 경우 나라장터 수요기관코드가 제공됨), 소관구분, 주소, 최상위기관코드, 최상위기관명 등이 포함되는 나라장터 사용자정보서비스\n\n※ 코드정보시스템(code.go.kr)에 등록되지 않은 수요기관이 나라장터에 수요기관으로 등록하는 경우 나라장터 자체 수요기관코드가 채번됩니다.",
+    "version": "2.0"
+  },
+  "host": "apis.data.go.kr",
+  "basePath": "/1230000/ao/UsrInfoService02",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/getUnptRsttCorpInfo02": {
+      "get": {
+        "summary": "부정당제재업체정보조회",
+        "description": "부정당 제재 업체 정보를 사업자등록번호, 제재시작일자 검색조건으로 사업자등록번호, 업체명, 법인등록번호, 제재시작일자, 제재종료일자, 제재기관명, 계약법구분, 제재근거법률, 조항호, 조항호코드, 조항도코드명, 시행규칙코드, 시행규칙코드명 목록을 조회(나라장터미등록업체, 개인에 대한 부정당제재는 미제공) [국가계약법]-조회시점에 제재만료, 해제된 것은 제공되지 않습니다. [지방계약법]-조회시점에 정지, 제재만료, 해제된 것은 제공되지 않습니다.",
+        "operationId": "getUnptRsttCorpInfo02",
+        "parameters": [
+          {
+            "name": "numOfRows",
+            "in": "query",
+            "description": "한 페이지 결과 수",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "페이지 번호",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ServiceKey",
+            "in": "query",
+            "description": "서비스키, 공공데이터포털에서 받은 인증키",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "타입, 오픈API 리턴 타입을 JSON으로 받고 싶을 경우 'json' 으로 지정함",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "inqryDiv",
+            "in": "query",
+            "description": "조회구분, 검색하고자하는 조회구분 입력",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "bizno",
+            "in": "query",
+            "description": "사업자등록번호, 검색하고자 하는 사업자등록번호 조회구분 1인 경우 필수",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "inqryBgnDt",
+            "in": "query",
+            "description": "조회기준시작일시, 검색하고자하는 검색기준시작일시 YYYYMMDDHHMM",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "inqryEndDt",
+            "in": "query",
+            "description": "조회기준종료일시, 검색하고자하는 검색기준종료일시 YYYYMMDDHHMM",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "$ref": "#/definitions/getUnptRsttCorpInfo02Response"
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      }
+    },
+    "/getDminsttInfo02": {
+      "get": {
+        "summary": "수요기관정보조회",
+        "description": "수요기관코드, 사업자등록번호, 수요기관명을 입력하여 수요기관명, 유효기간,법인등록번호, 사업자등록번호, 소관구분명, 기관유형명, 업태명, 업종명, 주소,등록일시 등 수요기관정보 목록을 조회.",
+        "operationId": "getDminsttInfo02",
+        "parameters": [
+          {
+            "name": "serviceKey",
+            "in": "query",
+            "description": "공공데이터포털에서 받은 인증키",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "페이지번호",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "numOfRows",
+            "in": "query",
+            "description": "한 페이지 결과 수",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "inqryDiv",
+            "in": "query",
+            "description": "조회구분",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "inqryBgnDt",
+            "in": "query",
+            "description": "조회기준시작일시",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "inqryEndDt",
+            "in": "query",
+            "description": "조회기준종료일시",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "dminsttCd",
+            "in": "query",
+            "description": "수요기관코드",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "dminsttNm",
+            "in": "query",
+            "description": "수요기관명",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bizno",
+            "in": "query",
+            "description": "사업자등록번호",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "타입",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "$ref": "#/definitions/getDminsttInfo02Response"
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      }
+    },
+    "/getPrcrmntCorpBasicInfo02": {
+      "get": {
+        "summary": "조달업체 기본정보 조회",
+        "description": "검색조건에 사업자등록번호와 업체명을 입력하여 사업자등록번호, 업체명, 영문업체명, 개업일시, 지역코드, 지역명, 우편번호, 주소, 상세주소, 전화번호, 팩스번호, 국가명, 홈페이지주소, 제조구분코드, 제조구분명, 종업원수, 업체업무구분코드, 업체업무구분명, 본사구분명, 등록일시, 변경일시, 고유번호증명등록여부, 대표자명 등 조달업체 기본정보 목록을 조회.",
+        "operationId": "getPrcrmntCorpBasicInfo02",
+        "parameters": [
+          {
+            "name": "serviceKey",
+            "in": "query",
+            "description": "공공데이터포털에서 받은 인증키",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "페이지번호",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "numOfRows",
+            "in": "query",
+            "description": "한 페이지 결과 수",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "inqryDiv",
+            "in": "query",
+            "description": "조회구분",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "inqryBgnDt",
+            "in": "query",
+            "description": "조회기준시작일시",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "inqryEndDt",
+            "in": "query",
+            "description": "조회기준종료일시",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "corpNm",
+            "in": "query",
+            "description": "업체명",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bizno",
+            "in": "query",
+            "description": "사업자등록번호",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "타입",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "$ref": "#/definitions/getPrcrmntCorpBasicInfo02Response"
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      }
+    },
+    "/getPrcrmntCorpIndstrytyInfo02": {
+      "get": {
+        "summary": "조달업체업종정보조회",
+        "description": "검색조건에 사업자등록번호를 입력하여 사업자등록번호, 업종코드, 업종명, 등록일시, 유효기간만료일시, 시스템등록일시, 변경일시, 업종상태명, 대표업종여부 등 조달업체 업종정보 목록을 조회.",
+        "operationId": "getPrcrmntCorpIndstrytyInfo02",
+        "parameters": [
+          {
+            "name": "serviceKey",
+            "in": "query",
+            "description": "공공데이터포털에서 받은 인증키",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "페이지번호",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "numOfRows",
+            "in": "query",
+            "description": "한 페이지 결과 수",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "inqryDiv",
+            "in": "query",
+            "description": "조회구분",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "inqryBgnDt",
+            "in": "query",
+            "description": "조회기준시작일시",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "inqryEndDt",
+            "in": "query",
+            "description": "조회기준종료일시",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bizno",
+            "in": "query",
+            "description": "사업자등록번호",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "타입",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "$ref": "#/definitions/getPrcrmntCorpIndstrytyInfo02Response"
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      }
+    },
+    "/getPrcrmntCorpSplyPrdctInfo02": {
+      "get": {
+        "summary": "조달업체공급물품정보조회",
+        "description": "검색조건에 사업자등록번호를 입력하여 사업자등록번호, 세부품명, 세부품명번호, 등록일시, 변경일시, 대표품명여부 등 조달업체 공급물품정보 목록을 조회.",
+        "operationId": "getPrcrmntCorpSplyPrdctInfo02",
+        "parameters": [
+          {
+            "name": "serviceKey",
+            "in": "query",
+            "description": "공공데이터포털에서 받은 인증키",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "페이지번호",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "numOfRows",
+            "in": "query",
+            "description": "한 페이지 결과 수",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "inqryDiv",
+            "in": "query",
+            "description": "조회구분",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "inqryBgnDt",
+            "in": "query",
+            "description": "조회기준시작일시",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "inqryEndDt",
+            "in": "query",
+            "description": "조회기준종료일시",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bizno",
+            "in": "query",
+            "description": "사업자등록번호",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "타입",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "$ref": "#/definitions/getPrcrmntCorpSplyPrdctInfo02Response"
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "getUnptRsttCorpInfo02Response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지 번호"
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "bizno": {
+                        "type": "string",
+                        "description": "사업자등록번호"
+                      },
+                      "corpNm": {
+                        "type": "string",
+                        "description": "업체명"
+                      },
+                      "enfcAtcsCd": {
+                        "type": "string",
+                        "description": "시행규칙코드"
+                      },
+                      "enfcPrvNm": {
+                        "type": "string",
+                        "description": "시행규칙코드명"
+                      },
+                      "insttCd": {
+                        "type": "string",
+                        "description": "수요기관코드"
+                      },
+                      "insttNm": {
+                        "type": "string",
+                        "description": "수요기관명"
+                      },
+                      "lawordArtclClause": {
+                        "type": "string",
+                        "description": "조항호"
+                      },
+                      "lawordArtclClauseCd": {
+                        "type": "string",
+                        "description": "조항호코드"
+                      },
+                      "lawordArtclClauseCdNm": {
+                        "type": "string",
+                        "description": "조항호코드명"
+                      },
+                      "lawordNm": {
+                        "type": "string",
+                        "description": "근거법령명"
+                      },
+                      "ntfcnDt": {
+                        "type": "string",
+                        "description": "게재일시"
+                      },
+                      "rsttBgnDate": {
+                        "type": "string",
+                        "description": "제재시작일자"
+                      },
+                      "rsttEndDate": {
+                        "type": "string",
+                        "description": "제재종료일자"
+                      },
+                      "rsttPrdDayNum": {
+                        "type": "string",
+                        "description": "제재기간일수"
+                      },
+                      "rsttPrdMonthNum": {
+                        "type": "string",
+                        "description": "제재기간개월수"
+                      },
+                      "rsttProgrsNm": {
+                        "type": "string",
+                        "description": "제재상태명"
+                      },
+                      "unptRsttDocNm": {
+                        "type": "string",
+                        "description": "제재문서명"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getDminsttInfo02Response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "adrs": {
+                        "type": "string",
+                        "description": "주소"
+                      },
+                      "bizcndtnNm": {
+                        "type": "string",
+                        "description": "업태명"
+                      },
+                      "bizno": {
+                        "type": "string",
+                        "description": "사업자등록번호"
+                      },
+                      "chgDt": {
+                        "type": "string",
+                        "description": "변경일시"
+                      },
+                      "corprtRgstNo": {
+                        "type": "string",
+                        "description": "법인등록번호"
+                      },
+                      "dltYn": {
+                        "type": "string",
+                        "description": "삭제여부"
+                      },
+                      "dminsttAbrvtNm": {
+                        "type": "string",
+                        "description": "수요기관약어명"
+                      },
+                      "dminsttCd": {
+                        "type": "string",
+                        "description": "수요기관코드"
+                      },
+                      "dminsttEngNm": {
+                        "type": "string",
+                        "description": "수요기관영문명"
+                      },
+                      "dminsttNm": {
+                        "type": "string",
+                        "description": "수요기관명"
+                      },
+                      "dtlAdrs": {
+                        "type": "string",
+                        "description": "상세주소"
+                      },
+                      "faxNo": {
+                        "type": "string",
+                        "description": "팩스번호"
+                      },
+                      "hmpgAdrs": {
+                        "type": "string",
+                        "description": "홈페이지주소"
+                      },
+                      "indstrytyNm": {
+                        "type": "string",
+                        "description": "업종명"
+                      },
+                      "insttTyCdLrgclsfcNm": {
+                        "type": "string",
+                        "description": "기관유형코드대분류명"
+                      },
+                      "insttTyCdMidclsfcNm": {
+                        "type": "string",
+                        "description": "기관유형코드중분류명"
+                      },
+                      "insttTyCdSmlclsfcNm": {
+                        "type": "string",
+                        "description": "기관유형코드소분류명"
+                      },
+                      "jrsdctnDivNm": {
+                        "type": "string",
+                        "description": "소관구분명"
+                      },
+                      "ofclFaxNo": {
+                        "type": "string",
+                        "description": "담당자팩스번호"
+                      },
+                      "rgnCd": {
+                        "type": "string",
+                        "description": "지역코드"
+                      },
+                      "rgnNm": {
+                        "type": "string",
+                        "description": "지역명"
+                      },
+                      "rgstDt": {
+                        "type": "string",
+                        "description": "등록일시"
+                      },
+                      "telNo": {
+                        "type": "string",
+                        "description": "전화번호"
+                      },
+                      "toplvlInsttCd": {
+                        "type": "string",
+                        "description": "최상위기관코드"
+                      },
+                      "toplvlInsttNm": {
+                        "type": "string",
+                        "description": "최상위기관명"
+                      },
+                      "vldPrdBgnDt": {
+                        "type": "string",
+                        "description": "유효기간시작일시"
+                      },
+                      "vldPrdEndDt": {
+                        "type": "string",
+                        "description": "유효기간종료일시"
+                      },
+                      "zip": {
+                        "type": "string",
+                        "description": "우편번호"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getPrcrmntCorpBasicInfo02Response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "adrs": {
+                        "type": "string",
+                        "description": "주소"
+                      },
+                      "bizno": {
+                        "type": "string",
+                        "description": "사업자등록번호"
+                      },
+                      "ceoNm": {
+                        "type": "string",
+                        "description": "대표자명"
+                      },
+                      "chgDt": {
+                        "type": "string",
+                        "description": "변경일시"
+                      },
+                      "cntryNm": {
+                        "type": "string",
+                        "description": "국가명"
+                      },
+                      "corpBsnsDivCd": {
+                        "type": "string",
+                        "description": "업체업무구분코드"
+                      },
+                      "corpBsnsDivNm": {
+                        "type": "string",
+                        "description": "업체업무구분명"
+                      },
+                      "corpNm": {
+                        "type": "string",
+                        "description": "업체명"
+                      },
+                      "dtlAdrs": {
+                        "type": "string",
+                        "description": "상세주소"
+                      },
+                      "emplyeNum": {
+                        "type": "string",
+                        "description": "종업원수"
+                      },
+                      "engCorpNm": {
+                        "type": "string",
+                        "description": "영문업체명"
+                      },
+                      "esntlNoCertRgstYn": {
+                        "type": "string",
+                        "description": "고유번호증명등록여부"
+                      },
+                      "faxNo": {
+                        "type": "string",
+                        "description": "팩스번호"
+                      },
+                      "hdoffceDivNm": {
+                        "type": "string",
+                        "description": "본사구분명"
+                      },
+                      "hmpgAdrs": {
+                        "type": "string",
+                        "description": "홈페이지주소"
+                      },
+                      "mnfctDivCd": {
+                        "type": "string",
+                        "description": "제조구분코드"
+                      },
+                      "mnfctDivNm": {
+                        "type": "string",
+                        "description": "제조구분명"
+                      },
+                      "opbizDt": {
+                        "type": "string",
+                        "description": "개업일시"
+                      },
+                      "rgnCd": {
+                        "type": "string",
+                        "description": "지역코드"
+                      },
+                      "rgnNm": {
+                        "type": "string",
+                        "description": "지역명"
+                      },
+                      "rgstDt": {
+                        "type": "string",
+                        "description": "등록일시"
+                      },
+                      "telNo": {
+                        "type": "string",
+                        "description": "전화번호"
+                      },
+                      "zip": {
+                        "type": "string",
+                        "description": "우편번호"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getPrcrmntCorpIndstrytyInfo02Response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "bizno": {
+                        "type": "string",
+                        "description": "사업자등록번호"
+                      },
+                      "chgDt": {
+                        "type": "string",
+                        "description": "변경일시"
+                      },
+                      "indstrytyCd": {
+                        "type": "string",
+                        "description": "업종코드"
+                      },
+                      "indstrytyNm": {
+                        "type": "string",
+                        "description": "업종명"
+                      },
+                      "indstrytyStatsNm": {
+                        "type": "string",
+                        "description": "업종상태명"
+                      },
+                      "rgstDt": {
+                        "type": "string",
+                        "description": "등록일시"
+                      },
+                      "rprsntIndstrytyYn": {
+                        "type": "string",
+                        "description": "대표업종여부"
+                      },
+                      "systmChgDt": {
+                        "type": "string",
+                        "description": "시스템변경일시"
+                      },
+                      "systmRgstDt": {
+                        "type": "string",
+                        "description": "시스템등록일시"
+                      },
+                      "vldPrdExprtDt": {
+                        "type": "string",
+                        "description": "유효기간만료일시"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getPrcrmntCorpSplyPrdctInfo02Response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "bizno": {
+                        "type": "string",
+                        "description": "사업자등록번호"
+                      },
+                      "chgDt": {
+                        "type": "string",
+                        "description": "변경일시"
+                      },
+                      "indstrytyCd": {
+                        "type": "string",
+                        "description": "업종코드"
+                      },
+                      "indstrytyNm": {
+                        "type": "string",
+                        "description": "업종명"
+                      },
+                      "indstrytyStatsNm": {
+                        "type": "string",
+                        "description": "업종상태명"
+                      },
+                      "rgstDt": {
+                        "type": "string",
+                        "description": "등록일시"
+                      },
+                      "rprsntIndstrytyYn": {
+                        "type": "string",
+                        "description": "대표업종여부"
+                      },
+                      "systmChgDt": {
+                        "type": "string",
+                        "description": "시스템변경일시"
+                      },
+                      "systmRgstDt": {
+                        "type": "string",
+                        "description": "시스템등록일시"
+                      },
+                      "vldPrdExprtDt": {
+                        "type": "string",
+                        "description": "유효기간만료일시"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "swaggerOprtinVOs": [
+    {
+      "oprtinUrl": "https://nopenapi.g2b.go.kr/ao/UsrInfoService/getUnptRsttCorpInfo",
+      "oprtinNm": "부정당제재업체정보조회",
+      "oprtinDc": "부정당 제재 업체 정보를 사업자등록번호, 제재시작일자 검색조건으로 사업자등록번호, 업체명, 법인등록번호, 제재시작일자, 제재종료일자, 제재기관명, 계약법구분, 제재근거법률, 조항호, 조항호코드, 조항도코드명, 시행규칙코드, 시행규칙코드명 목록을 조회(나라장터미등록업체, 개인에 대한 부정당제재는 미제공) [국가계약법]-조회시점에 제재만료, 해제된 것은 제공되지 않습니다. [지방계약법]-조회시점에 정지, 제재만료, 해제된 것은 제공되지 않습니다.",
+      "gwSvcNm": "getUnptRsttCorpInfo02",
+      "operationId": "getUnptRsttCorpInfo02",
+      "publicDataTyDetailCode": "PR0027",
+      "reqList": [
+        {
+          "paramtrNm": "numOfRows",
+          "paramtrTy": "string",
+          "paramtrDc": "한 페이지 결과 수",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "pageNo",
+          "paramtrTy": "string",
+          "paramtrDc": "페이지 번호",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "ServiceKey",
+          "paramtrTy": "string",
+          "paramtrDc": "서비스키, 공공데이터포털에서 받은 인증키",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "type",
+          "paramtrTy": "string",
+          "paramtrDc": "타입, 오픈API 리턴 타입을 JSON으로 받고 싶을 경우 'json' 으로 지정함",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "inqryDiv",
+          "paramtrTy": "string",
+          "paramtrDc": "조회구분, 검색하고자하는 조회구분 입력",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "bizno",
+          "paramtrTy": "string",
+          "paramtrDc": "사업자등록번호, 검색하고자 하는 사업자등록번호 조회구분 1인 경우 필수",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "inqryBgnDt",
+          "paramtrTy": "string",
+          "paramtrDc": "조회기준시작일시, 검색하고자하는 검색기준시작일시 YYYYMMDDHHMM",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "inqryEndDt",
+          "paramtrTy": "string",
+          "paramtrDc": "조회기준종료일시, 검색하고자하는 검색기준종료일시 YYYYMMDDHHMM",
+          "paramtrDivision": "옵"
+        }
+      ],
+      "resList": [
+        {
+          "paramtrNm": "header",
+          "paramtrTy": "object",
+          "paramtrDc": "header",
+          "paramtrDivision": "필",
+          "subParam": [
+            {
+              "paramtrNm": "resultCode",
+              "paramtrTy": "string",
+              "paramtrDc": "결과코드",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "resultMsg",
+              "paramtrTy": "string",
+              "paramtrDc": "결과메세지",
+              "paramtrDivision": "필"
+            }
+          ]
+        },
+        {
+          "paramtrNm": "body",
+          "paramtrTy": "object",
+          "paramtrDc": "body",
+          "paramtrDivision": "필",
+          "subParam": [
+            {
+              "paramtrNm": "numOfRows",
+              "paramtrTy": "string",
+              "paramtrDc": "totalCount",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "pageNo",
+              "paramtrTy": "string",
+              "paramtrDc": "페이지 번호",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "totalCount",
+              "paramtrTy": "string",
+              "paramtrDc": "전체 결과 수",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "items",
+              "paramtrTy": "object",
+              "paramtrDc": "items",
+              "paramtrDivision": "필",
+              "subParam": [
+                {
+                  "paramtrNm": "item",
+                  "paramtrTy": "object",
+                  "paramtrDc": "item",
+                  "paramtrDivision": "옵",
+                  "subParam": [
+                    {
+                      "paramtrNm": "bizno",
+                      "paramtrTy": "string",
+                      "paramtrDc": "사업자등록번호",
+                      "paramtrDivision": "필"
+                    },
+                    {
+                      "paramtrNm": "corpNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업체명",
+                      "paramtrDivision": "필"
+                    },
+                    {
+                      "paramtrNm": "enfcAtcsCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "시행규칙코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "enfcPrvNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "시행규칙코드명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "insttCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "수요기관코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "insttNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "수요기관명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "lawordArtclClause",
+                      "paramtrTy": "string",
+                      "paramtrDc": "조항호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "lawordArtclClauseCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "조항호코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "lawordArtclClauseCdNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "조항호코드명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "lawordNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "근거법령명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "ntfcnDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "게재일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rsttBgnDate",
+                      "paramtrTy": "string",
+                      "paramtrDc": "제재시작일자",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rsttEndDate",
+                      "paramtrTy": "string",
+                      "paramtrDc": "제재종료일자",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rsttPrdDayNum",
+                      "paramtrTy": "string",
+                      "paramtrDc": "제재기간일수",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rsttPrdMonthNum",
+                      "paramtrTy": "string",
+                      "paramtrDc": "제재기간개월수",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rsttProgrsNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "제재상태명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "unptRsttDocNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "제재문서명",
+                      "paramtrDivision": "옵"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "oprtinUrl": "https://nopenapi.g2b.go.kr/ao/UsrInfoService/getDminsttInfo",
+      "oprtinNm": "수요기관정보조회",
+      "oprtinDc": "수요기관코드, 사업자등록번호, 수요기관명을 입력하여 수요기관명, 유효기간,법인등록번호, 사업자등록번호, 소관구분명, 기관유형명, 업태명, 업종명, 주소,등록일시 등 수요기관정보 목록을 조회.",
+      "gwSvcNm": "getDminsttInfo02",
+      "operationId": "getDminsttInfo02",
+      "publicDataTyDetailCode": "PR0027",
+      "reqList": [
+        {
+          "paramtrNm": "serviceKey",
+          "paramtrTy": "string",
+          "paramtrDc": "공공데이터포털에서 받은 인증키",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "pageNo",
+          "paramtrTy": "string",
+          "paramtrDc": "페이지번호",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "numOfRows",
+          "paramtrTy": "string",
+          "paramtrDc": "한 페이지 결과 수",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "inqryDiv",
+          "paramtrTy": "string",
+          "paramtrDc": "조회구분",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "inqryBgnDt",
+          "paramtrTy": "string",
+          "paramtrDc": "조회기준시작일시",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "inqryEndDt",
+          "paramtrTy": "string",
+          "paramtrDc": "조회기준종료일시",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "dminsttCd",
+          "paramtrTy": "string",
+          "paramtrDc": "수요기관코드",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "dminsttNm",
+          "paramtrTy": "string",
+          "paramtrDc": "수요기관명",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "bizno",
+          "paramtrTy": "string",
+          "paramtrDc": "사업자등록번호",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "type",
+          "paramtrTy": "string",
+          "paramtrDc": "타입",
+          "paramtrDivision": "옵"
+        }
+      ],
+      "resList": [
+        {
+          "paramtrNm": "header",
+          "paramtrTy": "object",
+          "paramtrDc": "header",
+          "paramtrDivision": "필",
+          "subParam": [
+            {
+              "paramtrNm": "resultCode",
+              "paramtrTy": "string",
+              "paramtrDc": "결과코드",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "resultMsg",
+              "paramtrTy": "string",
+              "paramtrDc": "결과메세지",
+              "paramtrDivision": "필"
+            }
+          ]
+        },
+        {
+          "paramtrNm": "body",
+          "paramtrTy": "object",
+          "paramtrDc": "body",
+          "paramtrDivision": "필",
+          "subParam": [
+            {
+              "paramtrNm": "numOfRows",
+              "paramtrTy": "string",
+              "paramtrDc": "한 페이지 결과 수",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "pageNo",
+              "paramtrTy": "string",
+              "paramtrDc": "페이지번호",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "totalCount",
+              "paramtrTy": "string",
+              "paramtrDc": "전체 결과 수",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "items",
+              "paramtrTy": "object",
+              "paramtrDc": "items",
+              "paramtrDivision": "필",
+              "subParam": [
+                {
+                  "paramtrNm": "item",
+                  "paramtrTy": "object",
+                  "paramtrDc": "item",
+                  "paramtrDivision": "옵",
+                  "subParam": [
+                    {
+                      "paramtrNm": "adrs",
+                      "paramtrTy": "string",
+                      "paramtrDc": "주소",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "bizcndtnNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업태명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "bizno",
+                      "paramtrTy": "string",
+                      "paramtrDc": "사업자등록번호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "chgDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "변경일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "corprtRgstNo",
+                      "paramtrTy": "string",
+                      "paramtrDc": "법인등록번호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "dltYn",
+                      "paramtrTy": "string",
+                      "paramtrDc": "삭제여부",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "dminsttAbrvtNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "수요기관약어명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "dminsttCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "수요기관코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "dminsttEngNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "수요기관영문명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "dminsttNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "수요기관명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "dtlAdrs",
+                      "paramtrTy": "string",
+                      "paramtrDc": "상세주소",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "faxNo",
+                      "paramtrTy": "string",
+                      "paramtrDc": "팩스번호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "hmpgAdrs",
+                      "paramtrTy": "string",
+                      "paramtrDc": "홈페이지주소",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "indstrytyNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업종명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "insttTyCdLrgclsfcNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "기관유형코드대분류명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "insttTyCdMidclsfcNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "기관유형코드중분류명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "insttTyCdSmlclsfcNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "기관유형코드소분류명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "jrsdctnDivNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "소관구분명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "ofclFaxNo",
+                      "paramtrTy": "string",
+                      "paramtrDc": "담당자팩스번호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rgnCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "지역코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rgnNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "지역명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rgstDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "등록일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "telNo",
+                      "paramtrTy": "string",
+                      "paramtrDc": "전화번호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "toplvlInsttCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "최상위기관코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "toplvlInsttNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "최상위기관명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "vldPrdBgnDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "유효기간시작일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "vldPrdEndDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "유효기간종료일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "zip",
+                      "paramtrTy": "string",
+                      "paramtrDc": "우편번호",
+                      "paramtrDivision": "옵"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "oprtinUrl": "https://nopenapi.g2b.go.kr/ao/UsrInfoService/getPrcrmntCorpBasicInfo",
+      "oprtinNm": "조달업체 기본정보 조회",
+      "oprtinDc": "검색조건에 사업자등록번호와 업체명을 입력하여 사업자등록번호, 업체명, 영문업체명, 개업일시, 지역코드, 지역명, 우편번호, 주소, 상세주소, 전화번호, 팩스번호, 국가명, 홈페이지주소, 제조구분코드, 제조구분명, 종업원수, 업체업무구분코드, 업체업무구분명, 본사구분명, 등록일시, 변경일시, 고유번호증명등록여부, 대표자명 등 조달업체 기본정보 목록을 조회.",
+      "gwSvcNm": "getPrcrmntCorpBasicInfo02",
+      "operationId": "getPrcrmntCorpBasicInfo02",
+      "publicDataTyDetailCode": "PR0027",
+      "reqList": [
+        {
+          "paramtrNm": "serviceKey",
+          "paramtrTy": "string",
+          "paramtrDc": "공공데이터포털에서 받은 인증키",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "pageNo",
+          "paramtrTy": "string",
+          "paramtrDc": "페이지번호",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "numOfRows",
+          "paramtrTy": "string",
+          "paramtrDc": "한 페이지 결과 수",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "inqryDiv",
+          "paramtrTy": "string",
+          "paramtrDc": "조회구분",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "inqryBgnDt",
+          "paramtrTy": "string",
+          "paramtrDc": "조회기준시작일시",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "inqryEndDt",
+          "paramtrTy": "string",
+          "paramtrDc": "조회기준종료일시",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "corpNm",
+          "paramtrTy": "string",
+          "paramtrDc": "업체명",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "bizno",
+          "paramtrTy": "string",
+          "paramtrDc": "사업자등록번호",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "type",
+          "paramtrTy": "string",
+          "paramtrDc": "타입",
+          "paramtrDivision": "옵"
+        }
+      ],
+      "resList": [
+        {
+          "paramtrNm": "header",
+          "paramtrTy": "object",
+          "paramtrDc": "header",
+          "paramtrDivision": "필",
+          "subParam": [
+            {
+              "paramtrNm": "resultCode",
+              "paramtrTy": "string",
+              "paramtrDc": "결과코드",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "resultMsg",
+              "paramtrTy": "string",
+              "paramtrDc": "결과메세지",
+              "paramtrDivision": "필"
+            }
+          ]
+        },
+        {
+          "paramtrNm": "body",
+          "paramtrTy": "object",
+          "paramtrDc": "body",
+          "paramtrDivision": "필",
+          "subParam": [
+            {
+              "paramtrNm": "numOfRows",
+              "paramtrTy": "string",
+              "paramtrDc": "한 페이지 결과 수",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "pageNo",
+              "paramtrTy": "string",
+              "paramtrDc": "페이지번호",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "totalCount",
+              "paramtrTy": "string",
+              "paramtrDc": "전체 결과 수",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "items",
+              "paramtrTy": "object",
+              "paramtrDc": "items",
+              "paramtrDivision": "필",
+              "subParam": [
+                {
+                  "paramtrNm": "item",
+                  "paramtrTy": "object",
+                  "paramtrDc": "item",
+                  "paramtrDivision": "옵",
+                  "subParam": [
+                    {
+                      "paramtrNm": "adrs",
+                      "paramtrTy": "string",
+                      "paramtrDc": "주소",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "bizno",
+                      "paramtrTy": "string",
+                      "paramtrDc": "사업자등록번호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "ceoNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "대표자명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "chgDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "변경일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "cntryNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "국가명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "corpBsnsDivCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업체업무구분코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "corpBsnsDivNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업체업무구분명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "corpNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업체명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "dtlAdrs",
+                      "paramtrTy": "string",
+                      "paramtrDc": "상세주소",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "emplyeNum",
+                      "paramtrTy": "string",
+                      "paramtrDc": "종업원수",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "engCorpNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "영문업체명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "esntlNoCertRgstYn",
+                      "paramtrTy": "string",
+                      "paramtrDc": "고유번호증명등록여부",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "faxNo",
+                      "paramtrTy": "string",
+                      "paramtrDc": "팩스번호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "hdoffceDivNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "본사구분명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "hmpgAdrs",
+                      "paramtrTy": "string",
+                      "paramtrDc": "홈페이지주소",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "mnfctDivCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "제조구분코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "mnfctDivNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "제조구분명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "opbizDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "개업일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rgnCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "지역코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rgnNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "지역명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rgstDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "등록일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "telNo",
+                      "paramtrTy": "string",
+                      "paramtrDc": "전화번호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "zip",
+                      "paramtrTy": "string",
+                      "paramtrDc": "우편번호",
+                      "paramtrDivision": "옵"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "oprtinUrl": "https://nopenapi.g2b.go.kr/ao/UsrInfoService/getPrcrmntCorpIndstrytyInfo",
+      "oprtinNm": "조달업체업종정보조회",
+      "oprtinDc": "검색조건에 사업자등록번호를 입력하여 사업자등록번호, 업종코드, 업종명, 등록일시, 유효기간만료일시, 시스템등록일시, 변경일시, 업종상태명, 대표업종여부 등 조달업체 업종정보 목록을 조회.",
+      "gwSvcNm": "getPrcrmntCorpIndstrytyInfo02",
+      "operationId": "getPrcrmntCorpIndstrytyInfo02",
+      "publicDataTyDetailCode": "PR0027",
+      "reqList": [
+        {
+          "paramtrNm": "serviceKey",
+          "paramtrTy": "string",
+          "paramtrDc": "공공데이터포털에서 받은 인증키",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "pageNo",
+          "paramtrTy": "string",
+          "paramtrDc": "페이지번호",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "numOfRows",
+          "paramtrTy": "string",
+          "paramtrDc": "한 페이지 결과 수",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "inqryDiv",
+          "paramtrTy": "string",
+          "paramtrDc": "조회구분",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "inqryBgnDt",
+          "paramtrTy": "string",
+          "paramtrDc": "조회기준시작일시",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "inqryEndDt",
+          "paramtrTy": "string",
+          "paramtrDc": "조회기준종료일시",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "bizno",
+          "paramtrTy": "string",
+          "paramtrDc": "사업자등록번호",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "type",
+          "paramtrTy": "string",
+          "paramtrDc": "타입",
+          "paramtrDivision": "옵"
+        }
+      ],
+      "resList": [
+        {
+          "paramtrNm": "header",
+          "paramtrTy": "object",
+          "paramtrDc": "header",
+          "paramtrDivision": "필",
+          "subParam": [
+            {
+              "paramtrNm": "resultCode",
+              "paramtrTy": "string",
+              "paramtrDc": "결과코드",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "resultMsg",
+              "paramtrTy": "string",
+              "paramtrDc": "결과메세지",
+              "paramtrDivision": "필"
+            }
+          ]
+        },
+        {
+          "paramtrNm": "body",
+          "paramtrTy": "object",
+          "paramtrDc": "body",
+          "paramtrDivision": "필",
+          "subParam": [
+            {
+              "paramtrNm": "numOfRows",
+              "paramtrTy": "string",
+              "paramtrDc": "한 페이지 결과 수",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "pageNo",
+              "paramtrTy": "string",
+              "paramtrDc": "페이지번호",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "totalCount",
+              "paramtrTy": "string",
+              "paramtrDc": "전체 결과 수",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "items",
+              "paramtrTy": "object",
+              "paramtrDc": "items",
+              "paramtrDivision": "필",
+              "subParam": [
+                {
+                  "paramtrNm": "item",
+                  "paramtrTy": "object",
+                  "paramtrDc": "item",
+                  "paramtrDivision": "옵",
+                  "subParam": [
+                    {
+                      "paramtrNm": "bizno",
+                      "paramtrTy": "string",
+                      "paramtrDc": "사업자등록번호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "chgDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "변경일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "indstrytyCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업종코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "indstrytyNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업종명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "indstrytyStatsNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업종상태명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rgstDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "등록일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rprsntIndstrytyYn",
+                      "paramtrTy": "string",
+                      "paramtrDc": "대표업종여부",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "systmChgDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "시스템변경일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "systmRgstDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "시스템등록일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "vldPrdExprtDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "유효기간만료일시",
+                      "paramtrDivision": "옵"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "oprtinUrl": "https://nopenapi.g2b.go.kr/ao/UsrInfoService/getPrcrmntCorpSplyPrdctInfo",
+      "oprtinNm": "조달업체공급물품정보조회",
+      "oprtinDc": "검색조건에 사업자등록번호를 입력하여 사업자등록번호, 세부품명, 세부품명번호, 등록일시, 변경일시, 대표품명여부 등 조달업체 공급물품정보 목록을 조회.",
+      "gwSvcNm": "getPrcrmntCorpSplyPrdctInfo02",
+      "operationId": "getPrcrmntCorpSplyPrdctInfo02",
+      "publicDataTyDetailCode": "PR0027",
+      "reqList": [
+        {
+          "paramtrNm": "serviceKey",
+          "paramtrTy": "string",
+          "paramtrDc": "공공데이터포털에서 받은 인증키",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "pageNo",
+          "paramtrTy": "string",
+          "paramtrDc": "페이지번호",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "numOfRows",
+          "paramtrTy": "string",
+          "paramtrDc": "한 페이지 결과 수",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "inqryDiv",
+          "paramtrTy": "string",
+          "paramtrDc": "조회구분",
+          "paramtrDivision": "필"
+        },
+        {
+          "paramtrNm": "inqryBgnDt",
+          "paramtrTy": "string",
+          "paramtrDc": "조회기준시작일시",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "inqryEndDt",
+          "paramtrTy": "string",
+          "paramtrDc": "조회기준종료일시",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "bizno",
+          "paramtrTy": "string",
+          "paramtrDc": "사업자등록번호",
+          "paramtrDivision": "옵"
+        },
+        {
+          "paramtrNm": "type",
+          "paramtrTy": "string",
+          "paramtrDc": "타입",
+          "paramtrDivision": "옵"
+        }
+      ],
+      "resList": [
+        {
+          "paramtrNm": "header",
+          "paramtrTy": "object",
+          "paramtrDc": "header",
+          "paramtrDivision": "필",
+          "subParam": [
+            {
+              "paramtrNm": "resultCode",
+              "paramtrTy": "string",
+              "paramtrDc": "결과코드",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "resultMsg",
+              "paramtrTy": "string",
+              "paramtrDc": "결과메세지",
+              "paramtrDivision": "필"
+            }
+          ]
+        },
+        {
+          "paramtrNm": "body",
+          "paramtrTy": "object",
+          "paramtrDc": "body",
+          "paramtrDivision": "필",
+          "subParam": [
+            {
+              "paramtrNm": "numOfRows",
+              "paramtrTy": "string",
+              "paramtrDc": "한 페이지 결과 수",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "pageNo",
+              "paramtrTy": "string",
+              "paramtrDc": "페이지번호",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "totalCount",
+              "paramtrTy": "string",
+              "paramtrDc": "전체 결과 수",
+              "paramtrDivision": "필"
+            },
+            {
+              "paramtrNm": "items",
+              "paramtrTy": "object",
+              "paramtrDc": "items",
+              "paramtrDivision": "필",
+              "subParam": [
+                {
+                  "paramtrNm": "item",
+                  "paramtrTy": "object",
+                  "paramtrDc": "item",
+                  "paramtrDivision": "옵",
+                  "subParam": [
+                    {
+                      "paramtrNm": "bizno",
+                      "paramtrTy": "string",
+                      "paramtrDc": "사업자등록번호",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "chgDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "변경일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "indstrytyCd",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업종코드",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "indstrytyNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업종명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "indstrytyStatsNm",
+                      "paramtrTy": "string",
+                      "paramtrDc": "업종상태명",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rgstDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "등록일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "rprsntIndstrytyYn",
+                      "paramtrTy": "string",
+                      "paramtrDc": "대표업종여부",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "systmChgDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "시스템변경일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "systmRgstDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "시스템등록일시",
+                      "paramtrDivision": "옵"
+                    },
+                    {
+                      "paramtrNm": "vldPrdExprtDt",
+                      "paramtrTy": "string",
+                      "paramtrDc": "유효기간만료일시",
+                      "paramtrDivision": "옵"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

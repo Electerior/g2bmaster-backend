@@ -97,6 +97,7 @@ public final class BidNoticeMapper {
 
 		return new BidNoticeRow(
 				id,
+				NoticeSource.G2B,
 				orderOf(item.get("bidNtceOrd")),
 				clip(str(item.get("bidNtceNm")), NAME_MAX),
 				category,
@@ -123,7 +124,8 @@ public final class BidNoticeMapper {
 				trimToNull(str(item.get("ntceInsttOfclTelNo"))),
 				body,
 				attachmentJson(item, "ntceSpecFileNm", "ntceSpecDocUrl", ANNOUNCE_FILE_SLOTS),
-				firstNonBlank(str(item.get("bidNtceDtlUrl")), str(item.get("bidNtceUrl"))));
+				firstNonBlank(str(item.get("bidNtceDtlUrl")), str(item.get("bidNtceUrl"))),
+				null, null, null);
 	}
 
 	// ── 발주계획 ────────────────────────────────────────────────────────────
@@ -159,6 +161,7 @@ public final class BidNoticeMapper {
 
 		return new BidNoticeRow(
 				id,
+				NoticeSource.G2B,
 				"000",
 				clip(str(item.get("prcrmntReqNm")), NAME_MAX),
 				NoticeCategory.계획,
@@ -182,7 +185,8 @@ public final class BidNoticeMapper {
 				null,
 				body,
 				null,
-				trimToNull(str(item.get("prcrmntReqInfoUrl"))));
+				trimToNull(str(item.get("prcrmntReqInfoUrl"))),
+				null, null, null);
 	}
 
 	// ── 사전규격 ────────────────────────────────────────────────────────────
@@ -219,6 +223,7 @@ public final class BidNoticeMapper {
 
 		return new BidNoticeRow(
 				id,
+				NoticeSource.G2B,
 				"000",
 				clip(title, NAME_MAX),
 				NoticeCategory.사전규격,
@@ -242,7 +247,164 @@ public final class BidNoticeMapper {
 				trimToNull(str(item.get("ofclTelNo"))),
 				body,
 				attachmentJson(item, null, "specDocFileUrl", PRESPEC_FILE_SLOTS),
-				null);
+				null,
+				null, null, null);
+	}
+
+	// ── 누리장터(민간) ──────────────────────────────────────────────────────
+
+	/**
+	 * 누리장터 민간입찰공고 목록 행 → 색인 행 ({@code PrvtBidNtceService.getPrvtBidPblancListInfo*}).
+	 *
+	 * <p>나라장터와 이름이 다른 필드를 여기서 흡수한다: 공고명 {@code ntceNm}(← bidNtceNm),
+	 * 게시일시 {@code nticeDt}(← bidNtceDt), 공고구분 {@code ntceDivNm}(← ntceKindNm),
+	 * 계약방법 {@code cntrctMthdNm}(← cntrctCnclsMthdNm), 첨부 파일명 {@code ntceSpecDocNm*}
+	 * (← ntceSpecFileNm*). 목록 응답에 기관 <b>코드</b>가 아예 없어 코드 칸은 null 이다 —
+	 * 없는 코드를 지어내지 않는다(사전규격과 같은 원칙).
+	 *
+	 * <p>금액 체계가 다르다: 누리장터에는 예가·추정가격이 없고 <b>기준금액(refAmt, 투찰 상한)</b>이
+	 * 있다. 개념이 다르므로 {@code estimatedPrice} 에 넣지 않고 별도 키 {@code referenceAmount} 로
+	 * 담는다 — V11 생성 컬럼(estimated_price)은 누리 행에서 NULL 이 되고, 금액 정렬에서 뒤로
+	 * 밀리는 것이 의도된 동작이다(docs/multi-source-schema.md §6).
+	 */
+	public static BidNoticeRow fromPrivateNotice(Map<String, Object> item, BusinessDivision division,
+			LocalDateTime now) {
+		String id = str(item.get("bidNtceNo"));
+		if (id.isEmpty()) {
+			return null;
+		}
+
+		LocalDateTime closeDate = date(item.get("bidClseDt"));
+		NoticeCategory category = (closeDate != null && closeDate.isBefore(now))
+				? NoticeCategory.마감
+				: NoticeCategory.입찰;
+
+		// 업무별 상세목록은 [순번^품명^수량^…] 형식 — 나라장터 [순번^품명번호^품명]과 달리
+		// 두 번째 토큰이 '이름'이다. CaretList 결과의 code 자리를 이름으로 되읽는다.
+		List<CaretList.Entry> products = nuriDetailList(firstNonBlank(
+				str(item.get("prdctDtlList")), str(item.get("servcDtlList")), str(item.get("cnstwkDtlList"))));
+
+		String body = body(
+				str(item.get("ntceNm")),
+				str(item.get("ntceInsttNm")),
+				str(item.get("bidNtceClsfc")),
+				str(item.get("bidMethdNm")),
+				str(item.get("cntrctMthdNm")),
+				str(item.get("sucsfbidMthdNm")),
+				str(item.get("refNo")),
+				String.join(" ", CaretList.distinctNames(products)));
+
+		return new BidNoticeRow(
+				id,
+				NoticeSource.NURI,
+				orderOf(item.get("bidNtceOrd")),
+				clip(str(item.get("ntceNm")), NAME_MAX),
+				category,
+				NoticeState.fromNoticeKind(str(item.get("ntceDivNm"))),
+				division != null ? division : BusinessDivision.of(str(item.get("bidNtceClsfc"))),
+				// 지역은 참가가능지역 오퍼레이션이 따로 채운다(나라장터와 동일 구조).
+				"",
+				null,
+				null,
+				null,
+				clipToNull(str(item.get("ntceInsttNm")), INSTITUTION_MAX),
+				null,
+				productJson(products),
+				null,
+				null,
+				priceJsonNamed(
+						"assignedBudget", item.get("asignBdgtAmt"),
+						"referenceAmount", item.get("refAmt")),
+				date(firstNonBlankObject(item.get("nticeDt"), item.get("rgstDt"))),
+				closeDate,
+				trimToNull(str(item.get("ofclNm"))),
+				trimToNull(str(item.get("ofclTelNo"))),
+				body,
+				attachmentJson(item, "ntceSpecDocNm", "ntceSpecDocUrl", ANNOUNCE_FILE_SLOTS),
+				// 누리장터 목록 응답에는 공고 화면 URL 필드가 없다(guides-md 실측).
+				null,
+				extJson(item, "bidNtceClsfc", "ntceDivNm", "bidMethdNm", "sucsfbidMthdNm",
+						"refAmtUseYn", "refAmtOpenYn", "opengDt", "aptHsmpNm", "aptHshldNum",
+						"dtchacOpenDt", "dtchacBgnPrce"),
+				null, null);
+	}
+
+	// ── D2B(국방전자조달) ───────────────────────────────────────────────────
+
+	/**
+	 * D2B 공고 행 → 색인 행.
+	 *
+	 * <p>입력은 {@code D2bNormalizer.normalizeD2bItem} 을 거친 항목이다 — 합성 공고번호
+	 * ({@code D2B-기관-공고번호-차수})와 나라장터 모양의 필드가 이미 채워져 있고, 원본 필드
+	 * ({@code dcsNo}·{@code demandYear} 등)도 그대로 남아 있다. 합성 규칙을 여기서 다시 만들지
+	 * 않는 이유는 팬아웃 경로(/api/bid-announce)와 색인의 id 가 같아야 프론트가 두 경로를
+	 * 오갈 수 있기 때문이다.
+	 *
+	 * @param division 오퍼레이션이 정하는 업종 — 시설(Fclty) 오퍼레이션은 응답의 busiDivs 가
+	 *                 비어 있어도 '공사'다. normalizeD2bItem 의 _type 추정보다 신뢰도가 높다
+	 */
+	public static BidNoticeRow fromD2b(Map<String, Object> item, BusinessDivision division,
+			LocalDateTime now) {
+		String id = str(item.get("bidNtceNo"));
+		// 합성 키의 식별 성분(기관·공고번호·판단번호)이 전부 비면 색인할 수 없는 행이다 —
+		// 접두사·계열 태그만 남은 id 는 서로 다른 빈 행들을 하나로 뭉친다.
+		if (id.isEmpty() || (str(item.get("orntCode")).isEmpty()
+				&& str(item.get("pblancNo")).isEmpty() && str(item.get("dcsNo")).isEmpty())) {
+			return null;
+		}
+
+		LocalDateTime closeDate = date(item.get("bidClseDt"));
+		NoticeCategory category = (closeDate != null && closeDate.isBefore(now))
+				? NoticeCategory.마감
+				: NoticeCategory.입찰;
+
+		String body = body(
+				str(item.get("bidNtceNm")),
+				str(item.get("ntceInsttNm")),
+				str(item.get("cntrctCnclsMthdNm")),
+				str(item.get("bidStle")),
+				str(item.get("_noticeStatus")),
+				str(item.get("bsnsDivNm")));
+
+		return new BidNoticeRow(
+				id,
+				NoticeSource.D2B,
+				orderOf(item.get("bidNtceOrd")),
+				clip(str(item.get("bidNtceNm")), NAME_MAX),
+				category,
+				NoticeState.fromNoticeKind(str(item.get("pblancSe"))),
+				division != null ? division : BusinessDivision.of(str(item.get("bsnsDivNm"))),
+				// D2B 목록 응답에는 참가가능지역 개념이 없다 — 빈 값(전국 취급)의 한계는
+				// docs/multi-source-schema.md §6 에 문서화돼 있다.
+				"",
+				null,
+				null,
+				// D2B 발주기관코드는 조달청 코드 체계와 다른 네임스페이스다. source 컬럼이
+				// 행을 가르므로 담아 둔다 — 기관코드 조회는 source 조건과 함께 걸어야 한다.
+				trimToNull(str(item.get("orntCode"))),
+				clipToNull(str(item.get("ntceInsttNm")), INSTITUTION_MAX),
+				null,
+				null,
+				null,
+				null,
+				// 기초예비가격(bsicExpt)은 추정가격이 아니다 — 별도 키로 담고 estimatedPrice 는
+				// 비워 둔다(상세 오퍼레이션의 estmPrce 를 붙이는 것은 후속 단계).
+				priceJsonNamed(
+						"basicExpectedPrice", item.get("bsicExpt"),
+						"assignedBudget", item.get("budgetAmount")),
+				date(item.get("bidNtceDt")),
+				closeDate,
+				null,
+				null,
+				body,
+				// D2B 응답에는 첨부·공고 URL 필드가 없다(d2b-openapi/INDEX.md §④).
+				null,
+				null,
+				extJson(item, "demandYear", "pblancYear", "orntCode", "dcsNo", "pblancNo",
+						"pblancOdr", "cntrwkNo", "busiDivs", "pblancSe", "bidStle", "_d2bOperation",
+						"bidPartcptRegistClosDt", "opengDt"),
+				trimToNull(str(item.get("g2bPblancNo"))),
+				trimToNull(str(item.get("g2bPblancOdr"))));
 	}
 
 	// ── 지역 ────────────────────────────────────────────────────────────────
@@ -342,6 +504,51 @@ public final class BidNoticeMapper {
 		if (number != null) {
 			node.put(field, number);
 		}
+	}
+
+	/**
+	 * 키 이름을 직접 지정하는 가격 표 — 누리장터({@code referenceAmount})·D2B({@code basicExpectedPrice})
+	 * 처럼 나라장터의 고정 키 집합에 없는 금액 개념을 담는다. {@code (키, 값)} 쌍의 나열이다.
+	 */
+	private static String priceJsonNamed(Object... keyValues) {
+		ObjectNode node = JSON.createObjectNode();
+		for (int i = 0; i + 1 < keyValues.length; i += 2) {
+			putNumber(node, String.valueOf(keyValues[i]), keyValues[i + 1]);
+		}
+		return node.isEmpty() ? null : node.toString();
+	}
+
+	/**
+	 * 소스 특화 필드({@code source_ext} 컬럼, V13)를 JSON 으로 접는다. 값이 있는 키만 담고,
+	 * 전부 비면 {@code null} — 빈 객체를 넣으면 화면이 "확장 정보 있음"으로 오해한다.
+	 * 키는 원본 API 필드명 그대로다(매핑 표를 하나 더 만들지 않는다).
+	 */
+	private static String extJson(Map<String, Object> item, String... keys) {
+		ObjectNode node = JSON.createObjectNode();
+		for (String key : keys) {
+			String value = str(item.get(key)).trim();
+			if (!value.isEmpty()) {
+				node.put(key, value);
+			}
+		}
+		return node.isEmpty() ? null : node.toString();
+	}
+
+	/**
+	 * 누리장터 업무별 상세목록 파서. 형식이 {@code [순번^품명^수량^납품기한…]} 으로,
+	 * 나라장터의 {@code [순번^품명번호^품명]} 과 달리 <b>두 번째 토큰이 이름</b>이다.
+	 * {@link CaretList#parse} 를 재사용하되 code 자리에 온 이름을 되돌린다.
+	 */
+	private static List<CaretList.Entry> nuriDetailList(String raw) {
+		List<CaretList.Entry> parsed = CaretList.parse(raw == null ? "" : raw);
+		List<CaretList.Entry> remapped = new ArrayList<>(parsed.size());
+		for (CaretList.Entry entry : parsed) {
+			String name = entry.code().isEmpty() ? entry.name() : entry.code();
+			if (!name.isEmpty()) {
+				remapped.add(new CaretList.Entry(entry.seq(), "", name));
+			}
+		}
+		return List.copyOf(remapped);
 	}
 
 	/**

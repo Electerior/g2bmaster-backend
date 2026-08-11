@@ -1,0 +1,5169 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "조달청에서 조사된 또는 계약된 시설공통자재(토목),시설공통자재(건축),시설공통자재(기계설비),시설공통자재(전기, 정보통신),시장시공가격(토목),시장시공가격(건축),시장시공가격(기계설비),공종분류및세부공종,표준시장단가및시장시공가격,자원분류및순수자원,시설공통자재(종합)의 가격정보를 제공하는 서비스입니다. 다만 아래 유의사항을 참고하시어 활용하여 주시기 바랍니다.\n본 자재가격은 조달청에서 시설공사 원가계산시 적용하는 참고 가격이므로 수량, 난이도, 수급상황 등에 따라 가격변동이 될 수 있음을 유의하시기 바랍니다\n본 공개자료의 가격조사는 전국(제주제외)을 대상으로 하여 조사되었으며, 인도조건별로 게재하였으니 참고하시기 바랍니다.\n시설자재 가격정보는 매년 2회(상반기, 하반기)에 걸쳐 정기적으로 최신화 할 예정이며, 가격변동이 있거나 신규 추가되는 품목에 대한 가격자료는 수시로 게재될 수 있습니다.",
+    "version": "1.0.0",
+    "title": "조달청_나라장터 가격정보현황서비스"
+  },
+  "host": "apis.data.go.kr/1230000/ao/PriceInfoService",
+  "basePath": "",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/getPriceInfoListFcltyCmmnMtrilEngrk": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "specRootDmLen": {
+                              "type": "string",
+                              "description": "규격근원직경길이",
+                              "properties": {}
+                            },
+                            "krnPrdctNm": {
+                              "type": "string",
+                              "description": "규격명(한글품목명)",
+                              "properties": {}
+                            },
+                            "prceNticeNo": {
+                              "type": "string",
+                              "description": "가격게시번호",
+                              "properties": {}
+                            },
+                            "nticeDt": {
+                              "type": "string",
+                              "description": "게시일시",
+                              "properties": {}
+                            },
+                            "bsnsDivCd": {
+                              "type": "string",
+                              "description": "업무구분코드",
+                              "properties": {}
+                            },
+                            "bsnsDivNm": {
+                              "type": "string",
+                              "description": "업무구분명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNo": {
+                              "type": "string",
+                              "description": "물품분류번호",
+                              "properties": {}
+                            },
+                            "prdctIdntNo": {
+                              "type": "string",
+                              "description": "물품식별번호",
+                              "properties": {}
+                            },
+                            "invstDeptNm": {
+                              "type": "string",
+                              "description": "조사부서명",
+                              "properties": {}
+                            },
+                            "invstDeptTelNo": {
+                              "type": "string",
+                              "description": "조사부서전화번호",
+                              "properties": {}
+                            },
+                            "invstOfclNm": {
+                              "type": "string",
+                              "description": "조사담당자명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNoNm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "단위",
+                              "properties": {}
+                            },
+                            "prce": {
+                              "type": "string",
+                              "description": "가격",
+                              "properties": {}
+                            },
+                            "splyJrsdctRgnNm": {
+                              "type": "string",
+                              "description": "공급관할지역명",
+                              "properties": {}
+                            },
+                            "etcCntnts": {
+                              "type": "string",
+                              "description": "기타내용",
+                              "properties": {}
+                            },
+                            "mtrlcst": {
+                              "type": "string",
+                              "description": "재료비",
+                              "properties": {}
+                            },
+                            "lbrcst": {
+                              "type": "string",
+                              "description": "노무비",
+                              "properties": {}
+                            },
+                            "gnrlexpns": {
+                              "type": "string",
+                              "description": "경비",
+                              "properties": {}
+                            },
+                            "vatYnNm": {
+                              "type": "string",
+                              "description": "부가가치세여부명",
+                              "properties": {}
+                            },
+                            "prceDiv": {
+                              "type": "string",
+                              "description": "가격구분",
+                              "properties": {}
+                            },
+                            "dlvryCndtnNm": {
+                              "type": "string",
+                              "description": "인도조건명",
+                              "properties": {}
+                            },
+                            "distbStep": {
+                              "type": "string",
+                              "description": "유통단계",
+                              "properties": {}
+                            },
+                            "payCndtn": {
+                              "type": "string",
+                              "description": "결제조건",
+                              "properties": {}
+                            },
+                            "cntrctCorpNm": {
+                              "type": "string",
+                              "description": "계약업체명",
+                              "properties": {}
+                            },
+                            "cntrctCorpTelNo": {
+                              "type": "string",
+                              "description": "계약업체전화번호",
+                              "properties": {}
+                            },
+                            "treekndNo": {
+                              "type": "string",
+                              "description": "수증번호",
+                              "properties": {}
+                            },
+                            "specThtLen": {
+                              "type": "string",
+                              "description": "규격수고길이",
+                              "properties": {}
+                            },
+                            "specWtrtbBtLen": {
+                              "type": "string",
+                              "description": "규격수관폭길이",
+                              "properties": {}
+                            },
+                            "specWtrtbLen": {
+                              "type": "string",
+                              "description": "규격수관길이",
+                              "properties": {}
+                            },
+                            "specBhtDmLen": {
+                              "type": "string",
+                              "description": "규격흉고직경길이",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시설공통자재(토목) 가격정보",
+        "description": "시설공통자재(토목) 가격정보의 검색조건(물품분류번호,품명,물품식별번호,규격명)을 입력하면 물품분류번호,관련부서정보,관련계약정보,가격 등 조회.",
+        "operationId": "getPriceInfoListFcltyCmmnMtrilEngrk",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNo",
+          "description": "물품분류번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNoNm",
+          "description": "품명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctIdntNo",
+          "description": "물품식별번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "krnPrdctNm",
+          "description": "규격명(한글품목명)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPriceInfoListFcltyCmmnMtrilBildng": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "specRootDmLen": {
+                              "type": "string",
+                              "description": "규격근원직경길이",
+                              "properties": {}
+                            },
+                            "payCndtn": {
+                              "type": "string",
+                              "description": "결제조건",
+                              "properties": {}
+                            },
+                            "prceNticeNo": {
+                              "type": "string",
+                              "description": "가격게시번호",
+                              "properties": {}
+                            },
+                            "nticeDt": {
+                              "type": "string",
+                              "description": "게시일시",
+                              "properties": {}
+                            },
+                            "bsnsDivCd": {
+                              "type": "string",
+                              "description": "업무구분코드",
+                              "properties": {}
+                            },
+                            "bsnsDivNm": {
+                              "type": "string",
+                              "description": "업무구분명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNo": {
+                              "type": "string",
+                              "description": "물품분류번호",
+                              "properties": {}
+                            },
+                            "prdctIdntNo": {
+                              "type": "string",
+                              "description": "물품식별번호",
+                              "properties": {}
+                            },
+                            "invstDeptNm": {
+                              "type": "string",
+                              "description": "조사부서명",
+                              "properties": {}
+                            },
+                            "invstDeptTelNo": {
+                              "type": "string",
+                              "description": "조사부서전화번호",
+                              "properties": {}
+                            },
+                            "invstOfclNm": {
+                              "type": "string",
+                              "description": "조사담당자명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNoNm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "krnPrdctNm": {
+                              "type": "string",
+                              "description": "규격명(한글품목명)",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "단위",
+                              "properties": {}
+                            },
+                            "prce": {
+                              "type": "string",
+                              "description": "가격",
+                              "properties": {}
+                            },
+                            "splyJrsdctRgnNm": {
+                              "type": "string",
+                              "description": "공급관할지역명",
+                              "properties": {}
+                            },
+                            "etcCntnts": {
+                              "type": "string",
+                              "description": "기타내용",
+                              "properties": {}
+                            },
+                            "mtrlcst": {
+                              "type": "string",
+                              "description": "재료비",
+                              "properties": {}
+                            },
+                            "lbrcst": {
+                              "type": "string",
+                              "description": "노무비",
+                              "properties": {}
+                            },
+                            "gnrlexpns": {
+                              "type": "string",
+                              "description": "경비",
+                              "properties": {}
+                            },
+                            "vatYnNm": {
+                              "type": "string",
+                              "description": "부가가치세여부명",
+                              "properties": {}
+                            },
+                            "prceDiv": {
+                              "type": "string",
+                              "description": "가격구분",
+                              "properties": {}
+                            },
+                            "dlvryCndtnNm": {
+                              "type": "string",
+                              "description": "인도조건명",
+                              "properties": {}
+                            },
+                            "distbStep": {
+                              "type": "string",
+                              "description": "유통단계",
+                              "properties": {}
+                            },
+                            "cntrctCorpNm": {
+                              "type": "string",
+                              "description": "계약업체명",
+                              "properties": {}
+                            },
+                            "cntrctCorpTelNo": {
+                              "type": "string",
+                              "description": "계약업체전화번호",
+                              "properties": {}
+                            },
+                            "treekndNo": {
+                              "type": "string",
+                              "description": "수증번호",
+                              "properties": {}
+                            },
+                            "specThtLen": {
+                              "type": "string",
+                              "description": "규격수고길이",
+                              "properties": {}
+                            },
+                            "specWtrtbBtLen": {
+                              "type": "string",
+                              "description": "규격수관폭길이",
+                              "properties": {}
+                            },
+                            "specWtrtbLen": {
+                              "type": "string",
+                              "description": "규격수관길이",
+                              "properties": {}
+                            },
+                            "specBhtDmLen": {
+                              "type": "string",
+                              "description": "규격흉고직경길이",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시설공통자재(건축) 가격정보",
+        "description": "시설공통자재(건축) 가격정보의 검색조건(물품분류번호,품명,물품식별번호,규격명)을 입력하면 물품분류번호,관련부서정보,관련계약정보,가격 등 조회",
+        "operationId": "getPriceInfoListFcltyCmmnMtrilBildng",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNo",
+          "description": "물품분류번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNoNm",
+          "description": "품명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctIdntNo",
+          "description": "물품식별번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "krnPrdctNm",
+          "description": "규격명(한글품목명)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPriceInfoListFcltyCmmnMtrilMchnEqp": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "specRootDmLen": {
+                              "type": "string",
+                              "description": "규격근원직경길이",
+                              "properties": {}
+                            },
+                            "payCndtn": {
+                              "type": "string",
+                              "description": "결제조건",
+                              "properties": {}
+                            },
+                            "prceNticeNo": {
+                              "type": "string",
+                              "description": "가격게시번호",
+                              "properties": {}
+                            },
+                            "nticeDt": {
+                              "type": "string",
+                              "description": "게시일시",
+                              "properties": {}
+                            },
+                            "bsnsDivCd": {
+                              "type": "string",
+                              "description": "업무구분코드",
+                              "properties": {}
+                            },
+                            "bsnsDivNm": {
+                              "type": "string",
+                              "description": "업무구분명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNo": {
+                              "type": "string",
+                              "description": "물품분류번호",
+                              "properties": {}
+                            },
+                            "prdctIdntNo": {
+                              "type": "string",
+                              "description": "물품식별번호",
+                              "properties": {}
+                            },
+                            "invstDeptNm": {
+                              "type": "string",
+                              "description": "조사부서명",
+                              "properties": {}
+                            },
+                            "invstDeptTelNo": {
+                              "type": "string",
+                              "description": "조사부서전화번호",
+                              "properties": {}
+                            },
+                            "invstOfclNm": {
+                              "type": "string",
+                              "description": "조사담당자명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNoNm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "krnPrdctNm": {
+                              "type": "string",
+                              "description": "규격명(한글품목명)",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "단위",
+                              "properties": {}
+                            },
+                            "prce": {
+                              "type": "string",
+                              "description": "가격",
+                              "properties": {}
+                            },
+                            "splyJrsdctRgnNm": {
+                              "type": "string",
+                              "description": "공급관할지역명",
+                              "properties": {}
+                            },
+                            "etcCntnts": {
+                              "type": "string",
+                              "description": "기타내용",
+                              "properties": {}
+                            },
+                            "mtrlcst": {
+                              "type": "string",
+                              "description": "재료비",
+                              "properties": {}
+                            },
+                            "lbrcst": {
+                              "type": "string",
+                              "description": "노무비",
+                              "properties": {}
+                            },
+                            "gnrlexpns": {
+                              "type": "string",
+                              "description": "경비",
+                              "properties": {}
+                            },
+                            "vatYnNm": {
+                              "type": "string",
+                              "description": "부가가치세여부명",
+                              "properties": {}
+                            },
+                            "prceDiv": {
+                              "type": "string",
+                              "description": "가격구분",
+                              "properties": {}
+                            },
+                            "dlvryCndtnNm": {
+                              "type": "string",
+                              "description": "인도조건명",
+                              "properties": {}
+                            },
+                            "distbStep": {
+                              "type": "string",
+                              "description": "유통단계",
+                              "properties": {}
+                            },
+                            "cntrctCorpNm": {
+                              "type": "string",
+                              "description": "계약업체명",
+                              "properties": {}
+                            },
+                            "cntrctCorpTelNo": {
+                              "type": "string",
+                              "description": "계약업체전화번호",
+                              "properties": {}
+                            },
+                            "treekndNo": {
+                              "type": "string",
+                              "description": "수증번호",
+                              "properties": {}
+                            },
+                            "specThtLen": {
+                              "type": "string",
+                              "description": "규격수고길이",
+                              "properties": {}
+                            },
+                            "specWtrtbBtLen": {
+                              "type": "string",
+                              "description": "규격수관폭길이",
+                              "properties": {}
+                            },
+                            "specWtrtbLen": {
+                              "type": "string",
+                              "description": "규격수관길이",
+                              "properties": {}
+                            },
+                            "specBhtDmLen": {
+                              "type": "string",
+                              "description": "규격흉고직경길이",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시설공통자재(기계설비) 가격정보",
+        "description": "시설공통자재(기계설비) 가격정보의 검색조건(물품분류번호,품명,물품식별번호,규격명)을 입력하면 물품분류번호,관련부서정보,관련계약정보,가격 등 조회",
+        "operationId": "getPriceInfoListFcltyCmmnMtrilMchnEqp",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNo",
+          "description": "물품분류번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNoNm",
+          "description": "품명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctIdntNo",
+          "description": "물품식별번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "krnPrdctNm",
+          "description": "규격명(한글품목명)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPriceInfoListFcltyCmmnMtrilElctyIrmc": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "specRootDmLen": {
+                              "type": "string",
+                              "description": "규격근원직경길이",
+                              "properties": {}
+                            },
+                            "prdctClsfcNo": {
+                              "type": "string",
+                              "description": "물품분류번호",
+                              "properties": {}
+                            },
+                            "prceNticeNo": {
+                              "type": "string",
+                              "description": "가격게시번호",
+                              "properties": {}
+                            },
+                            "nticeDt": {
+                              "type": "string",
+                              "description": "게시일시",
+                              "properties": {}
+                            },
+                            "bsnsDivCd": {
+                              "type": "string",
+                              "description": "업무구분코드",
+                              "properties": {}
+                            },
+                            "bsnsDivNm": {
+                              "type": "string",
+                              "description": "업무구분명",
+                              "properties": {}
+                            },
+                            "prdctIdntNo": {
+                              "type": "string",
+                              "description": "물품식별번호",
+                              "properties": {}
+                            },
+                            "invstDeptNm": {
+                              "type": "string",
+                              "description": "조사부서명",
+                              "properties": {}
+                            },
+                            "invstDeptTelNo": {
+                              "type": "string",
+                              "description": "조사부서전화번호",
+                              "properties": {}
+                            },
+                            "invstOfclNm": {
+                              "type": "string",
+                              "description": "조사담당자명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNoNm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "krnPrdctNm": {
+                              "type": "string",
+                              "description": "규격명(한글품목명)",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "단위",
+                              "properties": {}
+                            },
+                            "prce": {
+                              "type": "string",
+                              "description": "가격",
+                              "properties": {}
+                            },
+                            "splyJrsdctRgnNm": {
+                              "type": "string",
+                              "description": "공급관할지역명",
+                              "properties": {}
+                            },
+                            "etcCntnts": {
+                              "type": "string",
+                              "description": "기타내용",
+                              "properties": {}
+                            },
+                            "mtrlcst": {
+                              "type": "string",
+                              "description": "재료비",
+                              "properties": {}
+                            },
+                            "lbrcst": {
+                              "type": "string",
+                              "description": "노무비",
+                              "properties": {}
+                            },
+                            "gnrlexpns": {
+                              "type": "string",
+                              "description": "경비",
+                              "properties": {}
+                            },
+                            "vatYnNm": {
+                              "type": "string",
+                              "description": "부가가치세여부명",
+                              "properties": {}
+                            },
+                            "prceDiv": {
+                              "type": "string",
+                              "description": "가격구분",
+                              "properties": {}
+                            },
+                            "dlvryCndtnNm": {
+                              "type": "string",
+                              "description": "인도조건명",
+                              "properties": {}
+                            },
+                            "distbStep": {
+                              "type": "string",
+                              "description": "유통단계",
+                              "properties": {}
+                            },
+                            "payCndtn": {
+                              "type": "string",
+                              "description": "결제조건",
+                              "properties": {}
+                            },
+                            "cntrctCorpNm": {
+                              "type": "string",
+                              "description": "계약업체명",
+                              "properties": {}
+                            },
+                            "cntrctCorpTelNo": {
+                              "type": "string",
+                              "description": "계약업체전화번호",
+                              "properties": {}
+                            },
+                            "treekndNo": {
+                              "type": "string",
+                              "description": "수증번호",
+                              "properties": {}
+                            },
+                            "specThtLen": {
+                              "type": "string",
+                              "description": "규격수고길이",
+                              "properties": {}
+                            },
+                            "specWtrtbBtLen": {
+                              "type": "string",
+                              "description": "규격수관폭길이",
+                              "properties": {}
+                            },
+                            "specWtrtbLen": {
+                              "type": "string",
+                              "description": "규격수관길이",
+                              "properties": {}
+                            },
+                            "specBhtDmLen": {
+                              "type": "string",
+                              "description": "규격흉고직경길이",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시설공통자재(전기, 정보통신) 가격정보",
+        "description": "시설공통자재(전기,정보통신) 가격정보의 검색조건(물품분류번호,품명,물품식별번호,규격명)을 입력하면 물품분류번호,관련부서정보,관련계약정보,가격 등 조회",
+        "operationId": "getPriceInfoListFcltyCmmnMtrilElctyIrmc",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNoNm",
+          "description": "품명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctIdntNo",
+          "description": "물품식별번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "krnPrdctNm",
+          "description": "규격명(한글품목명)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNo",
+          "description": "물품분류번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPriceInfoListMrktCnstrctPcEngrk": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "specRootDmLen": {
+                              "type": "string",
+                              "description": "규격근원직경길이",
+                              "properties": {}
+                            },
+                            "prceNticeNo": {
+                              "type": "string",
+                              "description": "가격게시번호",
+                              "properties": {}
+                            },
+                            "nticeDt": {
+                              "type": "string",
+                              "description": "게시일시",
+                              "properties": {}
+                            },
+                            "bsnsDivCd": {
+                              "type": "string",
+                              "description": "업무구분코드",
+                              "properties": {}
+                            },
+                            "bsnsDivNm": {
+                              "type": "string",
+                              "description": "업무구분명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNo": {
+                              "type": "string",
+                              "description": "물품분류번호",
+                              "properties": {}
+                            },
+                            "prdctIdntNo": {
+                              "type": "string",
+                              "description": "물품식별번호",
+                              "properties": {}
+                            },
+                            "invstDeptNm": {
+                              "type": "string",
+                              "description": "조사부서명",
+                              "properties": {}
+                            },
+                            "invstDeptTelNo": {
+                              "type": "string",
+                              "description": "조사부서전화번호",
+                              "properties": {}
+                            },
+                            "invstOfclNm": {
+                              "type": "string",
+                              "description": "조사담당자명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNoNm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "krnPrdctNm": {
+                              "type": "string",
+                              "description": "규격명(한글품목명)",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "단위",
+                              "properties": {}
+                            },
+                            "prce": {
+                              "type": "string",
+                              "description": "가격",
+                              "properties": {}
+                            },
+                            "splyJrsdctRgnNm": {
+                              "type": "string",
+                              "description": "공급관할지역명",
+                              "properties": {}
+                            },
+                            "etcCntnts": {
+                              "type": "string",
+                              "description": "기타내용",
+                              "properties": {}
+                            },
+                            "mtrlcst": {
+                              "type": "string",
+                              "description": "재료비",
+                              "properties": {}
+                            },
+                            "lbrcst": {
+                              "type": "string",
+                              "description": "노무비",
+                              "properties": {}
+                            },
+                            "gnrlexpns": {
+                              "type": "string",
+                              "description": "경비",
+                              "properties": {}
+                            },
+                            "vatYnNm": {
+                              "type": "string",
+                              "description": "부가가치세여부명",
+                              "properties": {}
+                            },
+                            "prceDiv": {
+                              "type": "string",
+                              "description": "가격구분",
+                              "properties": {}
+                            },
+                            "dlvryCndtnNm": {
+                              "type": "string",
+                              "description": "인도조건명",
+                              "properties": {}
+                            },
+                            "distbStep": {
+                              "type": "string",
+                              "description": "유통단계",
+                              "properties": {}
+                            },
+                            "payCndtn": {
+                              "type": "string",
+                              "description": "결제조건",
+                              "properties": {}
+                            },
+                            "cntrctCorpNm": {
+                              "type": "string",
+                              "description": "계약업체명",
+                              "properties": {}
+                            },
+                            "cntrctCorpTelNo": {
+                              "type": "string",
+                              "description": "계약업체전화번호",
+                              "properties": {}
+                            },
+                            "treekndNo": {
+                              "type": "string",
+                              "description": "수증번호",
+                              "properties": {}
+                            },
+                            "specThtLen": {
+                              "type": "string",
+                              "description": "규격수고길이",
+                              "properties": {}
+                            },
+                            "specWtrtbBtLen": {
+                              "type": "string",
+                              "description": "규격수관폭길이",
+                              "properties": {}
+                            },
+                            "specWtrtbLen": {
+                              "type": "string",
+                              "description": "규격수관길이",
+                              "properties": {}
+                            },
+                            "specBhtDmLen": {
+                              "type": "string",
+                              "description": "규격흉고직경길이",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시장시공가격(토목) 가격정보",
+        "description": "시장시공가격(토목) 정보의 검색조건(물품분류번호,품명,물품식별번호,규격명)을 입력하면 물품분류번호,관련부서정보,관련계약정보,시장시공가격 등 조회",
+        "operationId": "getPriceInfoListMrktCnstrctPcEngrk",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNo",
+          "description": "물품분류번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNoNm",
+          "description": "품명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctIdntNo",
+          "description": "물품식별번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "krnPrdctNm",
+          "description": "규격명(한글품목명)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPriceInfoListMrktCnstrctPcBildng": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "payCndtn": {
+                              "type": "string",
+                              "description": "결제조건",
+                              "properties": {}
+                            },
+                            "prceNticeNo": {
+                              "type": "string",
+                              "description": "가격게시번호",
+                              "properties": {}
+                            },
+                            "nticeDt": {
+                              "type": "string",
+                              "description": "게시일시",
+                              "properties": {}
+                            },
+                            "bsnsDivCd": {
+                              "type": "string",
+                              "description": "업무구분코드",
+                              "properties": {}
+                            },
+                            "bsnsDivNm": {
+                              "type": "string",
+                              "description": "업무구분명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNo": {
+                              "type": "string",
+                              "description": "물품분류번호",
+                              "properties": {}
+                            },
+                            "prdctIdntNo": {
+                              "type": "string",
+                              "description": "물품식별번호",
+                              "properties": {}
+                            },
+                            "invstDeptNm": {
+                              "type": "string",
+                              "description": "조사부서명",
+                              "properties": {}
+                            },
+                            "invstDeptTelNo": {
+                              "type": "string",
+                              "description": "조사부서전화번호",
+                              "properties": {}
+                            },
+                            "invstOfclNm": {
+                              "type": "string",
+                              "description": "조사담당자명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNoNm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "krnPrdctNm": {
+                              "type": "string",
+                              "description": "규격명(한글품목명)",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "단위",
+                              "properties": {}
+                            },
+                            "prce": {
+                              "type": "string",
+                              "description": "가격",
+                              "properties": {}
+                            },
+                            "splyJrsdctRgnNm": {
+                              "type": "string",
+                              "description": "공급관할지역명",
+                              "properties": {}
+                            },
+                            "etcCntnts": {
+                              "type": "string",
+                              "description": "기타내용",
+                              "properties": {}
+                            },
+                            "mtrlcst": {
+                              "type": "string",
+                              "description": "재료비",
+                              "properties": {}
+                            },
+                            "lbrcst": {
+                              "type": "string",
+                              "description": "노무비",
+                              "properties": {}
+                            },
+                            "gnrlexpns": {
+                              "type": "string",
+                              "description": "경비",
+                              "properties": {}
+                            },
+                            "vatYnNm": {
+                              "type": "string",
+                              "description": "부가가치세여부명",
+                              "properties": {}
+                            },
+                            "prceDiv": {
+                              "type": "string",
+                              "description": "가격구분",
+                              "properties": {}
+                            },
+                            "dlvryCndtnNm": {
+                              "type": "string",
+                              "description": "인도조건명",
+                              "properties": {}
+                            },
+                            "distbStep": {
+                              "type": "string",
+                              "description": "유통단계",
+                              "properties": {}
+                            },
+                            "cntrctCorpNm": {
+                              "type": "string",
+                              "description": "계약업체명",
+                              "properties": {}
+                            },
+                            "cntrctCorpTelNo": {
+                              "type": "string",
+                              "description": "계약업체전화번호",
+                              "properties": {}
+                            },
+                            "treekndNo": {
+                              "type": "string",
+                              "description": "수증번호",
+                              "properties": {}
+                            },
+                            "specThtLen": {
+                              "type": "string",
+                              "description": "규격수고길이",
+                              "properties": {}
+                            },
+                            "specWtrtbBtLen": {
+                              "type": "string",
+                              "description": "규격수관폭길이",
+                              "properties": {}
+                            },
+                            "specWtrtbLen": {
+                              "type": "string",
+                              "description": "규격수관길이",
+                              "properties": {}
+                            },
+                            "specBhtDmLen": {
+                              "type": "string",
+                              "description": "규격흉고직경길이",
+                              "properties": {}
+                            },
+                            "specRootDmLen": {
+                              "type": "string",
+                              "description": "규격근원직경길이",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시장시공가격(건축) 가격정보",
+        "description": "시장시공가격(건축) 정보의 검색조건(물품분류번호,품명,물품식별번호,규격명)을 입력하면 물품분류번호,관련부서정보,관련계약정보,시장시공가격 등 조회",
+        "operationId": "getPriceInfoListMrktCnstrctPcBildng",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNo",
+          "description": "물품분류번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNoNm",
+          "description": "품명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctIdntNo",
+          "description": "물품식별번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "krnPrdctNm",
+          "description": "규격명(한글품목명)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPriceInfoListMrktCnstrctPcMchnEqp": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "payCndtn": {
+                              "type": "string",
+                              "description": "결제조건",
+                              "properties": {}
+                            },
+                            "prceNticeNo": {
+                              "type": "string",
+                              "description": "가격게시번호",
+                              "properties": {}
+                            },
+                            "nticeDt": {
+                              "type": "string",
+                              "description": "게시일시",
+                              "properties": {}
+                            },
+                            "bsnsDivCd": {
+                              "type": "string",
+                              "description": "업무구분코드",
+                              "properties": {}
+                            },
+                            "bsnsDivNm": {
+                              "type": "string",
+                              "description": "업무구분명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNo": {
+                              "type": "string",
+                              "description": "물품분류번호",
+                              "properties": {}
+                            },
+                            "prdctIdntNo": {
+                              "type": "string",
+                              "description": "물품식별번호",
+                              "properties": {}
+                            },
+                            "invstDeptNm": {
+                              "type": "string",
+                              "description": "조사부서명",
+                              "properties": {}
+                            },
+                            "invstDeptTelNo": {
+                              "type": "string",
+                              "description": "조사부서전화번호",
+                              "properties": {}
+                            },
+                            "invstOfclNm": {
+                              "type": "string",
+                              "description": "조사담당자명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNoNm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "krnPrdctNm": {
+                              "type": "string",
+                              "description": "규격명(한글품목명)",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "단위",
+                              "properties": {}
+                            },
+                            "prce": {
+                              "type": "string",
+                              "description": "가격",
+                              "properties": {}
+                            },
+                            "splyJrsdctRgnNm": {
+                              "type": "string",
+                              "description": "공급관할지역명",
+                              "properties": {}
+                            },
+                            "etcCntnts": {
+                              "type": "string",
+                              "description": "기타내용",
+                              "properties": {}
+                            },
+                            "mtrlcst": {
+                              "type": "string",
+                              "description": "재료비",
+                              "properties": {}
+                            },
+                            "lbrcst": {
+                              "type": "string",
+                              "description": "노무비",
+                              "properties": {}
+                            },
+                            "gnrlexpns": {
+                              "type": "string",
+                              "description": "경비",
+                              "properties": {}
+                            },
+                            "vatYnNm": {
+                              "type": "string",
+                              "description": "부가가치세여부명",
+                              "properties": {}
+                            },
+                            "prceDiv": {
+                              "type": "string",
+                              "description": "가격구분",
+                              "properties": {}
+                            },
+                            "dlvryCndtnNm": {
+                              "type": "string",
+                              "description": "인도조건명",
+                              "properties": {}
+                            },
+                            "distbStep": {
+                              "type": "string",
+                              "description": "유통단계",
+                              "properties": {}
+                            },
+                            "cntrctCorpNm": {
+                              "type": "string",
+                              "description": "계약업체명",
+                              "properties": {}
+                            },
+                            "cntrctCorpTelNo": {
+                              "type": "string",
+                              "description": "계약업체전화번호",
+                              "properties": {}
+                            },
+                            "treekndNo": {
+                              "type": "string",
+                              "description": "수증번호",
+                              "properties": {}
+                            },
+                            "specThtLen": {
+                              "type": "string",
+                              "description": "규격수고길이",
+                              "properties": {}
+                            },
+                            "specWtrtbBtLen": {
+                              "type": "string",
+                              "description": "규격수관폭길이",
+                              "properties": {}
+                            },
+                            "specWtrtbLen": {
+                              "type": "string",
+                              "description": "규격수관길이",
+                              "properties": {}
+                            },
+                            "specBhtDmLen": {
+                              "type": "string",
+                              "description": "규격흉고직경길이",
+                              "properties": {}
+                            },
+                            "specRootDmLen": {
+                              "type": "string",
+                              "description": "규격근원직경길이",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시장시공가격(기계설비) 가격정보",
+        "description": "시장시공가격(기계설비) 정보의 검색조건(물품분류번호, 품명, 물품식별번호, 규격명)을 입력하면 물품분류번호, 관련부서정보, 관련계약정보, 시장시공가격 등 조회",
+        "operationId": "getPriceInfoListMrktCnstrctPcMchnEqp",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNo",
+          "description": "물품분류번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNoNm",
+          "description": "품명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctIdntNo",
+          "description": "물품식별번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "krnPrdctNm",
+          "description": "규격명(한글품목명)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getCnsttyClsfcInfoList": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "SpectnYn": {
+                              "type": "string",
+                              "description": "규격화여부",
+                              "properties": {}
+                            },
+                            "cnstwkDivCd": {
+                              "type": "string",
+                              "description": "공사구분코드",
+                              "properties": {}
+                            },
+                            "cnstwkDivNm": {
+                              "type": "string",
+                              "description": "공사구분코드명",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclCd1": {
+                              "type": "string",
+                              "description": "일레벨수량산출공종분류코드",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclNm1": {
+                              "type": "string",
+                              "description": "일레벨수량산출공종분류명",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclDscrpt1": {
+                              "type": "string",
+                              "description": "일레벨수량산출공종분류설명",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclCd2": {
+                              "type": "string",
+                              "description": "이레벨수량산출공종분류코드",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclNm2": {
+                              "type": "string",
+                              "description": "이레벨수량산출공종분류명",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclDscrpt2": {
+                              "type": "string",
+                              "description": "이레벨수량산출공종분류설명",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclCd3": {
+                              "type": "string",
+                              "description": "삼레벨수량산출공종분류코드",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclNm3": {
+                              "type": "string",
+                              "description": "삼레벨수량산출공종분류명",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclDscrpt3": {
+                              "type": "string",
+                              "description": "삼레벨수량산출공종분류설명",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclCd4": {
+                              "type": "string",
+                              "description": "사레벨수량산출공종분류코드",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclNm4": {
+                              "type": "string",
+                              "description": "사레벨수량산출공종분류명",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclDscrpt4": {
+                              "type": "string",
+                              "description": "사레벨수량산출공종분류설명",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclCd5": {
+                              "type": "string",
+                              "description": "오레벨수량산출공종분류코드",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclNm5": {
+                              "type": "string",
+                              "description": "오레벨수량산출공종분류명",
+                              "properties": {}
+                            },
+                            "LvlqtyCalcCtyclDscrpt5": {
+                              "type": "string",
+                              "description": "오레벨수량산출공종분류설명",
+                              "properties": {}
+                            },
+                            "qtyCalcCtyclcd": {
+                              "type": "string",
+                              "description": "수량산출공종코드",
+                              "properties": {}
+                            },
+                            "qtyCalcCtyclNm": {
+                              "type": "string",
+                              "description": "수량산출공종명",
+                              "properties": {}
+                            },
+                            "spec": {
+                              "type": "string",
+                              "description": "규격",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "단위",
+                              "properties": {}
+                            },
+                            "dscrpt": {
+                              "type": "string",
+                              "description": "설명",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "공종분류및세부공종",
+        "description": "시설공사공종분류 검색조건(공사분류코드)을 입력하면 수량산출공종분류코, 수량산출코드명 등 조회.",
+        "operationId": "getCnsttyClsfcInfoList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getStdMarkUprcinfoList": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "uprcAplCndtnCntnts": {
+                              "type": "string",
+                              "description": "단가적용조건내용",
+                              "properties": {}
+                            },
+                            "pblctDate": {
+                              "type": "string",
+                              "description": "공표일자",
+                              "properties": {}
+                            },
+                            "cnstwkDivCd": {
+                              "type": "string",
+                              "description": "공사구분코드",
+                              "properties": {}
+                            },
+                            "cnstwkDivCdNm": {
+                              "type": "string",
+                              "description": "공사구분코드명",
+                              "properties": {}
+                            },
+                            "uprcDivNm": {
+                              "type": "string",
+                              "description": "단가구분명",
+                              "properties": {}
+                            },
+                            "qtyCalcCtyclcd": {
+                              "type": "string",
+                              "description": "수량산출공종코드",
+                              "properties": {}
+                            },
+                            "prdnm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "spec": {
+                              "type": "string",
+                              "description": "규격",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "단위",
+                              "properties": {}
+                            },
+                            "mtrlcstUprc": {
+                              "type": "string",
+                              "description": "재료비단가",
+                              "properties": {}
+                            },
+                            "lbrcstUprc": {
+                              "type": "string",
+                              "description": "노무비단가",
+                              "properties": {}
+                            },
+                            "gnrexpnsUprc": {
+                              "type": "string",
+                              "description": "경비단가",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "표준시장단가및시장시공가격 정보",
+        "description": "시설공사 표준시장단가 공사구분(토목,건축,전기,통신,설비) 발표일에 구성된 세부공종, 품명, 규격,단위, 재료비,노무비,경비 합계",
+        "operationId": "getStdMarkUprcinfoList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "inqryDiv",
+          "description": "조회구분",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "inqryBgnDate",
+          "description": "조회시작일시",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "inqryEndDate",
+          "description": "조회종료일자",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPriceInfoListFcltyCmmnMtrilTotal": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "krnPrdctNm": {
+                              "type": "string",
+                              "description": "한글품목명",
+                              "properties": {}
+                            },
+                            "prceNticeNo": {
+                              "type": "string",
+                              "description": "가격게시번호",
+                              "properties": {}
+                            },
+                            "nticeDt": {
+                              "type": "string",
+                              "description": "게시일시",
+                              "properties": {}
+                            },
+                            "bsnsDivCd": {
+                              "type": "string",
+                              "description": "업무구분코드",
+                              "properties": {}
+                            },
+                            "bsnsDivNm": {
+                              "type": "string",
+                              "description": "업무구분명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNo": {
+                              "type": "string",
+                              "description": "단가구분명",
+                              "properties": {}
+                            },
+                            "qtyCalcCtyclcd": {
+                              "type": "string",
+                              "description": "물품분류번호",
+                              "properties": {}
+                            },
+                            "prdctIdntNo": {
+                              "type": "string",
+                              "description": "물품식별번호",
+                              "properties": {}
+                            },
+                            "invstDeptNm": {
+                              "type": "string",
+                              "description": "조사부서명",
+                              "properties": {}
+                            },
+                            "invstDeptTelNo": {
+                              "type": "string",
+                              "description": "조사부서전화번호",
+                              "properties": {}
+                            },
+                            "invstOfclNm": {
+                              "type": "string",
+                              "description": "조사담당자명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNoNm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "시설공통자재(종합) 가격정보",
+        "description": ".시설공통자재(토목, 건축, 기계설비, 전기·정보통신) 가격정보의 검색조건(물품분류번호,품명,물품식별번호,규격명)을 입력하면 물품분류번호,관련부서정보,관련계약정보,가격 등 조회.",
+        "operationId": "getPriceInfoListFcltyCmmnMtrilTotal",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "inqryDiv",
+          "description": "조회구분",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "inqryBgnDate",
+          "description": "조회시작일자",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "inqryEndDate",
+          "description": "조회종료일자",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        }
+      ]
+    },
+    "/getNetRsceinfoList": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "dlvryCndtnNm": {
+                              "type": "string",
+                              "description": "인도조건명",
+                              "properties": {}
+                            },
+                            "rsceTyExtrnlCd": {
+                              "type": "string",
+                              "description": "자원유형외부코드",
+                              "properties": {}
+                            },
+                            "grpUnitCnstwkExtrnlCdNm": {
+                              "type": "string",
+                              "description": "그룹단위공사외부코드명",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcNo1": {
+                              "type": "string",
+                              "description": "일레벨자원분류번호",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcNm1": {
+                              "type": "string",
+                              "description": "일레벨자원분류명",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcDscrpt1": {
+                              "type": "string",
+                              "description": "일레벨자원분류설명",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcNo2": {
+                              "type": "string",
+                              "description": "이레벨자원분류번호",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcNm2": {
+                              "type": "string",
+                              "description": "이레벨자원분류명",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcDscrpt2": {
+                              "type": "string",
+                              "description": "이레벨자원분류설명",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcNo3": {
+                              "type": "string",
+                              "description": "삼레벨자원분류번호",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcNm3": {
+                              "type": "string",
+                              "description": "삼레벨자원분류명",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcDscrpt3": {
+                              "type": "string",
+                              "description": "삼레벨자원분류설명",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcNo4": {
+                              "type": "string",
+                              "description": "사레벨자원분류번호",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcNm4": {
+                              "type": "string",
+                              "description": "사레벨자원분류명",
+                              "properties": {}
+                            },
+                            "lvlRsceClsfcDscrpt4": {
+                              "type": "string",
+                              "description": "사레벨자원분류설명",
+                              "properties": {}
+                            },
+                            "gnrlexpnsItemGrpExtrnCd": {
+                              "type": "string",
+                              "description": "경비항목그룹외부코드",
+                              "properties": {}
+                            },
+                            "prdctMngDivNm": {
+                              "type": "string",
+                              "description": "경비항목그룹외부코드명",
+                              "properties": {}
+                            },
+                            "netRsceCd": {
+                              "type": "string",
+                              "description": "순수자원코드",
+                              "properties": {}
+                            },
+                            "rsceNm": {
+                              "type": "string",
+                              "description": "자원명",
+                              "properties": {}
+                            },
+                            "rsceSpecNm": {
+                              "type": "string",
+                              "description": "자원규격명",
+                              "properties": {}
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "단위",
+                              "properties": {}
+                            },
+                            "rsceDscrpt": {
+                              "type": "string",
+                              "description": "자원설명",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "자원분류및순수자원",
+        "description": "조달청 시설공사 가격조사 및 관리업무 규정에 따라 자원분류 및 순수자원을 정기적으로 가격을 조사한 자료",
+        "operationId": "getNetRsceinfoList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "getPriceInfoListFcltyCmmnMtrilEngrk_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "specRootDmLen": {
+                      "type": "string",
+                      "description": "규격근원직경길이"
+                    },
+                    "krnPrdctNm": {
+                      "type": "string",
+                      "description": "규격명(한글품목명)"
+                    },
+                    "prceNticeNo": {
+                      "type": "string",
+                      "description": "가격게시번호"
+                    },
+                    "nticeDt": {
+                      "type": "string",
+                      "description": "게시일시"
+                    },
+                    "bsnsDivCd": {
+                      "type": "string",
+                      "description": "업무구분코드"
+                    },
+                    "bsnsDivNm": {
+                      "type": "string",
+                      "description": "업무구분명"
+                    },
+                    "prdctClsfcNo": {
+                      "type": "string",
+                      "description": "물품분류번호"
+                    },
+                    "prdctIdntNo": {
+                      "type": "string",
+                      "description": "물품식별번호"
+                    },
+                    "invstDeptNm": {
+                      "type": "string",
+                      "description": "조사부서명"
+                    },
+                    "invstDeptTelNo": {
+                      "type": "string",
+                      "description": "조사부서전화번호"
+                    },
+                    "invstOfclNm": {
+                      "type": "string",
+                      "description": "조사담당자명"
+                    },
+                    "prdctClsfcNoNm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "단위"
+                    },
+                    "prce": {
+                      "type": "string",
+                      "description": "가격"
+                    },
+                    "splyJrsdctRgnNm": {
+                      "type": "string",
+                      "description": "공급관할지역명"
+                    },
+                    "etcCntnts": {
+                      "type": "string",
+                      "description": "기타내용"
+                    },
+                    "mtrlcst": {
+                      "type": "string",
+                      "description": "재료비"
+                    },
+                    "lbrcst": {
+                      "type": "string",
+                      "description": "노무비"
+                    },
+                    "gnrlexpns": {
+                      "type": "string",
+                      "description": "경비"
+                    },
+                    "vatYnNm": {
+                      "type": "string",
+                      "description": "부가가치세여부명"
+                    },
+                    "prceDiv": {
+                      "type": "string",
+                      "description": "가격구분"
+                    },
+                    "dlvryCndtnNm": {
+                      "type": "string",
+                      "description": "인도조건명"
+                    },
+                    "distbStep": {
+                      "type": "string",
+                      "description": "유통단계"
+                    },
+                    "payCndtn": {
+                      "type": "string",
+                      "description": "결제조건"
+                    },
+                    "cntrctCorpNm": {
+                      "type": "string",
+                      "description": "계약업체명"
+                    },
+                    "cntrctCorpTelNo": {
+                      "type": "string",
+                      "description": "계약업체전화번호"
+                    },
+                    "treekndNo": {
+                      "type": "string",
+                      "description": "수증번호"
+                    },
+                    "specThtLen": {
+                      "type": "string",
+                      "description": "규격수고길이"
+                    },
+                    "specWtrtbBtLen": {
+                      "type": "string",
+                      "description": "규격수관폭길이"
+                    },
+                    "specWtrtbLen": {
+                      "type": "string",
+                      "description": "규격수관길이"
+                    },
+                    "specBhtDmLen": {
+                      "type": "string",
+                      "description": "규격흉고직경길이"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getPriceInfoListFcltyCmmnMtrilBildng_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "specRootDmLen": {
+                      "type": "string",
+                      "description": "규격근원직경길이"
+                    },
+                    "payCndtn": {
+                      "type": "string",
+                      "description": "결제조건"
+                    },
+                    "prceNticeNo": {
+                      "type": "string",
+                      "description": "가격게시번호"
+                    },
+                    "nticeDt": {
+                      "type": "string",
+                      "description": "게시일시"
+                    },
+                    "bsnsDivCd": {
+                      "type": "string",
+                      "description": "업무구분코드"
+                    },
+                    "bsnsDivNm": {
+                      "type": "string",
+                      "description": "업무구분명"
+                    },
+                    "prdctClsfcNo": {
+                      "type": "string",
+                      "description": "물품분류번호"
+                    },
+                    "prdctIdntNo": {
+                      "type": "string",
+                      "description": "물품식별번호"
+                    },
+                    "invstDeptNm": {
+                      "type": "string",
+                      "description": "조사부서명"
+                    },
+                    "invstDeptTelNo": {
+                      "type": "string",
+                      "description": "조사부서전화번호"
+                    },
+                    "invstOfclNm": {
+                      "type": "string",
+                      "description": "조사담당자명"
+                    },
+                    "prdctClsfcNoNm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "krnPrdctNm": {
+                      "type": "string",
+                      "description": "규격명(한글품목명)"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "단위"
+                    },
+                    "prce": {
+                      "type": "string",
+                      "description": "가격"
+                    },
+                    "splyJrsdctRgnNm": {
+                      "type": "string",
+                      "description": "공급관할지역명"
+                    },
+                    "etcCntnts": {
+                      "type": "string",
+                      "description": "기타내용"
+                    },
+                    "mtrlcst": {
+                      "type": "string",
+                      "description": "재료비"
+                    },
+                    "lbrcst": {
+                      "type": "string",
+                      "description": "노무비"
+                    },
+                    "gnrlexpns": {
+                      "type": "string",
+                      "description": "경비"
+                    },
+                    "vatYnNm": {
+                      "type": "string",
+                      "description": "부가가치세여부명"
+                    },
+                    "prceDiv": {
+                      "type": "string",
+                      "description": "가격구분"
+                    },
+                    "dlvryCndtnNm": {
+                      "type": "string",
+                      "description": "인도조건명"
+                    },
+                    "distbStep": {
+                      "type": "string",
+                      "description": "유통단계"
+                    },
+                    "cntrctCorpNm": {
+                      "type": "string",
+                      "description": "계약업체명"
+                    },
+                    "cntrctCorpTelNo": {
+                      "type": "string",
+                      "description": "계약업체전화번호"
+                    },
+                    "treekndNo": {
+                      "type": "string",
+                      "description": "수증번호"
+                    },
+                    "specThtLen": {
+                      "type": "string",
+                      "description": "규격수고길이"
+                    },
+                    "specWtrtbBtLen": {
+                      "type": "string",
+                      "description": "규격수관폭길이"
+                    },
+                    "specWtrtbLen": {
+                      "type": "string",
+                      "description": "규격수관길이"
+                    },
+                    "specBhtDmLen": {
+                      "type": "string",
+                      "description": "규격흉고직경길이"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getPriceInfoListFcltyCmmnMtrilMchnEqp_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "specRootDmLen": {
+                      "type": "string",
+                      "description": "규격근원직경길이"
+                    },
+                    "payCndtn": {
+                      "type": "string",
+                      "description": "결제조건"
+                    },
+                    "prceNticeNo": {
+                      "type": "string",
+                      "description": "가격게시번호"
+                    },
+                    "nticeDt": {
+                      "type": "string",
+                      "description": "게시일시"
+                    },
+                    "bsnsDivCd": {
+                      "type": "string",
+                      "description": "업무구분코드"
+                    },
+                    "bsnsDivNm": {
+                      "type": "string",
+                      "description": "업무구분명"
+                    },
+                    "prdctClsfcNo": {
+                      "type": "string",
+                      "description": "물품분류번호"
+                    },
+                    "prdctIdntNo": {
+                      "type": "string",
+                      "description": "물품식별번호"
+                    },
+                    "invstDeptNm": {
+                      "type": "string",
+                      "description": "조사부서명"
+                    },
+                    "invstDeptTelNo": {
+                      "type": "string",
+                      "description": "조사부서전화번호"
+                    },
+                    "invstOfclNm": {
+                      "type": "string",
+                      "description": "조사담당자명"
+                    },
+                    "prdctClsfcNoNm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "krnPrdctNm": {
+                      "type": "string",
+                      "description": "규격명(한글품목명)"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "단위"
+                    },
+                    "prce": {
+                      "type": "string",
+                      "description": "가격"
+                    },
+                    "splyJrsdctRgnNm": {
+                      "type": "string",
+                      "description": "공급관할지역명"
+                    },
+                    "etcCntnts": {
+                      "type": "string",
+                      "description": "기타내용"
+                    },
+                    "mtrlcst": {
+                      "type": "string",
+                      "description": "재료비"
+                    },
+                    "lbrcst": {
+                      "type": "string",
+                      "description": "노무비"
+                    },
+                    "gnrlexpns": {
+                      "type": "string",
+                      "description": "경비"
+                    },
+                    "vatYnNm": {
+                      "type": "string",
+                      "description": "부가가치세여부명"
+                    },
+                    "prceDiv": {
+                      "type": "string",
+                      "description": "가격구분"
+                    },
+                    "dlvryCndtnNm": {
+                      "type": "string",
+                      "description": "인도조건명"
+                    },
+                    "distbStep": {
+                      "type": "string",
+                      "description": "유통단계"
+                    },
+                    "cntrctCorpNm": {
+                      "type": "string",
+                      "description": "계약업체명"
+                    },
+                    "cntrctCorpTelNo": {
+                      "type": "string",
+                      "description": "계약업체전화번호"
+                    },
+                    "treekndNo": {
+                      "type": "string",
+                      "description": "수증번호"
+                    },
+                    "specThtLen": {
+                      "type": "string",
+                      "description": "규격수고길이"
+                    },
+                    "specWtrtbBtLen": {
+                      "type": "string",
+                      "description": "규격수관폭길이"
+                    },
+                    "specWtrtbLen": {
+                      "type": "string",
+                      "description": "규격수관길이"
+                    },
+                    "specBhtDmLen": {
+                      "type": "string",
+                      "description": "규격흉고직경길이"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getPriceInfoListFcltyCmmnMtrilElctyIrmc_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "specRootDmLen": {
+                      "type": "string",
+                      "description": "규격근원직경길이"
+                    },
+                    "prdctClsfcNo": {
+                      "type": "string",
+                      "description": "물품분류번호"
+                    },
+                    "prceNticeNo": {
+                      "type": "string",
+                      "description": "가격게시번호"
+                    },
+                    "nticeDt": {
+                      "type": "string",
+                      "description": "게시일시"
+                    },
+                    "bsnsDivCd": {
+                      "type": "string",
+                      "description": "업무구분코드"
+                    },
+                    "bsnsDivNm": {
+                      "type": "string",
+                      "description": "업무구분명"
+                    },
+                    "prdctIdntNo": {
+                      "type": "string",
+                      "description": "물품식별번호"
+                    },
+                    "invstDeptNm": {
+                      "type": "string",
+                      "description": "조사부서명"
+                    },
+                    "invstDeptTelNo": {
+                      "type": "string",
+                      "description": "조사부서전화번호"
+                    },
+                    "invstOfclNm": {
+                      "type": "string",
+                      "description": "조사담당자명"
+                    },
+                    "prdctClsfcNoNm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "krnPrdctNm": {
+                      "type": "string",
+                      "description": "규격명(한글품목명)"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "단위"
+                    },
+                    "prce": {
+                      "type": "string",
+                      "description": "가격"
+                    },
+                    "splyJrsdctRgnNm": {
+                      "type": "string",
+                      "description": "공급관할지역명"
+                    },
+                    "etcCntnts": {
+                      "type": "string",
+                      "description": "기타내용"
+                    },
+                    "mtrlcst": {
+                      "type": "string",
+                      "description": "재료비"
+                    },
+                    "lbrcst": {
+                      "type": "string",
+                      "description": "노무비"
+                    },
+                    "gnrlexpns": {
+                      "type": "string",
+                      "description": "경비"
+                    },
+                    "vatYnNm": {
+                      "type": "string",
+                      "description": "부가가치세여부명"
+                    },
+                    "prceDiv": {
+                      "type": "string",
+                      "description": "가격구분"
+                    },
+                    "dlvryCndtnNm": {
+                      "type": "string",
+                      "description": "인도조건명"
+                    },
+                    "distbStep": {
+                      "type": "string",
+                      "description": "유통단계"
+                    },
+                    "payCndtn": {
+                      "type": "string",
+                      "description": "결제조건"
+                    },
+                    "cntrctCorpNm": {
+                      "type": "string",
+                      "description": "계약업체명"
+                    },
+                    "cntrctCorpTelNo": {
+                      "type": "string",
+                      "description": "계약업체전화번호"
+                    },
+                    "treekndNo": {
+                      "type": "string",
+                      "description": "수증번호"
+                    },
+                    "specThtLen": {
+                      "type": "string",
+                      "description": "규격수고길이"
+                    },
+                    "specWtrtbBtLen": {
+                      "type": "string",
+                      "description": "규격수관폭길이"
+                    },
+                    "specWtrtbLen": {
+                      "type": "string",
+                      "description": "규격수관길이"
+                    },
+                    "specBhtDmLen": {
+                      "type": "string",
+                      "description": "규격흉고직경길이"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getPriceInfoListMrktCnstrctPcEngrk_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "specRootDmLen": {
+                      "type": "string",
+                      "description": "규격근원직경길이"
+                    },
+                    "prceNticeNo": {
+                      "type": "string",
+                      "description": "가격게시번호"
+                    },
+                    "nticeDt": {
+                      "type": "string",
+                      "description": "게시일시"
+                    },
+                    "bsnsDivCd": {
+                      "type": "string",
+                      "description": "업무구분코드"
+                    },
+                    "bsnsDivNm": {
+                      "type": "string",
+                      "description": "업무구분명"
+                    },
+                    "prdctClsfcNo": {
+                      "type": "string",
+                      "description": "물품분류번호"
+                    },
+                    "prdctIdntNo": {
+                      "type": "string",
+                      "description": "물품식별번호"
+                    },
+                    "invstDeptNm": {
+                      "type": "string",
+                      "description": "조사부서명"
+                    },
+                    "invstDeptTelNo": {
+                      "type": "string",
+                      "description": "조사부서전화번호"
+                    },
+                    "invstOfclNm": {
+                      "type": "string",
+                      "description": "조사담당자명"
+                    },
+                    "prdctClsfcNoNm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "krnPrdctNm": {
+                      "type": "string",
+                      "description": "규격명(한글품목명)"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "단위"
+                    },
+                    "prce": {
+                      "type": "string",
+                      "description": "가격"
+                    },
+                    "splyJrsdctRgnNm": {
+                      "type": "string",
+                      "description": "공급관할지역명"
+                    },
+                    "etcCntnts": {
+                      "type": "string",
+                      "description": "기타내용"
+                    },
+                    "mtrlcst": {
+                      "type": "string",
+                      "description": "재료비"
+                    },
+                    "lbrcst": {
+                      "type": "string",
+                      "description": "노무비"
+                    },
+                    "gnrlexpns": {
+                      "type": "string",
+                      "description": "경비"
+                    },
+                    "vatYnNm": {
+                      "type": "string",
+                      "description": "부가가치세여부명"
+                    },
+                    "prceDiv": {
+                      "type": "string",
+                      "description": "가격구분"
+                    },
+                    "dlvryCndtnNm": {
+                      "type": "string",
+                      "description": "인도조건명"
+                    },
+                    "distbStep": {
+                      "type": "string",
+                      "description": "유통단계"
+                    },
+                    "payCndtn": {
+                      "type": "string",
+                      "description": "결제조건"
+                    },
+                    "cntrctCorpNm": {
+                      "type": "string",
+                      "description": "계약업체명"
+                    },
+                    "cntrctCorpTelNo": {
+                      "type": "string",
+                      "description": "계약업체전화번호"
+                    },
+                    "treekndNo": {
+                      "type": "string",
+                      "description": "수증번호"
+                    },
+                    "specThtLen": {
+                      "type": "string",
+                      "description": "규격수고길이"
+                    },
+                    "specWtrtbBtLen": {
+                      "type": "string",
+                      "description": "규격수관폭길이"
+                    },
+                    "specWtrtbLen": {
+                      "type": "string",
+                      "description": "규격수관길이"
+                    },
+                    "specBhtDmLen": {
+                      "type": "string",
+                      "description": "규격흉고직경길이"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getPriceInfoListMrktCnstrctPcBildng_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "payCndtn": {
+                      "type": "string",
+                      "description": "결제조건"
+                    },
+                    "prceNticeNo": {
+                      "type": "string",
+                      "description": "가격게시번호"
+                    },
+                    "nticeDt": {
+                      "type": "string",
+                      "description": "게시일시"
+                    },
+                    "bsnsDivCd": {
+                      "type": "string",
+                      "description": "업무구분코드"
+                    },
+                    "bsnsDivNm": {
+                      "type": "string",
+                      "description": "업무구분명"
+                    },
+                    "prdctClsfcNo": {
+                      "type": "string",
+                      "description": "물품분류번호"
+                    },
+                    "prdctIdntNo": {
+                      "type": "string",
+                      "description": "물품식별번호"
+                    },
+                    "invstDeptNm": {
+                      "type": "string",
+                      "description": "조사부서명"
+                    },
+                    "invstDeptTelNo": {
+                      "type": "string",
+                      "description": "조사부서전화번호"
+                    },
+                    "invstOfclNm": {
+                      "type": "string",
+                      "description": "조사담당자명"
+                    },
+                    "prdctClsfcNoNm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "krnPrdctNm": {
+                      "type": "string",
+                      "description": "규격명(한글품목명)"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "단위"
+                    },
+                    "prce": {
+                      "type": "string",
+                      "description": "가격"
+                    },
+                    "splyJrsdctRgnNm": {
+                      "type": "string",
+                      "description": "공급관할지역명"
+                    },
+                    "etcCntnts": {
+                      "type": "string",
+                      "description": "기타내용"
+                    },
+                    "mtrlcst": {
+                      "type": "string",
+                      "description": "재료비"
+                    },
+                    "lbrcst": {
+                      "type": "string",
+                      "description": "노무비"
+                    },
+                    "gnrlexpns": {
+                      "type": "string",
+                      "description": "경비"
+                    },
+                    "vatYnNm": {
+                      "type": "string",
+                      "description": "부가가치세여부명"
+                    },
+                    "prceDiv": {
+                      "type": "string",
+                      "description": "가격구분"
+                    },
+                    "dlvryCndtnNm": {
+                      "type": "string",
+                      "description": "인도조건명"
+                    },
+                    "distbStep": {
+                      "type": "string",
+                      "description": "유통단계"
+                    },
+                    "cntrctCorpNm": {
+                      "type": "string",
+                      "description": "계약업체명"
+                    },
+                    "cntrctCorpTelNo": {
+                      "type": "string",
+                      "description": "계약업체전화번호"
+                    },
+                    "treekndNo": {
+                      "type": "string",
+                      "description": "수증번호"
+                    },
+                    "specThtLen": {
+                      "type": "string",
+                      "description": "규격수고길이"
+                    },
+                    "specWtrtbBtLen": {
+                      "type": "string",
+                      "description": "규격수관폭길이"
+                    },
+                    "specWtrtbLen": {
+                      "type": "string",
+                      "description": "규격수관길이"
+                    },
+                    "specBhtDmLen": {
+                      "type": "string",
+                      "description": "규격흉고직경길이"
+                    },
+                    "specRootDmLen": {
+                      "type": "string",
+                      "description": "규격근원직경길이"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getPriceInfoListMrktCnstrctPcMchnEqp_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "payCndtn": {
+                      "type": "string",
+                      "description": "결제조건"
+                    },
+                    "prceNticeNo": {
+                      "type": "string",
+                      "description": "가격게시번호"
+                    },
+                    "nticeDt": {
+                      "type": "string",
+                      "description": "게시일시"
+                    },
+                    "bsnsDivCd": {
+                      "type": "string",
+                      "description": "업무구분코드"
+                    },
+                    "bsnsDivNm": {
+                      "type": "string",
+                      "description": "업무구분명"
+                    },
+                    "prdctClsfcNo": {
+                      "type": "string",
+                      "description": "물품분류번호"
+                    },
+                    "prdctIdntNo": {
+                      "type": "string",
+                      "description": "물품식별번호"
+                    },
+                    "invstDeptNm": {
+                      "type": "string",
+                      "description": "조사부서명"
+                    },
+                    "invstDeptTelNo": {
+                      "type": "string",
+                      "description": "조사부서전화번호"
+                    },
+                    "invstOfclNm": {
+                      "type": "string",
+                      "description": "조사담당자명"
+                    },
+                    "prdctClsfcNoNm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "krnPrdctNm": {
+                      "type": "string",
+                      "description": "규격명(한글품목명)"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "단위"
+                    },
+                    "prce": {
+                      "type": "string",
+                      "description": "가격"
+                    },
+                    "splyJrsdctRgnNm": {
+                      "type": "string",
+                      "description": "공급관할지역명"
+                    },
+                    "etcCntnts": {
+                      "type": "string",
+                      "description": "기타내용"
+                    },
+                    "mtrlcst": {
+                      "type": "string",
+                      "description": "재료비"
+                    },
+                    "lbrcst": {
+                      "type": "string",
+                      "description": "노무비"
+                    },
+                    "gnrlexpns": {
+                      "type": "string",
+                      "description": "경비"
+                    },
+                    "vatYnNm": {
+                      "type": "string",
+                      "description": "부가가치세여부명"
+                    },
+                    "prceDiv": {
+                      "type": "string",
+                      "description": "가격구분"
+                    },
+                    "dlvryCndtnNm": {
+                      "type": "string",
+                      "description": "인도조건명"
+                    },
+                    "distbStep": {
+                      "type": "string",
+                      "description": "유통단계"
+                    },
+                    "cntrctCorpNm": {
+                      "type": "string",
+                      "description": "계약업체명"
+                    },
+                    "cntrctCorpTelNo": {
+                      "type": "string",
+                      "description": "계약업체전화번호"
+                    },
+                    "treekndNo": {
+                      "type": "string",
+                      "description": "수증번호"
+                    },
+                    "specThtLen": {
+                      "type": "string",
+                      "description": "규격수고길이"
+                    },
+                    "specWtrtbBtLen": {
+                      "type": "string",
+                      "description": "규격수관폭길이"
+                    },
+                    "specWtrtbLen": {
+                      "type": "string",
+                      "description": "규격수관길이"
+                    },
+                    "specBhtDmLen": {
+                      "type": "string",
+                      "description": "규격흉고직경길이"
+                    },
+                    "specRootDmLen": {
+                      "type": "string",
+                      "description": "규격근원직경길이"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getCnsttyClsfcInfoList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "SpectnYn": {
+                      "type": "string",
+                      "description": "규격화여부"
+                    },
+                    "cnstwkDivCd": {
+                      "type": "string",
+                      "description": "공사구분코드"
+                    },
+                    "cnstwkDivNm": {
+                      "type": "string",
+                      "description": "공사구분코드명"
+                    },
+                    "LvlqtyCalcCtyclCd1": {
+                      "type": "string",
+                      "description": "일레벨수량산출공종분류코드"
+                    },
+                    "LvlqtyCalcCtyclNm1": {
+                      "type": "string",
+                      "description": "일레벨수량산출공종분류명"
+                    },
+                    "LvlqtyCalcCtyclDscrpt1": {
+                      "type": "string",
+                      "description": "일레벨수량산출공종분류설명"
+                    },
+                    "LvlqtyCalcCtyclCd2": {
+                      "type": "string",
+                      "description": "이레벨수량산출공종분류코드"
+                    },
+                    "LvlqtyCalcCtyclNm2": {
+                      "type": "string",
+                      "description": "이레벨수량산출공종분류명"
+                    },
+                    "LvlqtyCalcCtyclDscrpt2": {
+                      "type": "string",
+                      "description": "이레벨수량산출공종분류설명"
+                    },
+                    "LvlqtyCalcCtyclCd3": {
+                      "type": "string",
+                      "description": "삼레벨수량산출공종분류코드"
+                    },
+                    "LvlqtyCalcCtyclNm3": {
+                      "type": "string",
+                      "description": "삼레벨수량산출공종분류명"
+                    },
+                    "LvlqtyCalcCtyclDscrpt3": {
+                      "type": "string",
+                      "description": "삼레벨수량산출공종분류설명"
+                    },
+                    "LvlqtyCalcCtyclCd4": {
+                      "type": "string",
+                      "description": "사레벨수량산출공종분류코드"
+                    },
+                    "LvlqtyCalcCtyclNm4": {
+                      "type": "string",
+                      "description": "사레벨수량산출공종분류명"
+                    },
+                    "LvlqtyCalcCtyclDscrpt4": {
+                      "type": "string",
+                      "description": "사레벨수량산출공종분류설명"
+                    },
+                    "LvlqtyCalcCtyclCd5": {
+                      "type": "string",
+                      "description": "오레벨수량산출공종분류코드"
+                    },
+                    "LvlqtyCalcCtyclNm5": {
+                      "type": "string",
+                      "description": "오레벨수량산출공종분류명"
+                    },
+                    "LvlqtyCalcCtyclDscrpt5": {
+                      "type": "string",
+                      "description": "오레벨수량산출공종분류설명"
+                    },
+                    "qtyCalcCtyclcd": {
+                      "type": "string",
+                      "description": "수량산출공종코드"
+                    },
+                    "qtyCalcCtyclNm": {
+                      "type": "string",
+                      "description": "수량산출공종명"
+                    },
+                    "spec": {
+                      "type": "string",
+                      "description": "규격"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "단위"
+                    },
+                    "dscrpt": {
+                      "type": "string",
+                      "description": "설명"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getStdMarkUprcinfoList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "uprcAplCndtnCntnts": {
+                      "type": "string",
+                      "description": "단가적용조건내용"
+                    },
+                    "pblctDate": {
+                      "type": "string",
+                      "description": "공표일자"
+                    },
+                    "cnstwkDivCd": {
+                      "type": "string",
+                      "description": "공사구분코드"
+                    },
+                    "cnstwkDivCdNm": {
+                      "type": "string",
+                      "description": "공사구분코드명"
+                    },
+                    "uprcDivNm": {
+                      "type": "string",
+                      "description": "단가구분명"
+                    },
+                    "qtyCalcCtyclcd": {
+                      "type": "string",
+                      "description": "수량산출공종코드"
+                    },
+                    "prdnm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "spec": {
+                      "type": "string",
+                      "description": "규격"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "단위"
+                    },
+                    "mtrlcstUprc": {
+                      "type": "string",
+                      "description": "재료비단가"
+                    },
+                    "lbrcstUprc": {
+                      "type": "string",
+                      "description": "노무비단가"
+                    },
+                    "gnrexpnsUprc": {
+                      "type": "string",
+                      "description": "경비단가"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getNetRsceinfoList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "dlvryCndtnNm": {
+                      "type": "string",
+                      "description": "인도조건명"
+                    },
+                    "rsceTyExtrnlCd": {
+                      "type": "string",
+                      "description": "자원유형외부코드"
+                    },
+                    "grpUnitCnstwkExtrnlCdNm": {
+                      "type": "string",
+                      "description": "그룹단위공사외부코드명"
+                    },
+                    "lvlRsceClsfcNo1": {
+                      "type": "string",
+                      "description": "일레벨자원분류번호"
+                    },
+                    "lvlRsceClsfcNm1": {
+                      "type": "string",
+                      "description": "일레벨자원분류명"
+                    },
+                    "lvlRsceClsfcDscrpt1": {
+                      "type": "string",
+                      "description": "일레벨자원분류설명"
+                    },
+                    "lvlRsceClsfcNo2": {
+                      "type": "string",
+                      "description": "이레벨자원분류번호"
+                    },
+                    "lvlRsceClsfcNm2": {
+                      "type": "string",
+                      "description": "이레벨자원분류명"
+                    },
+                    "lvlRsceClsfcDscrpt2": {
+                      "type": "string",
+                      "description": "이레벨자원분류설명"
+                    },
+                    "lvlRsceClsfcNo3": {
+                      "type": "string",
+                      "description": "삼레벨자원분류번호"
+                    },
+                    "lvlRsceClsfcNm3": {
+                      "type": "string",
+                      "description": "삼레벨자원분류명"
+                    },
+                    "lvlRsceClsfcDscrpt3": {
+                      "type": "string",
+                      "description": "삼레벨자원분류설명"
+                    },
+                    "lvlRsceClsfcNo4": {
+                      "type": "string",
+                      "description": "사레벨자원분류번호"
+                    },
+                    "lvlRsceClsfcNm4": {
+                      "type": "string",
+                      "description": "사레벨자원분류명"
+                    },
+                    "lvlRsceClsfcDscrpt4": {
+                      "type": "string",
+                      "description": "사레벨자원분류설명"
+                    },
+                    "gnrlexpnsItemGrpExtrnCd": {
+                      "type": "string",
+                      "description": "경비항목그룹외부코드"
+                    },
+                    "prdctMngDivNm": {
+                      "type": "string",
+                      "description": "경비항목그룹외부코드명"
+                    },
+                    "netRsceCd": {
+                      "type": "string",
+                      "description": "순수자원코드"
+                    },
+                    "rsceNm": {
+                      "type": "string",
+                      "description": "자원명"
+                    },
+                    "rsceSpecNm": {
+                      "type": "string",
+                      "description": "자원규격명"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "단위"
+                    },
+                    "rsceDscrpt": {
+                      "type": "string",
+                      "description": "자원설명"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getPriceInfoListFcltyCmmnMtrilTotal_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "krnPrdctNm": {
+                      "type": "string",
+                      "description": "한글품목명"
+                    },
+                    "prceNticeNo": {
+                      "type": "string",
+                      "description": "가격게시번호"
+                    },
+                    "nticeDt": {
+                      "type": "string",
+                      "description": "게시일시"
+                    },
+                    "bsnsDivCd": {
+                      "type": "string",
+                      "description": "업무구분코드"
+                    },
+                    "bsnsDivNm": {
+                      "type": "string",
+                      "description": "업무구분명"
+                    },
+                    "prdctClsfcNo": {
+                      "type": "string",
+                      "description": "단가구분명"
+                    },
+                    "qtyCalcCtyclcd": {
+                      "type": "string",
+                      "description": "물품분류번호"
+                    },
+                    "prdctIdntNo": {
+                      "type": "string",
+                      "description": "물품식별번호"
+                    },
+                    "invstDeptNm": {
+                      "type": "string",
+                      "description": "조사부서명"
+                    },
+                    "invstDeptTelNo": {
+                      "type": "string",
+                      "description": "조사부서전화번호"
+                    },
+                    "invstOfclNm": {
+                      "type": "string",
+                      "description": "조사담당자명"
+                    },
+                    "prdctClsfcNoNm": {
+                      "type": "string",
+                      "description": "품명"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    }
+  },
+  "swaggerOprtinVOs": [
+    {
+      "oprtinUrl": "https://nopenapi.g2b.go.kr/ao/PriceInfoService/getNetRsceinfoList",
+      "oprtinNm": "자원분류및순수자원",
+      "oprtinDc": "조달청 시설공사 가격조사 및 관리업무 규정에 따라 자원분류 및 순수자원을 정기적으로 가격을 조사한 자료",
+      "gwSvcNm": "getNetRsceinfoList",
+      "operationId": "getNetRsceinfoList",
+      "publicDataTyDetailCode": "PRDE02",
+      "reqList": [
+        {
+          "paramtrNm": "serviceKey",
+          "paramtrDc": "공공데이터포털에서 받은 인증키",
+          "paramtrBassValue": "-",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "pageNo",
+          "paramtrDc": "페이지번호",
+          "paramtrBassValue": "1",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "numOfRows",
+          "paramtrDc": "한 페이지 결과 수",
+          "paramtrBassValue": "10",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "type",
+          "paramtrDc": "타입",
+          "paramtrBassValue": "json",
+          "paramtrTy": "string",
+          "paramtrDivision": "옵션",
+          "ck": true
+        }
+      ],
+      "resList": [
+        {
+          "paramtrNm": "header",
+          "paramtrDc": "header",
+          "arrayYn": "N",
+          "paramtrDefNm": "#/definitions/header",
+          "subDefNm": "header",
+          "paramtrTy": "object",
+          "paramtrDivision": "필수",
+          "ck": true,
+          "subParam": [
+            {
+              "paramtrNm": "resultCode",
+              "paramtrDc": "결과코드",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            },
+            {
+              "paramtrNm": "resultMsg",
+              "paramtrDc": "결과메세지",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            }
+          ]
+        },
+        {
+          "paramtrNm": "body",
+          "paramtrDc": "body",
+          "arrayYn": "N",
+          "paramtrDefNm": "#/definitions/body",
+          "subDefNm": "body",
+          "paramtrTy": "object",
+          "paramtrDivision": "필수",
+          "ck": true,
+          "subParam": [
+            {
+              "paramtrNm": "items",
+              "paramtrDc": "items",
+              "arrayYn": "N",
+              "paramtrDefNm": "#/definitions/items",
+              "subDefNm": "items",
+              "paramtrTy": "object",
+              "paramtrDivision": "필수",
+              "ck": true,
+              "subParam": [
+                {
+                  "paramtrNm": "item",
+                  "paramtrDc": "item",
+                  "arrayYn": "N",
+                  "paramtrDefNm": "#/definitions/item",
+                  "subDefNm": "item",
+                  "paramtrTy": "object",
+                  "paramtrDivision": "옵션",
+                  "ck": true,
+                  "subParam": [
+                    {
+                      "paramtrNm": "dlvryCndtnNm",
+                      "paramtrDc": "인도조건명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "rsceTyExtrnlCd",
+                      "paramtrDc": "자원유형외부코드",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "grpUnitCnstwkExtrnlCdNm",
+                      "paramtrDc": "그룹단위공사외부코드명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcNo1",
+                      "paramtrDc": "일레벨자원분류번호",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcNm1",
+                      "paramtrDc": "일레벨자원분류명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcDscrpt1",
+                      "paramtrDc": "일레벨자원분류설명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcNo2",
+                      "paramtrDc": "이레벨자원분류번호",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcNm2",
+                      "paramtrDc": "이레벨자원분류명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcDscrpt2",
+                      "paramtrDc": "이레벨자원분류설명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcNo3",
+                      "paramtrDc": "삼레벨자원분류번호",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcNm3",
+                      "paramtrDc": "삼레벨자원분류명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcDscrpt3",
+                      "paramtrDc": "삼레벨자원분류설명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcNo4",
+                      "paramtrDc": "사레벨자원분류번호",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcNm4",
+                      "paramtrDc": "사레벨자원분류명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lvlRsceClsfcDscrpt4",
+                      "paramtrDc": "사레벨자원분류설명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "gnrlexpnsItemGrpExtrnCd",
+                      "paramtrDc": "경비항목그룹외부코드",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "prdctMngDivNm",
+                      "paramtrDc": "경비항목그룹외부코드명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "netRsceCd",
+                      "paramtrDc": "순수자원코드",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "rsceNm",
+                      "paramtrDc": "자원명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "rsceSpecNm",
+                      "paramtrDc": "자원규격명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "unit",
+                      "paramtrDc": "단위",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "rsceDscrpt",
+                      "paramtrDc": "자원설명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "paramtrNm": "totalCount",
+              "paramtrDc": "전체 결과 수",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            },
+            {
+              "paramtrNm": "numOfRows",
+              "paramtrDc": "한 페이지 결과 수",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            },
+            {
+              "paramtrNm": "pageNo",
+              "paramtrDc": "페이지번호",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

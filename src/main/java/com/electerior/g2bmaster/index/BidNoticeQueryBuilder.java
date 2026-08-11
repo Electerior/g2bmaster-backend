@@ -44,6 +44,12 @@ public final class BidNoticeQueryBuilder {
 	private boolean fullText;
 	private int paramSeq;
 
+	// activeOnly 는 다른 필터와 달리 조건을 즉시 쌓지 않고 build() 에서 조립한다 —
+	// category 지정 여부에 따라 모양이 달라지는데, 체인 호출 순서에 의미를 실으면
+	// buildBuilder() 의 줄 순서를 바꾸는 순간 소리 없이 깨지기 때문이다.
+	private boolean activeOnly;
+	private boolean categorySpecified;
+
 	/**
 	 * 자유 검색어.
 	 *
@@ -130,6 +136,7 @@ public final class BidNoticeQueryBuilder {
 	// ── 단순 필터 ───────────────────────────────────────────────────────────
 
 	public BidNoticeQueryBuilder category(NoticeCategory category) {
+		categorySpecified = category != null;
 		return equalsIfPresent("n.category", category == null ? null : category.name(), "category");
 	}
 
@@ -139,6 +146,11 @@ public final class BidNoticeQueryBuilder {
 
 	public BidNoticeQueryBuilder businessDivision(BusinessDivision division) {
 		return equalsIfPresent("n.business_division", division == null ? null : division.name(), "division");
+	}
+
+	/** 공고 출처(나라장터/누리장터/D2B). 미지정이면 전 소스 통합 검색이다. */
+	public BidNoticeQueryBuilder source(NoticeSource source) {
+		return equalsIfPresent("n.source", source == null ? null : source.name(), "source");
 	}
 
 	public BidNoticeQueryBuilder noticeInstitutionCode(String code) {
@@ -240,16 +252,21 @@ public final class BidNoticeQueryBuilder {
 	}
 
 	/**
-	 * 아직 참여할 수 있는 공고만.
+	 * 아직 참여할 수 있는 공고만. 실제 조건은 {@link #build()} 가 두 갈래로 조립한다.
 	 *
-	 * <p>{@code category <> '마감'} 이 아니라 마감일시를 직접 본다. 스위퍼는 주기적으로 도는
-	 * 것이라 방금 마감된 건이 아직 '입찰'로 남아 있을 수 있는데, 이 필터까지 그 지연을
-	 * 물려받으면 사용자가 이미 닫힌 공고에 시간을 쓴다.
+	 * <ol>
+	 *   <li><b>마감 판정은 category 가 아니라 마감일시로.</b> 스위퍼는 주기적으로 도는 것이라
+	 *       방금 마감된 건이 아직 '입찰'로 남아 있을 수 있는데, 이 필터까지 그 지연을
+	 *       물려받으면 사용자가 이미 닫힌 공고에 시간을 쓴다.</li>
+	 *   <li><b>단계를 고르지 않았으면 입찰 문서({@code IN ('입찰','마감')})로 좁힌다.</b>
+	 *       계획은 마감일시가 아예 없어(NULL) 마감일시 조건을 무조건 통과하고, 사전규격의
+	 *       마감일시는 입찰마감이 아니라 <em>의견등록</em>마감이다. 이 스코프가 없으면
+	 *       "지금 참여할 수 있는 공고"의 다섯에 하나가 참여 대상이 아닌 문서였다(실측 21.5%).
+	 *       단계를 직접 고른 검색에는 걸지 않는다 — '계획'+마감 전만 보기가 0건이 되면 안 된다.</li>
+	 * </ol>
 	 */
 	public BidNoticeQueryBuilder activeOnly(boolean active) {
-		if (active) {
-			conditions.add("(n.close_date IS NULL OR n.close_date >= NOW(6))");
-		}
+		this.activeOnly = active;
 		return this;
 	}
 
@@ -258,22 +275,24 @@ public final class BidNoticeQueryBuilder {
 	/**
 	 * 추정가격 구간.
 	 *
-	 * <p>금액은 {@code price_detail} JSON 안에 있어 인덱스를 못 탄다. 다른 필터가 먼저 좁힌
-	 * 뒤에 걸리므로 실사용에서는 문제가 없지만, <b>금액만</b> 지정한 검색은 전체 훑기가 된다.
-	 * 그 조합이 흔해지면 생성 컬럼 + 인덱스로 승격할 자리다.
+	 * <p>{@code price_detail} JSON 안의 값을 {@code V11} 에서 생성 컬럼 {@code estimated_price} 로
+	 * 승격했으므로 <b>여기서는 컬럼을 그대로 참조한다.</b> JSON 함수를 식으로 걸던 때는
+	 * 금액만 지정한 검색이 전체 훑기(type=ALL, rows=17477)였다.
+	 *
+	 * <p>식을 다시 인라인하지 말 것 — 함수를 씌우는 순간 {@code ix_bid_notice_amount} 를
+	 * 못 쓰게 되고, 증상이 '느려짐' 뿐이라 리뷰에서 잡히지 않는다.
 	 */
 	public BidNoticeQueryBuilder estimatedPriceBetween(Long min, Long max) {
 		if (min == null && max == null) {
 			return this;
 		}
-		String expr = "CAST(JSON_UNQUOTE(JSON_EXTRACT(n.price_detail, '$.estimatedPrice')) AS DECIMAL(20,4))";
 		if (min != null) {
 			params.put("minAmount", min);
-			conditions.add(expr + " >= :minAmount");
+			conditions.add("n.estimated_price >= :minAmount");
 		}
 		if (max != null) {
 			params.put("maxAmount", max);
-			conditions.add(expr + " <= :maxAmount");
+			conditions.add("n.estimated_price <= :maxAmount");
 		}
 		return this;
 	}
@@ -281,6 +300,12 @@ public final class BidNoticeQueryBuilder {
 	// ── 조립 ────────────────────────────────────────────────────────────────
 
 	public Where build() {
+		if (activeOnly) {
+			if (!categorySpecified) {
+				conditions.add("n.category IN ('입찰', '마감')");
+			}
+			conditions.add("(n.close_date IS NULL OR n.close_date >= NOW(6))");
+		}
 		String sql = conditions.isEmpty() ? "" : "\n WHERE " + String.join("\n   AND ", conditions);
 		return new Where(sql, Map.copyOf(params), relevanceSelect, fullText);
 	}

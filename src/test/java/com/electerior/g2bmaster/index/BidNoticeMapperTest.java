@@ -345,8 +345,8 @@ class BidNoticeMapperTest {
 	}
 
 	private static BidNoticeRow row(String id, String order) {
-		return new BidNoticeRow(id, order, "이름", NoticeCategory.입찰, null, BusinessDivision.물품,
-				"", null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-				null, null);
+		return new BidNoticeRow(id, NoticeSource.G2B, order, "이름", NoticeCategory.입찰, null,
+				BusinessDivision.물품, "", null, null, null, null, null, null, null, null, null, null,
+				null, null, null, null, null, null, null, null, null);
 	}
 }

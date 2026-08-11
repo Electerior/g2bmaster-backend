@@ -1,0 +1,196 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "방위사업청 국방전자조달시스템(D2B)에서 제공하는 군수품조달 발주기관 코드목록 조회 데이터입니다. 본 데이터는 군수품 조달 관련 서비스(조달계획, 입찰공고, 입찰결과, 계약정보 등)에서 공통으로 활용되는 발주기관(기관명) 및 발주기관코드 정보를 제공합니다. 이를 통해 발주기관을 기준으로 조달 데이터를 검색·필터링하고, 기관별 조달 현황 및 계약·입찰 실적을 비교 분석할 수 있습니다. 또한 다른 조달 데이터와 결합하여 기관 단위 통계 분석, 기관별 발주 패턴 분석, 연도별/분야별 조달 추이 확인 등 다양한 연계 분석에 활용 가능합니다.",
+    "version": "1.0.0",
+    "title": "방위사업청_군수품조달정보 코드조회_GW"
+  },
+  "host": "apis.data.go.kr/1690000/CodeInqireService",
+  "basePath": "",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/getOrntCodeList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "description": "코드",
+                              "properties": {}
+                            },
+                            "codeNm": {
+                              "type": "string",
+                              "description": "코드명",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "발주기관코드목록",
+        "description": "발주기관코드목록",
+        "operationId": "getOrntCodeList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "codeNm",
+          "description": "코드명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "getOrntCodeList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "코드"
+                    },
+                    "codeNm": {
+                      "type": "string",
+                      "description": "코드명"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
