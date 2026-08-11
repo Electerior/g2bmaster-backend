@@ -1,0 +1,32 @@
+-- ============================================================
+-- V12__bid_notice_created_sort.sql
+-- 필터 없는 기본 목록(랜딩 첫 화면)을 위한 created_date 단독 인덱스
+--
+-- 왜 필요한가 (실측, bid_notice 20,403행):
+--   검색 화면에 처음 들어오면 필터 없이 최신순 20건을 요청한다.
+--     SELECT … FROM bid_notice n ORDER BY n.created_date DESC, n.id ASC LIMIT 20
+--   그런데 V7 의 인덱스는 전부 선행 컬럼이 category / business_division 이라
+--   등치 조건 없이는 쓸 수 없다. 그래서 이 질의가 type=index + Using filesort 로
+--   16,560행을 훑고 정렬한 뒤 20건을 냈다.
+--
+--   즉 "가장 자주 열리는 화면"이 가장 비싼 질의였다.
+--
+-- 방향이 DESC 인 이유:
+--   V7 의 ix_bid_notice_category_created 와 같은 규칙이다. InnoDB 는 PK 접미(id)를
+--   언제나 ASC 로 붙이므로, (created_date DESC) 를 정방향으로 읽으면
+--   'created_date DESC, id ASC' 가 그대로 나온다 — 코드가 내는 ORDER BY 와 일치한다.
+--   ASC 로 선언하면 역방향 스캔이 되어 id 가 DESC 로 나오고 타이브레이커가 어긋나
+--   filesort 가 다시 붙는다(BidNoticeSearchService.INDEX_DIRECTION 주석 참고).
+--
+-- 왜 (created_date DESC, id) 가 아니라 단일 컬럼인가:
+--   보조 인덱스에는 PK 가 이미 접미로 들어 있다. id 를 명시하면 같은 컬럼이 두 번 들어가
+--   인덱스만 커지고 얻는 것이 없다.
+--
+-- 비용:
+--   bid_notice 는 10분마다 배치 upsert 를 받는다. 보조 인덱스가 하나 늘면 그만큼
+--   쓰기 비용이 는다. 그럼에도 넣는 이유는 이 인덱스가 덮는 것이 '가장 자주 열리는 화면'
+--   이고, created_date 가 적재 후 거의 바뀌지 않아 인덱스 갱신이 드물기 때문이다.
+-- ============================================================
+
+ALTER TABLE `bid_notice`
+  ADD KEY `ix_bid_notice_created` (`created_date` DESC);

@@ -77,10 +77,13 @@ public class NoticeSearchController {
 		return body;
 	}
 
-	@Operation(summary = "공고 상세", description = "공고 본문 전문을 포함한다.")
+	@Operation(summary = "공고 상세", description = "공고 본문 전문을 포함한다. "
+			+ "같은 번호가 여러 출처에 있을 수 있으므로 source(G2B/NURI/D2B)로 특정할 수 있다 — "
+			+ "미지정이면 G2B → NURI → D2B 순으로 먼저 있는 행을 준다.")
 	@GetMapping("/{id}")
-	public Map<String, Object> detail(@PathVariable("id") String id) {
-		Map<String, Object> found = searchService.findOne(id);
+	public Map<String, Object> detail(@PathVariable("id") String id,
+			@RequestParam(name = "source", required = false) String source) {
+		Map<String, Object> found = searchService.findOne(id, source);
 		if (found == null) {
 			// 문구는 화면에 그대로 뜬다 — docs/api-contract.md §1.1 참고.
 			throw ApiException.notFound("색인에 없는 공고입니다: " + id);

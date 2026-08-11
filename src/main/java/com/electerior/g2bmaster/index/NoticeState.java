@@ -21,7 +21,11 @@ public enum NoticeState {
 	취소,
 	재,
 	다시,
-	정정;
+	정정,
+	/** 누리장터 '긴급공고' · D2B '긴급'. V13 에서 ENUM 말미에 추가됐다. */
+	긴급,
+	/** D2B '연기'. V13 에서 ENUM 말미에 추가됐다. */
+	연기;
 
 	/**
 	 * 나라장터 {@code ntceKindNm}(공고구분명) → 상태.
@@ -49,6 +53,14 @@ public enum NoticeState {
 		}
 		if (kind.contains("변경") || kind.contains("정정")) {
 			return 정정;
+		}
+		// 누리장터 '긴급공고' · D2B pblancSe '긴급'/'연기'. 취소·변경 판정보다 뒤에 둔다 —
+		// '긴급취소공고' 는 취소가 본질이고 긴급은 수식어다.
+		if (kind.contains("긴급")) {
+			return 긴급;
+		}
+		if (kind.contains("연기")) {
+			return 연기;
 		}
 		return null;
 	}

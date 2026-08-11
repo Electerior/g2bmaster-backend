@@ -1,0 +1,526 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "방위사업청 국방표준종합서비스(국방표준종합서비스 규격목록) 데이터입니다. 본 서비스는 국방 물자 및 장비의 표준화·목록화 업무에 활용되는 규격(표준) 정보 목록을 제공하며, 재고번호(NSN), 품목식별번호(IIN), 군급(FSC), 품명부호, 국가부호, 생산자부호(CAGE), 부여일자 등 국방 표준 관련 주요 식별·관리 항목을 포함합니다. 또한 품목명(한글/영문), 지정·비지정 품명, 요청기관, 참조번호 등 세부 항목을 함께 제공하여 국방 물자 식별, 규격관리, 표준화 데이터 조회 및 업무 분석에 활용할 수 있습니다.",
+    "version": "1.0.0",
+    "title": "방위사업청_국방표준종합서비스_GW"
+  },
+  "host": "apis.data.go.kr/1690000/KDSISInfoService",
+  "basePath": "",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/getKDSISSpecNoList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "cageCd_9250": {
+                              "type": "string",
+                              "description": "생산자부호",
+                              "properties": {}
+                            },
+                            "assndDt_2180": {
+                              "type": "string",
+                              "description": "NIIN부여일자",
+                              "properties": {}
+                            },
+                            "chk": {
+                              "type": "string",
+                              "description": "체크",
+                              "properties": {}
+                            },
+                            "fsgFsc": {
+                              "type": "string",
+                              "description": "군급",
+                              "properties": {}
+                            },
+                            "IINbr_4131": {
+                              "type": "string",
+                              "description": "품목식별번호",
+                              "properties": {}
+                            },
+                            "inc_4080": {
+                              "type": "string",
+                              "description": "품명부호",
+                              "properties": {}
+                            },
+                            "itemDvsCd": {
+                              "type": "string",
+                              "description": "구분",
+                              "properties": {}
+                            },
+                            "ncbCd_4130": {
+                              "type": "string",
+                              "description": "국가부호",
+                              "properties": {}
+                            },
+                            "niinStatCd_2670": {
+                              "type": "string",
+                              "description": "NIIN상태부호",
+                              "properties": {}
+                            },
+                            "nsn": {
+                              "type": "string",
+                              "description": "재고번호",
+                              "properties": {}
+                            },
+                            "oid": {
+                              "type": "string",
+                              "description": "Oid",
+                              "properties": {}
+                            },
+                            "refNbr_3570": {
+                              "type": "string",
+                              "description": "참조번호",
+                              "properties": {}
+                            },
+                            "workDrngYn": {
+                              "type": "string",
+                              "description": "작업중여부",
+                              "properties": {}
+                            },
+                            "EntprzHanglItmnm": {
+                              "type": "string",
+                              "description": "업체한글품명",
+                              "properties": {}
+                            },
+                            "EntprzEnglshItmnm": {
+                              "type": "string",
+                              "description": "업체영문품명",
+                              "properties": {}
+                            },
+                            "shrtNmK122": {
+                              "type": "string",
+                              "description": "지정한글품명",
+                              "properties": {}
+                            },
+                            "shrtNm2301": {
+                              "type": "string",
+                              "description": "지정영문품명",
+                              "properties": {}
+                            },
+                            "prptnDsgntnHanglItmnm": {
+                              "type": "string",
+                              "description": "비지정한글품명",
+                              "properties": {}
+                            },
+                            "prptnDsgntnEnglshItmnm": {
+                              "type": "string",
+                              "description": "비지정영문품명",
+                              "properties": {}
+                            },
+                            "rqstOrgan_2074": {
+                              "type": "string",
+                              "description": "요청기관",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "국방표준종합서비스 규격목록",
+        "description": "국방표준종합서비스 규격에 대한 목록 제공",
+        "operationId": "getKDSISSpecNoList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scNsn",
+          "description": "재고번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scFsgFsc",
+          "description": "군급",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scRefNbr3570",
+          "description": "참조번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "rfnoDvsSignCd",
+          "description": "참조번호유형코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scRqstOrgan2074",
+          "description": "요청기관부서",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scRqstno",
+          "description": "요청번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scSbmtDttmFr",
+          "description": "신청기간시작일",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scSbmtDttmTo",
+          "description": "신청기간종료일",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scEntprzHanglItmnm",
+          "description": "업체품명(한글)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scEntprzEnglshItmnm",
+          "description": "업체품명(영문)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scShrtNmK122",
+          "description": "지정품명(한글)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scShrtNm2301",
+          "description": "지정품명(영문)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scPrptnDsgntnHanglItmnm",
+          "description": "비지정품명(한글)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scPrptnDsgntnEnglshItmnm",
+          "description": "비지정품명(영문)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scPsnchrgId",
+          "description": "목록화 담당자",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "fscMainEqpNsn",
+          "description": "주장비재고번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scInc4080",
+          "description": "품명부호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scAssndDt2180Fr",
+          "description": "재고번호 부여일(시작)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scAssndDt2180To",
+          "description": "재고번호 부여일(종료)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scCageCd9250",
+          "description": "생산자부호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scRqstDttmFr",
+          "description": "요청기간(시작)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scRqstDttmTo",
+          "description": "요청기간(종료)",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scItemDvsCd",
+          "description": "작성구분",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "scIINbr4131",
+          "description": "임시재고번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "fnctnlPpsModel",
+          "description": "국방장비부호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "getKDSISSpecNoList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "cageCd_9250": {
+                      "type": "string",
+                      "description": "생산자부호"
+                    },
+                    "assndDt_2180": {
+                      "type": "string",
+                      "description": "NIIN부여일자"
+                    },
+                    "chk": {
+                      "type": "string",
+                      "description": "체크"
+                    },
+                    "fsgFsc": {
+                      "type": "string",
+                      "description": "군급"
+                    },
+                    "IINbr_4131": {
+                      "type": "string",
+                      "description": "품목식별번호"
+                    },
+                    "inc_4080": {
+                      "type": "string",
+                      "description": "품명부호"
+                    },
+                    "itemDvsCd": {
+                      "type": "string",
+                      "description": "구분"
+                    },
+                    "ncbCd_4130": {
+                      "type": "string",
+                      "description": "국가부호"
+                    },
+                    "niinStatCd_2670": {
+                      "type": "string",
+                      "description": "NIIN상태부호"
+                    },
+                    "nsn": {
+                      "type": "string",
+                      "description": "재고번호"
+                    },
+                    "oid": {
+                      "type": "string",
+                      "description": "Oid"
+                    },
+                    "refNbr_3570": {
+                      "type": "string",
+                      "description": "참조번호"
+                    },
+                    "workDrngYn": {
+                      "type": "string",
+                      "description": "작업중여부"
+                    },
+                    "EntprzHanglItmnm": {
+                      "type": "string",
+                      "description": "업체한글품명"
+                    },
+                    "EntprzEnglshItmnm": {
+                      "type": "string",
+                      "description": "업체영문품명"
+                    },
+                    "shrtNmK122": {
+                      "type": "string",
+                      "description": "지정한글품명"
+                    },
+                    "shrtNm2301": {
+                      "type": "string",
+                      "description": "지정영문품명"
+                    },
+                    "prptnDsgntnHanglItmnm": {
+                      "type": "string",
+                      "description": "비지정한글품명"
+                    },
+                    "prptnDsgntnEnglshItmnm": {
+                      "type": "string",
+                      "description": "비지정영문품명"
+                    },
+                    "rqstOrgan_2074": {
+                      "type": "string",
+                      "description": "요청기관"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

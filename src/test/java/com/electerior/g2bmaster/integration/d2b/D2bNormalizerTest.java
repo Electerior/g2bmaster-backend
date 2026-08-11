@@ -48,14 +48,16 @@ class D2bNormalizerTest {
 	}
 
 	@Test
-	void 공고번호는_기관_공고_차수를_합쳐_D2B_접두사를_붙인다() {
+	void 공고번호는_계열_기관_공고_차수를_합쳐_D2B_접두사를_붙인다() {
 		// 접두사가 없으면 나라장터 번호와 우연히 겹쳐 중복 제거 단계에서 서로를 지운다.
+		// 계열 태그(DC/FC/DN/FN)가 없으면 오퍼레이션 계열끼리 겹친다 — 실측(2026-08-11)으로
+		// 국내경쟁과 시설수의가 같은 pblancNo(LQG0044)를 서로 다른 공고에 썼다.
 		Map<String, Object> normalized = D2bNormalizer.normalizeD2bItem(
 				item("orntCode", "1234", "pblancNo", "A0001", "pblancOdr", "02",
 						"bidNm", "노트북 구매", "ornt", "제32사단", "busiDivs", "물품"),
 				"getDmstcCmpetBidPblancList");
 
-		assertThat(normalized.get("bidNtceNo")).isEqualTo("D2B-1234-A0001-02");
+		assertThat(normalized.get("bidNtceNo")).isEqualTo("D2B-DC-1234-A0001-02");
 		assertThat(normalized.get("bidNtceOrd")).isEqualTo("02");
 		assertThat(normalized.get("bidNtceNm")).isEqualTo("노트북 구매");
 		assertThat(normalized.get("ntceInsttNm")).isEqualTo("제32사단");
@@ -65,12 +67,47 @@ class D2bNormalizerTest {
 	}
 
 	@Test
+	void 같은_공고번호라도_오퍼레이션_계열이_다르면_다른_id_다() {
+		Map<String, Object> competition = D2bNormalizer.normalizeD2bItem(
+				item("orntCode", "LQG", "pblancNo", "LQG0044", "bidNm", "PC 제조"),
+				"getDmstcCmpetBidPblancList");
+		Map<String, Object> facility = D2bNormalizer.normalizeD2bItem(
+				item("orntCode", "LQG", "pblancNo", "LQG0044", "cntrwkNm", "전열·전등 보수공사"),
+				"getFcltyOthbcVltrnNtatPlanList");
+
+		assertThat(competition.get("bidNtceNo")).isEqualTo("D2B-DC-LQG-LQG0044-1");
+		assertThat(facility.get("bidNtceNo")).isEqualTo("D2B-FN-LQG-LQG0044-1");
+		assertThat(competition.get("bidNtceNo")).isNotEqualTo(facility.get("bidNtceNo"));
+	}
+
+	@Test
+	void 연도와_공사번호가_있으면_id_성분에_들어간다() {
+		Map<String, Object> normalized = D2bNormalizer.normalizeD2bItem(
+				item("orntCode", "LPC", "pblancYear", "2026", "pblancNo", "B0007",
+						"cntrwkNo", "C01", "cntrwkNm", "격납고 보수"),
+				"getFcltyCmpetBidPblancList");
+
+		assertThat(normalized.get("bidNtceNo")).isEqualTo("D2B-FC-LPC-2026-B0007-C01-1");
+	}
+
+	@Test
+	void 시설_공고명은_cntrwkNm_에서_온다() {
+		// 실측: 시설경쟁 응답에는 bidNm 키 자체가 없다. 빠뜨리면 제목 없는 공고가 색인된다.
+		Map<String, Object> normalized = D2bNormalizer.normalizeD2bItem(
+				item("orntCode", "X", "pblancNo", "P1", "cntrwkNm", "00부대 시설공사"),
+				"getFcltyCmpetBidPblancList");
+
+		assertThat(normalized.get("bidNtceNm")).isEqualTo("00부대 시설공사");
+		assertThat(normalized.get("_type")).isEqualTo("공사");
+	}
+
+	@Test
 	void 오타_필드_pblanc0dr_도_차수로_읽는다() {
 		// D2B 응답에 실제로 섞여 오는 오타(숫자 0). 원본이 둘 다 보므로 유지한다.
 		Map<String, Object> normalized = D2bNormalizer.normalizeD2bItem(
 				item("orntCode", "1", "dcsNo", "D9", "pblanc0dr", "03"), "getFcltyCmpetBidPblancList");
 
-		assertThat(normalized.get("bidNtceNo")).isEqualTo("D2B-1-D9-03");
+		assertThat(normalized.get("bidNtceNo")).isEqualTo("D2B-FC-1-D9-03");
 	}
 
 	@Test

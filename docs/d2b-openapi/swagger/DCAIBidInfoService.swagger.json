@@ -1,0 +1,735 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "(해외입찰정보) 방위사업청 방산수출입지원시스템에서 제공하는 해외입찰정보 OpenAPI 서비스입니다. 본 데이터는 해외 방산·조달 관련 입찰공고 정보를 기간 조건으로 조회할 수 있으며, 공고명(국문/영문), 국가/권역, 입찰기간(시작일~종료일), 정보획득일자, 공고형태(입찰공고/조달계획/기타) 등의 항목을 포함합니다. 또한 상세 조회를 통해 발주기관, 품목명/품목구분, 수량·단위, 화폐단위 및 총금액, 담당자 정보, 원문 URL 등 입찰공고의 세부 내용을 확인할 수 있어 해외 시장 동향 분석, 입찰 모니터링, 방산수출 전략 수립 등 다양한 업무에 활용 가능합니다.",
+    "version": "1.0.0",
+    "title": "방위사업청_해외입찰정보_GW"
+  },
+  "host": "apis.data.go.kr/1690000/DCAIBidInfoService",
+  "basePath": "",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/getDCAIBidInfoList": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "anucType": {
+                              "type": "string",
+                              "description": "공고형태 1:입찰공고 2:조달계획 3:기타",
+                              "properties": {}
+                            },
+                            "anucTypeNm": {
+                              "type": "string",
+                              "description": "공고형태명",
+                              "properties": {}
+                            },
+                            "bidFrom": {
+                              "type": "string",
+                              "description": "입찰기간 시작일",
+                              "properties": {}
+                            },
+                            "bidNameEng": {
+                              "type": "string",
+                              "description": "입찰공고명_영문",
+                              "properties": {}
+                            },
+                            "bidNameKor": {
+                              "type": "string",
+                              "description": "입찰공고명_국문",
+                              "properties": {}
+                            },
+                            "bidTo": {
+                              "type": "string",
+                              "description": "입찰기간 종료일",
+                              "properties": {}
+                            },
+                            "infoAcquireFrom": {
+                              "type": "string",
+                              "description": "정보획득일자 시작일",
+                              "properties": {}
+                            },
+                            "orgPlace": {
+                              "type": "string",
+                              "description": "국가코드",
+                              "properties": {}
+                            },
+                            "orgPlaceNm": {
+                              "type": "string",
+                              "description": "국가명",
+                              "properties": {}
+                            },
+                            "region": {
+                              "type": "string",
+                              "description": "권역코드",
+                              "properties": {}
+                            },
+                            "regionNm": {
+                              "type": "string",
+                              "description": "권역명",
+                              "properties": {}
+                            },
+                            "seqn": {
+                              "type": "string",
+                              "description": "순번",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "방산수출입지원시스템 해외입찰정보목록",
+        "description": "방위사업청 방산수출입지원시스템의 해외입찰정보 메뉴를 기반으로 입찰공고 목록을 조회하는 해외입찰정보목록 오퍼레이션",
+        "operationId": "getDCAIBidInfoList",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "bidFrom",
+          "description": "입찰기간 시작일",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "bidTo",
+          "description": "입찰기간 종료일",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getDCAIBidInfoDetail": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메시지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "item": {
+                      "type": "object",
+                      "description": "item",
+                      "properties": {
+                        "amnt": {
+                          "type": "string",
+                          "description": "총금액",
+                          "properties": {}
+                        },
+                        "anucNumb": {
+                          "type": "string",
+                          "description": "입찰공고번호",
+                          "properties": {}
+                        },
+                        "anucType": {
+                          "type": "string",
+                          "description": "공고형태 1:입찰공고 2:조달계획 3:기타",
+                          "properties": {}
+                        },
+                        "anucTypeNm": {
+                          "type": "string",
+                          "description": "공고형태명",
+                          "properties": {}
+                        },
+                        "bidFrom": {
+                          "type": "string",
+                          "description": "입찰기간 시작일",
+                          "properties": {}
+                        },
+                        "bidNameEng": {
+                          "type": "string",
+                          "description": "입찰공고명_영문",
+                          "properties": {}
+                        },
+                        "bidNameKor": {
+                          "type": "string",
+                          "description": "입찰공고명_국문",
+                          "properties": {}
+                        },
+                        "bidTo": {
+                          "type": "string",
+                          "description": "입찰기간 종료일",
+                          "properties": {}
+                        },
+                        "charName": {
+                          "type": "string",
+                          "description": "담당자",
+                          "properties": {}
+                        },
+                        "infoCharTelno": {
+                          "type": "string",
+                          "description": "담당자연락처",
+                          "properties": {}
+                        },
+                        "currUnit": {
+                          "type": "string",
+                          "description": "화폐단위",
+                          "properties": {}
+                        },
+                        "currUnitNm": {
+                          "type": "string",
+                          "description": "화폐단위명",
+                          "properties": {}
+                        },
+                        "infoAcquireFrom": {
+                          "type": "string",
+                          "description": "정보획득일자 시작일",
+                          "properties": {}
+                        },
+                        "note": {
+                          "type": "string",
+                          "description": "비고",
+                          "properties": {}
+                        },
+                        "orderOrgan": {
+                          "type": "string",
+                          "description": "발주기관",
+                          "properties": {}
+                        },
+                        "orgPlace": {
+                          "type": "string",
+                          "description": "국가코드",
+                          "properties": {}
+                        },
+                        "orgPlaceNm": {
+                          "type": "string",
+                          "description": "국가명",
+                          "properties": {}
+                        },
+                        "oriUrl": {
+                          "type": "string",
+                          "description": "원문 URL",
+                          "properties": {}
+                        },
+                        "prctDivs": {
+                          "type": "string",
+                          "description": "품목구분",
+                          "properties": {}
+                        },
+                        "prctDivsNm": {
+                          "type": "string",
+                          "description": "품목구분명",
+                          "properties": {}
+                        },
+                        "prctName": {
+                          "type": "string",
+                          "description": "품목명",
+                          "properties": {}
+                        },
+                        "prctQnty": {
+                          "type": "string",
+                          "description": "대표품목수량(개)",
+                          "properties": {}
+                        },
+                        "qnty": {
+                          "type": "string",
+                          "description": "수량(개)",
+                          "properties": {}
+                        },
+                        "region": {
+                          "type": "string",
+                          "description": "권역코드",
+                          "properties": {}
+                        },
+                        "regionNm": {
+                          "type": "string",
+                          "description": "권역명",
+                          "properties": {}
+                        },
+                        "seqn": {
+                          "type": "string",
+                          "description": "순번",
+                          "properties": {}
+                        },
+                        "totQnty": {
+                          "type": "string",
+                          "description": "총수량(개)",
+                          "properties": {}
+                        },
+                        "unit": {
+                          "type": "string",
+                          "description": "단위코드",
+                          "properties": {}
+                        },
+                        "unitNm": {
+                          "type": "string",
+                          "description": "단위명",
+                          "properties": {}
+                        },
+                        "wtSectCode": {
+                          "type": "string",
+                          "description": "무기체계대분류",
+                          "properties": {}
+                        },
+                        "wtSectCodeNm": {
+                          "type": "string",
+                          "description": "무기체계대분류명",
+                          "properties": {}
+                        },
+                        "wtSectSubCode": {
+                          "type": "string",
+                          "description": "무기체계중분류",
+                          "properties": {}
+                        },
+                        "wtSectSubCodeNm": {
+                          "type": "string",
+                          "description": "무기체계중분류명",
+                          "properties": {}
+                        },
+                        "wtSectSubcCode": {
+                          "type": "string",
+                          "description": "무기체계소분류",
+                          "properties": {}
+                        },
+                        "wtSectSubcCodeNm": {
+                          "type": "string",
+                          "description": "무기체계소분류명",
+                          "properties": {}
+                        },
+                        "charTelno": {
+                          "type": "string",
+                          "description": "담당자연락처2",
+                          "properties": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "방산수출입지원시스템 해외입찰정보상세",
+        "description": "방위사업청 방산수출입지원시스템의 해외입찰정보 메뉴를 기반으로 공고명, 나라, 입찰일자 등을 조회하는 해외입찰정보상세 오퍼레이션",
+        "operationId": "getDCAIBidInfoDetail",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "seqn",
+          "description": "순번",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "getDCAIBidInfoList_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "anucType": {
+                      "type": "string",
+                      "description": "공고형태 1:입찰공고 2:조달계획 3:기타"
+                    },
+                    "anucTypeNm": {
+                      "type": "string",
+                      "description": "공고형태명"
+                    },
+                    "bidFrom": {
+                      "type": "string",
+                      "description": "입찰기간 시작일"
+                    },
+                    "bidNameEng": {
+                      "type": "string",
+                      "description": "입찰공고명_영문"
+                    },
+                    "bidNameKor": {
+                      "type": "string",
+                      "description": "입찰공고명_국문"
+                    },
+                    "bidTo": {
+                      "type": "string",
+                      "description": "입찰기간 종료일"
+                    },
+                    "infoAcquireFrom": {
+                      "type": "string",
+                      "description": "정보획득일자 시작일"
+                    },
+                    "orgPlace": {
+                      "type": "string",
+                      "description": "국가코드"
+                    },
+                    "orgPlaceNm": {
+                      "type": "string",
+                      "description": "국가명"
+                    },
+                    "region": {
+                      "type": "string",
+                      "description": "권역코드"
+                    },
+                    "regionNm": {
+                      "type": "string",
+                      "description": "권역명"
+                    },
+                    "seqn": {
+                      "type": "string",
+                      "description": "순번"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getDCAIBidInfoDetail_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메시지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "item": {
+              "type": "object",
+              "description": "item",
+              "properties": {
+                "amnt": {
+                  "type": "string",
+                  "description": "총금액"
+                },
+                "anucNumb": {
+                  "type": "string",
+                  "description": "입찰공고번호"
+                },
+                "anucType": {
+                  "type": "string",
+                  "description": "공고형태 1:입찰공고 2:조달계획 3:기타"
+                },
+                "anucTypeNm": {
+                  "type": "string",
+                  "description": "공고형태명"
+                },
+                "bidFrom": {
+                  "type": "string",
+                  "description": "입찰기간 시작일"
+                },
+                "bidNameEng": {
+                  "type": "string",
+                  "description": "입찰공고명_영문"
+                },
+                "bidNameKor": {
+                  "type": "string",
+                  "description": "입찰공고명_국문"
+                },
+                "bidTo": {
+                  "type": "string",
+                  "description": "입찰기간 종료일"
+                },
+                "charName": {
+                  "type": "string",
+                  "description": "담당자"
+                },
+                "infoCharTelno": {
+                  "type": "string",
+                  "description": "담당자연락처"
+                },
+                "currUnit": {
+                  "type": "string",
+                  "description": "화폐단위"
+                },
+                "currUnitNm": {
+                  "type": "string",
+                  "description": "화폐단위명"
+                },
+                "infoAcquireFrom": {
+                  "type": "string",
+                  "description": "정보획득일자 시작일"
+                },
+                "note": {
+                  "type": "string",
+                  "description": "비고"
+                },
+                "orderOrgan": {
+                  "type": "string",
+                  "description": "발주기관"
+                },
+                "orgPlace": {
+                  "type": "string",
+                  "description": "국가코드"
+                },
+                "orgPlaceNm": {
+                  "type": "string",
+                  "description": "국가명"
+                },
+                "oriUrl": {
+                  "type": "string",
+                  "description": "원문 URL"
+                },
+                "prctDivs": {
+                  "type": "string",
+                  "description": "품목구분"
+                },
+                "prctDivsNm": {
+                  "type": "string",
+                  "description": "품목구분명"
+                },
+                "prctName": {
+                  "type": "string",
+                  "description": "품목명"
+                },
+                "prctQnty": {
+                  "type": "string",
+                  "description": "대표품목수량(개)"
+                },
+                "qnty": {
+                  "type": "string",
+                  "description": "수량(개)"
+                },
+                "region": {
+                  "type": "string",
+                  "description": "권역코드"
+                },
+                "regionNm": {
+                  "type": "string",
+                  "description": "권역명"
+                },
+                "seqn": {
+                  "type": "string",
+                  "description": "순번"
+                },
+                "totQnty": {
+                  "type": "string",
+                  "description": "총수량(개)"
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "단위코드"
+                },
+                "unitNm": {
+                  "type": "string",
+                  "description": "단위명"
+                },
+                "wtSectCode": {
+                  "type": "string",
+                  "description": "무기체계대분류"
+                },
+                "wtSectCodeNm": {
+                  "type": "string",
+                  "description": "무기체계대분류명"
+                },
+                "wtSectSubCode": {
+                  "type": "string",
+                  "description": "무기체계중분류"
+                },
+                "wtSectSubCodeNm": {
+                  "type": "string",
+                  "description": "무기체계중분류명"
+                },
+                "wtSectSubcCode": {
+                  "type": "string",
+                  "description": "무기체계소분류"
+                },
+                "wtSectSubcCodeNm": {
+                  "type": "string",
+                  "description": "무기체계소분류명"
+                },
+                "charTelno": {
+                  "type": "string",
+                  "description": "담당자연락처2"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

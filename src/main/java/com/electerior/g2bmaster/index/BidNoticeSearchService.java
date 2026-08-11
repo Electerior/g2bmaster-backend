@@ -47,15 +47,56 @@ public class BidNoticeSearchService {
 			"close", "n.close_date IS NULL, n.close_date %s",
 			"name", "n.notice_name %s",
 			"updated", "n.updated_at %s",
-			"amount", "CAST(JSON_UNQUOTE(JSON_EXTRACT(n.price_detail, '$.estimatedPrice')) AS DECIMAL(20,4)) %s",
+			// V11 에서 price_detail JSON 을 생성 컬럼으로 승격했다. 식을 다시 인라인하면
+			// ix_bid_notice_category_amount 를 못 쓰고 정렬이 filesort 로 떨어진다.
+			"amount", "n.estimated_price %s",
 			"relevance", "relevance %s");
+
+	/**
+	 * 정렬 키를 받쳐 주는 인덱스가 그 컬럼을 <b>어느 방향으로 선언했는가</b>.
+	 *
+	 * <p>타이브레이커 방향을 정하는 데 쓴다. InnoDB 보조 인덱스는 선행 컬럼을 어떻게 선언했든
+	 * PK 접미({@code id})를 <b>항상 오름차순</b>으로 붙인다. 그래서 스캔 방향에 따라 id 순서가 정해진다:
+	 *
+	 * <pre>
+	 *   요청 방향 == 인덱스 선언 방향  →  정방향 스캔  →  id 가 ASC 로 나온다
+	 *   요청 방향 != 인덱스 선언 방향  →  역방향 스캔  →  id 가 DESC 로 나온다
+	 * </pre>
+	 *
+	 * <p>타이브레이커를 그 순서와 다르게 적으면 같은 인덱스를 쓰고도 전체를 다시 정렬한다.
+	 * 실측(bid_notice 20,403행)이 방향 하나에 얼마가 걸리는지 보여 준다:
+	 *
+	 * <pre>
+	 *   created DESC + id ASC   →  Using index          (인덱스 (category, created_date DESC))
+	 *   created DESC + id DESC  →  Using filesort, 8,738행
+	 *   updated DESC + id DESC  →  Backward index scan, 20행   (인덱스 (updated_at) = ASC)
+	 *   updated DESC + id ASC   →  Using filesort, 16,560행
+	 * </pre>
+	 *
+	 * <p>즉 <b>전역으로 한 방향을 고를 수 없다</b> — 인덱스 선언이 키마다 다르기 때문이다.
+	 * 표에 없는 키({@code close}, {@code name}, {@code relevance})는 받쳐 주는 인덱스가 없어
+	 * 어느 쪽이든 filesort 이므로 기본값을 쓴다.
+	 *
+	 * <p>⚠ 이 표는 마이그레이션의 인덱스 선언과 짝이다. 인덱스 방향을 바꾸면 여기도 바꿔야 한다.
+	 */
+	private static final Map<String, String> INDEX_DIRECTION = Map.of(
+			// V7: ix_bid_notice_category_created (category, created_date DESC)
+			"created", "DESC",
+			// V7: ix_bid_notice_updated (updated_at)  — 방향 미지정이므로 ASC
+			"updated", "ASC",
+			// V11: ix_bid_notice_category_amount (category, estimated_price DESC)
+			"amount", "DESC");
+
+	/** 관련도 정렬 키. 저장소가 전문검색 전용 경로를 탈지 판단하는 데도 쓴다. */
+	private static final String RELEVANCE = "relevance";
 
 	/** 패싯을 뽑을 컬럼. 사용자 입력이 아니라 이 상수만 저장소로 넘어간다. */
 	private static final Map<String, String> FACET_COLUMNS = Map.of(
 			"category", "category",
 			"division", "business_division",
 			"region", "region",
-			"state", "state");
+			"state", "state",
+			"source", "source");
 
 	/** 지역 패싯 상한. 시·도 단위라 스무 개면 전부 덮는다. */
 	private static final int FACET_LIMIT = 30;
@@ -70,11 +111,13 @@ public class BidNoticeSearchService {
 
 	public PagedResponse<Map<String, Object>> search(NoticeSearchRequest request) {
 		BidNoticeQueryBuilder.Where where = buildWhere(request);
-		String orderBy = orderBy(request, where.fullText());
+		String sortKey = effectiveSortKey(request, where.fullText());
+		String orderBy = orderBy(request, sortKey);
 
 		int total = repository.count(where);
+		// 관련도 정렬일 때만 저장소가 전문검색 전용 2단 질의를 쓴다 — 이유는 그쪽 주석 참고.
 		List<Map<String, Object>> rows = repository.search(where, orderBy,
-				request.perPageValue(), request.offset());
+				request.perPageValue(), request.offset(), RELEVANCE.equals(sortKey));
 
 		LocalDateTime now = LocalDateTime.now();
 		List<Map<String, Object>> items = rows.stream().map(row -> shape(row, now)).toList();
@@ -97,9 +140,9 @@ public class BidNoticeSearchService {
 		return facets;
 	}
 
-	/** 상세 한 건. 없으면 {@code null}. */
-	public Map<String, Object> findOne(String id) {
-		Map<String, Object> row = repository.findOne(id);
+	/** 상세 한 건. 없으면 {@code null}. 소스 미지정이면 G2B → NURI → D2B 우선순위 픽. */
+	public Map<String, Object> findOne(String id, String source) {
+		Map<String, Object> row = repository.findOne(id, NoticeSource.of(source));
 		return row == null ? null : shape(row, LocalDateTime.now());
 	}
 
@@ -115,6 +158,7 @@ public class BidNoticeSearchService {
 				.category(request.categoryValue())
 				.state(request.stateValue())
 				.businessDivision(request.divisionValue())
+				.source(request.sourceValue())
 				.region(request.region())
 				.noticeInstitutionCode(request.insttCd())
 				.demandInstitutionCode(request.dmndInsttCd())
@@ -133,27 +177,57 @@ public class BidNoticeSearchService {
 	}
 
 	/**
-	 * 정렬 절.
+	 * 실제로 적용될 정렬 키.
 	 *
 	 * <p>기본값이 조건에 따라 달라진다 — 검색어가 있으면 <b>관련도</b>, 없으면 <b>최신순</b>.
 	 * 검색어 없이 관련도로 정렬하면 전부 0점이라 순서가 사실상 무작위가 되고, 검색어가 있는데
 	 * 최신순으로 두면 정확히 맞는 공고가 3페이지 뒤로 밀린다.
 	 *
+	 * <p>{@link #orderBy} 와 저장소의 경로 선택이 <b>같은 판정</b>을 봐야 하므로 따로 뽑아 둔다.
+	 * 둘이 갈라지면 관련도로 정렬하면서 전문검색 전용 질의를 안 타거나 그 반대가 된다.
+	 */
+	private static String effectiveSortKey(NoticeSearchRequest request, boolean fullText) {
+		String key = request.sort() == null ? "" : request.sort().trim();
+		return SORTS.containsKey(key) ? key : (fullText ? RELEVANCE : "created");
+	}
+
+	/**
+	 * 정렬 절.
+	 *
 	 * <p>마지막에 {@code n.id} 를 붙이는 것은 <b>페이징 안정성</b> 때문이다. 정렬 키가 같은 행이
 	 * 여럿일 때(같은 날 올라온 공고가 수백 건이다) 타이브레이커가 없으면 MySQL 이 페이지마다
 	 * 다른 순서를 줘서, 2페이지에 1페이지의 공고가 또 나오거나 아예 건너뛴다.
+	 *
+	 * <p><b>타이브레이커 방향은 정렬 키마다 다르다.</b> 목적은 순서를 <em>고정</em>하는 것이지
+	 * 특정 방향이 아니므로, 인덱스가 이미 만들어 둔 순서에 맞추는 편이 공짜다. 규칙과 실측
+	 * 근거는 {@link #INDEX_DIRECTION} 에 있다 — 방향 하나가 어긋나면 같은 인덱스를 쓰고도
+	 * 수천 행을 다시 정렬한다.
 	 */
-	private String orderBy(NoticeSearchRequest request, boolean fullText) {
-		String key = request.sort() == null ? "" : request.sort().trim();
-		if (!SORTS.containsKey(key)) {
-			key = fullText ? "relevance" : "created";
-		}
+	private String orderBy(NoticeSearchRequest request, String key) {
 		String direction = "asc".equalsIgnoreCase(request.dir()) ? "ASC" : "DESC";
 		// 마감 임박은 '가까운 것부터'가 자연스럽다 — 방향 지정이 없으면 오름차순으로 뒤집는다.
 		if ("close".equals(key) && request.dir() == null) {
 			direction = "ASC";
 		}
-		return SORTS.get(key).formatted(direction) + ", n.id DESC";
+		return SORTS.get(key).formatted(direction) + ", n.id " + tiebreakerDirection(key, direction);
+	}
+
+	/**
+	 * 타이브레이커({@code n.id}) 방향.
+	 *
+	 * <p>인덱스를 정방향으로 읽으면 PK 접미가 ASC 로, 역방향으로 읽으면 DESC 로 나온다.
+	 * 요청 방향이 인덱스 선언 방향과 같으면 정방향이다. 근거는 {@link #INDEX_DIRECTION}.
+	 *
+	 * <p>{@code private} 이 아닌 것은 테스트 때문이다 — 방향이 하나만 어긋나도 증상이
+	 * '조금 느려짐' 뿐이라 리뷰나 기능 테스트로는 잡히지 않는다.
+	 */
+	static String tiebreakerDirection(String sortKey, String direction) {
+		String indexDirection = INDEX_DIRECTION.get(sortKey);
+		if (indexDirection == null) {
+			// 받쳐 주는 인덱스가 없는 정렬 키 — 어느 쪽이든 filesort 라 순서만 고정하면 된다.
+			return "ASC";
+		}
+		return indexDirection.equals(direction) ? "ASC" : "DESC";
 	}
 
 	// ── 행 성형 ─────────────────────────────────────────────────────────────
@@ -168,6 +242,14 @@ public class BidNoticeSearchService {
 	private Map<String, Object> shape(Map<String, Object> row, LocalDateTime now) {
 		Map<String, Object> out = new LinkedHashMap<>();
 		out.put("id", row.get("id"));
+		// DB ENUM 값(G2B/NURI/D2B)과 팬아웃 계약의 _source(g2b/private-g2b/d2b)를 함께 준다 —
+		// 프론트가 기존 팬아웃 화면의 출처 뱃지 로직을 그대로 쓸 수 있게.
+		NoticeSource source = NoticeSource.of(String.valueOf(row.get("source")));
+		out.put("source", row.get("source"));
+		if (source != null) {
+			out.put("_source", source.apiValue());
+			out.put("_sourceLabel", source.label());
+		}
 		out.put("noticeOrder", row.get("notice_order"));
 		out.put("noticeName", row.get("notice_name"));
 		out.put("category", row.get("category"));
@@ -196,6 +278,9 @@ public class BidNoticeSearchService {
 		out.put("aiSummary", row.get("ai_summary"));
 		out.put("attachmentUrls", parseJson(row.get("attachment_urls")));
 		out.put("sourceUrl", row.get("source_url"));
+		out.put("sourceExt", parseJson(row.get("source_ext")));
+		out.put("g2bPblancNo", row.get("g2b_pblanc_no"));
+		out.put("g2bPblancOdr", row.get("g2b_pblanc_odr"));
 
 		// 목록은 미리보기, 상세는 전문. 있는 것만 넣는다.
 		out.put("bodyPreview", row.get("body_preview"));

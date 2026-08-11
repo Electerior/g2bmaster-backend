@@ -76,7 +76,7 @@ public final class D2bNormalizer {
 		}
 		StringBuilder sb = new StringBuilder();
 		for (String key : new String[] {"_noticeStatus", "progrsSttus", "pblancSe", "ntceKindNm",
-				"bidNtceNm", "bidNm", "othbcNtatNm"}) {
+				"bidNtceNm", "bidNm", "cntrwkNm", "othbcNtatNm"}) {
 			String value = str(item.get(key));
 			if (!value.isEmpty()) {
 				if (!sb.isEmpty()) {
@@ -91,16 +91,23 @@ public final class D2bNormalizer {
 	/**
 	 * D2B 항목 → 나라장터 모양.
 	 *
-	 * <p>{@code bidNtceNo} 를 {@code D2B-기관-공고번호-차수} 로 합성하는 것이 핵심이다.
-	 * D2B는 단일 공고번호가 없어 네 값이 모여야 유일해지고, 접두사가 없으면 나라장터 번호와
-	 * 우연히 겹쳐 중복 제거 단계에서 서로를 지운다.
+	 * <p>{@code bidNtceNo} 를 {@code D2B-계열-기관[-연도]-공고번호[-공사번호]-차수} 로 합성하는
+	 * 것이 핵심이다. D2B는 단일 공고번호가 없고, <b>공고번호({@code pblancNo})의 발번 공간이
+	 * 오퍼레이션 계열마다 따로 돈다</b> — 실측(2026-08-11)으로 국내경쟁의 {@code LQG0044}
+	 * (예비군부대 PC 제조)와 시설수의의 {@code LQG0044}(전열·전등 보수공사)가 같은 번호였다.
+	 * 계열 태그(DC/FC/DN/FN) 없이 합치면 서로 다른 공고가 하나로 병합되고, 접두사가 없으면
+	 * 나라장터 번호와도 겹쳐 중복 제거 단계에서 서로를 지운다. 연도({@code pblancYear}/
+	 * {@code demandYear})와 시설 공사번호({@code cntrwkNo})도 있으면 성분으로 넣는다 —
+	 * 같은 번호가 해를 넘겨 재사용되거나 한 공고가 공사번호로 갈라지는 경우의 대비다.
 	 */
 	public static Map<String, Object> normalizeD2bItem(Map<String, Object> item, String operation) {
 		Map<String, Object> src = item == null ? Map.of() : item;
 		String op = operation == null ? "" : operation;
 
 		String busiDivs = str(src.get("busiDivs"));
-		String type = "공사".equals(busiDivs) ? "공사" : "용역".equals(busiDivs) ? "용역" : "물품";
+		boolean facility = op.contains("Fclty");
+		String type = facility || "공사".equals(busiDivs) ? "공사"
+				: "용역".equals(busiDivs) ? "용역" : "물품";
 		boolean negotiation = op.contains("OthbcVltrnNtatPlan");
 
 		// 'pblanc0dr'(숫자 0)은 D2B 응답에 실제로 섞여 오는 오타 필드다. 원본이 둘 다 보므로 유지한다.
@@ -113,6 +120,21 @@ public final class D2bNormalizer {
 			noticeStatus = negotiation ? "공개수의" : "경쟁입찰";
 		}
 
+		// 계열 태그: D=국내, F=시설 × C=경쟁입찰, N=공개수의협상.
+		String family = (facility ? "F" : "D") + (negotiation ? "N" : "C");
+		String year = firstNonBlank(src, "pblancYear", "demandYear");
+		String cntrwkNo = str(src.get("cntrwkNo"));
+		StringBuilder syntheticId = new StringBuilder("D2B-").append(family)
+				.append('-').append(str(src.get("orntCode")));
+		if (!year.isEmpty()) {
+			syntheticId.append('-').append(year);
+		}
+		syntheticId.append('-').append(firstNonBlank(src, "pblancNo", "dcsNo"));
+		if (!cntrwkNo.isEmpty()) {
+			syntheticId.append('-').append(cntrwkNo);
+		}
+		syntheticId.append('-').append(noticeOrder);
+
 		Map<String, Object> out = new LinkedHashMap<>(src);
 		out.put("_source", "d2b");
 		out.put("_sourceLabel", "국방전자조달");
@@ -120,10 +142,11 @@ public final class D2bNormalizer {
 		out.put("_isCancelled", isCancelledNotice(out));
 		out.put("_d2bOperation", op);
 		out.put("_type", type);
-		out.put("bidNtceNo", "D2B-" + str(src.get("orntCode")) + "-"
-				+ firstNonBlank(src, "pblancNo", "dcsNo") + "-" + noticeOrder);
+		out.put("bidNtceNo", syntheticId.toString());
 		out.put("bidNtceOrd", noticeOrder);
-		out.put("bidNtceNm", firstNonBlank(src, "bidNm", "othbcNtatNm"));
+		// 시설 오퍼레이션은 공고명이 bidNm 이 아니라 cntrwkNm(공사명)에 온다 —
+		// 실측: 시설경쟁 응답에 bidNm 키 자체가 없다. 빠뜨리면 제목이 빈 공고가 색인된다.
+		out.put("bidNtceNm", firstNonBlank(src, "bidNm", "cntrwkNm", "othbcNtatNm"));
 		out.put("ntceInsttNm", str(src.get("ornt")));
 		out.put("dminsttNm", str(src.get("ornt")));
 		out.put("presmptPrce", firstNonBlank(src, "bsicExpt", "budgetAmount"));

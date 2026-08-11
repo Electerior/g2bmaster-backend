@@ -1,0 +1,5146 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "나라장터를 포함 24개 전자조달시스템에서 체결한 전자계약정보와 비전자계약정보를 수집하여 전체 공공조달 규모를 파악할 수 있도록 공공조달통계 정보를 제공하는 서비스로\n검색조건을 기준년도, 기준년월 범위로 전체 조달실적, 계약방법별 현황, 지역제한 현황, 기관구분별 조달현황, 기업구분별 조달현황, 계약방법별 조달현황, 수요기관별 기업구분별 실적, 수요기관별 업무대상별 실적, 수요기관별 시스템유형별 실적, 조달기업별 계약방법별 실적, 조달기업별 업무대상별 실적, 품목 및 서비스별 실적을 각 유형별로 조회할 수 있음",
+    "version": "1.0.0",
+    "title": "조달청_공공조달통계정보서비스"
+  },
+  "host": "apis.data.go.kr/1230000/at/PubPrcrmntStatInfoService",
+  "basePath": "",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/getTotlPubPrcrmntSttus": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "bssYear4Amt": {
+                              "type": "string",
+                              "description": "기준년도+4금액",
+                              "properties": {}
+                            },
+                            "bssMnth": {
+                              "type": "string",
+                              "description": "기준월",
+                              "properties": {}
+                            },
+                            "statDivNm": {
+                              "type": "string",
+                              "description": "통계구분명",
+                              "properties": {}
+                            },
+                            "bssYearAmt": {
+                              "type": "string",
+                              "description": "기준년도금액",
+                              "properties": {}
+                            },
+                            "bssYear1Amt": {
+                              "type": "string",
+                              "description": "기준년도+1금액",
+                              "properties": {}
+                            },
+                            "bssYear2Amt": {
+                              "type": "string",
+                              "description": "기준년도+2금액",
+                              "properties": {}
+                            },
+                            "bssYear3Amt": {
+                              "type": "string",
+                              "description": "기준년도+3금액",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "전체 공공조달 현황",
+        "description": "검색조건에 기준년도를 입력하여 기준년월, 공급집계금액 등 전체 공공조달 현황을 조회",
+        "operationId": "getTotlPubPrcrmntSttus",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYear",
+          "description": "검색기준년도",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPrdctIdntNoServcAccotArslt": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "unClsfcArsltAmt": {
+                              "type": "string",
+                              "description": "미분류실적금액",
+                              "properties": {}
+                            },
+                            "linkSystmNm": {
+                              "type": "string",
+                              "description": "연계시스템명",
+                              "properties": {}
+                            },
+                            "prdctClsfcNo": {
+                              "type": "string",
+                              "description": "물품분류번호",
+                              "properties": {}
+                            },
+                            "prdctClsfcNm": {
+                              "type": "string",
+                              "description": "품명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "gnrlCmptArsltNum": {
+                              "type": "string",
+                              "description": "일반경쟁실적건수",
+                              "properties": {}
+                            },
+                            "gnrlCmptArsltAmt": {
+                              "type": "string",
+                              "description": "일반경쟁실적금액",
+                              "properties": {}
+                            },
+                            "lmtCmptArsltNum": {
+                              "type": "string",
+                              "description": "제한경쟁실적건수",
+                              "properties": {}
+                            },
+                            "lmtCmptArsltAmt": {
+                              "type": "string",
+                              "description": "제한경쟁실적금액",
+                              "properties": {}
+                            },
+                            "dsgntCmptArsltNum": {
+                              "type": "string",
+                              "description": "지명경쟁실적건수",
+                              "properties": {}
+                            },
+                            "dsgntCmptArsltAmt": {
+                              "type": "string",
+                              "description": "지명경쟁실적금액",
+                              "properties": {}
+                            },
+                            "prvtcntrctArsltNum": {
+                              "type": "string",
+                              "description": "수의계약실적건수",
+                              "properties": {}
+                            },
+                            "prvtcntrctArsltAmt": {
+                              "type": "string",
+                              "description": "수의계약실적금액",
+                              "properties": {}
+                            },
+                            "unClsfcArsltNum": {
+                              "type": "string",
+                              "description": "미분류실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "품목 및 서비스별 실적",
+        "description": "검색조건에 기준년월범위, 물품분류번호, 품명을 입력하여 물품분류번호, 품명,실적합계건수, 실적합계금액, 일반경쟁실적건수, 일반경쟁실적금액, 제한경쟁실적건수, 제한경쟁실적금액, 지명경쟁실적건수, 지명경쟁실적금액, 수의계약실적건수, 수의계약실적금액, 미분류실적건수, 미분류실적금액 등 품목 및 서비스별 실적을 조회",
+        "operationId": "getPrdctIdntNoServcAccotArslt",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNo",
+          "description": "물품분류번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "prdctClsfcNm",
+          "description": "품명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "linkSystmCd",
+          "description": "연계시스템코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPrcrmntEntrprsAccotBsnsObjAccotArslt": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "unClsfcArsltAmt": {
+                              "type": "string",
+                              "description": "미분류실적금액",
+                              "properties": {}
+                            },
+                            "linkSystmNm": {
+                              "type": "string",
+                              "description": "연계시스템명",
+                              "properties": {}
+                            },
+                            "corpUntyNo": {
+                              "type": "string",
+                              "description": "업체통합번호",
+                              "properties": {}
+                            },
+                            "corpNm": {
+                              "type": "string",
+                              "description": "업체명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "prdctArsltNum": {
+                              "type": "string",
+                              "description": "물품실적건수",
+                              "properties": {}
+                            },
+                            "prdctArsltAmt": {
+                              "type": "string",
+                              "description": "물품실적금액",
+                              "properties": {}
+                            },
+                            "cnstwkArsltNum": {
+                              "type": "string",
+                              "description": "공사실적건수",
+                              "properties": {}
+                            },
+                            "cnstwkArsltAmt": {
+                              "type": "string",
+                              "description": "공사실적금액",
+                              "properties": {}
+                            },
+                            "gnrlSrvceArsltNum": {
+                              "type": "string",
+                              "description": "일반용역실적건수",
+                              "properties": {}
+                            },
+                            "gnrlSrvceArsltAmt": {
+                              "type": "string",
+                              "description": "일반용역실적금액",
+                              "properties": {}
+                            },
+                            "techSrvceArsltNum": {
+                              "type": "string",
+                              "description": "기술용역실적건수",
+                              "properties": {}
+                            },
+                            "techSrvceArsltAmt": {
+                              "type": "string",
+                              "description": "기술용역실적금액",
+                              "properties": {}
+                            },
+                            "unClsfcArsltNum": {
+                              "type": "string",
+                              "description": "미분류실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "조달기업별 업무대상별 실적",
+        "description": "검색조건에 기준년월범위, 업체통합번호, 업체명, 연계시스템코드을 입력하여 업체통합번호, 업체명, 실적합계건수, 실적합계금액, 물품실적건수, 물품실적금액, 공사실적건수, 공사실적금액, 일반용역실적건수, 일반용역실적금액, 기술용역실적건수, 기술용역실적금액, 미분류실적건수, 미분류실적금액 등 조달기업별 업무대상별 실적을 조회",
+        "operationId": "getPrcrmntEntrprsAccotBsnsObjAccotArslt",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "corpUntyNo",
+          "description": "업체통합번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "corpNm",
+          "description": "업체명",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "linkSystmCd",
+          "description": "연계시스템코드",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPrcrmntEntrprsAccotCntrctMthdAccotArslt": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "mnllbrRgstArsltAmt": {
+                              "type": "string",
+                              "description": "수기등록실적금액",
+                              "properties": {}
+                            },
+                            "linkSystmNm": {
+                              "type": "string",
+                              "description": "연계시스템명",
+                              "properties": {}
+                            },
+                            "corpUntyNo": {
+                              "type": "string",
+                              "description": "업체통합번호",
+                              "properties": {}
+                            },
+                            "corpNm": {
+                              "type": "string",
+                              "description": "업체명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "gnrlCmptArsltNum": {
+                              "type": "string",
+                              "description": "일반경쟁실적건수",
+                              "properties": {}
+                            },
+                            "gnrlCmptArsltAmt": {
+                              "type": "string",
+                              "description": "일반경쟁실적금액",
+                              "properties": {}
+                            },
+                            "lmtCmptArsltNum": {
+                              "type": "string",
+                              "description": "제한경쟁실적건수",
+                              "properties": {}
+                            },
+                            "lmtCmptArsltAmt": {
+                              "type": "string",
+                              "description": "제한경쟁실적금액",
+                              "properties": {}
+                            },
+                            "dsgntCmptArsltNum": {
+                              "type": "string",
+                              "description": "지명경쟁실적건수",
+                              "properties": {}
+                            },
+                            "dsgntCmptArsltAmt": {
+                              "type": "string",
+                              "description": "지명경쟁실적금액",
+                              "properties": {}
+                            },
+                            "prvtcntrctArsltNum": {
+                              "type": "string",
+                              "description": "수의계약실적건수",
+                              "properties": {}
+                            },
+                            "prvtcntrctArsltAmt": {
+                              "type": "string",
+                              "description": "수의계약실적금액",
+                              "properties": {}
+                            },
+                            "unClsfcArsltNum": {
+                              "type": "string",
+                              "description": "미분류실적건수",
+                              "properties": {}
+                            },
+                            "unClsfcArsltAmt": {
+                              "type": "string",
+                              "description": "미분류실적금액",
+                              "properties": {}
+                            },
+                            "mnllbrRgstArsltNum": {
+                              "type": "string",
+                              "description": "수기등록실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "조달기업별 계약방법별 실적",
+        "description": "검색조건에 기준년월범위, 업체통합번호, 업체명, 연계시스템코드을 입력하여 업체통합번호, 업체명, 실적합계건수, 실적합계금액, 일반경쟁실적건수, 일반경쟁실적금액, 제한경쟁실적건수, 제한경쟁실적금액, 지명경쟁실적건수, 지명경쟁실적금액, 수의계약실적건수, 수의계약실적금액, 미분류실적건수, 미분류실적금액, 수기등록실적건수, 수기등록실적금액 등 조달기업별 계약방법별 실적을 조회",
+        "operationId": "getPrcrmntEntrprsAccotCntrctMthdAccotArslt",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "corpUntyNo",
+          "description": "업체통합번호",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "corpNm",
+          "description": "업체명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "linkSystmCd",
+          "description": "연계시스템코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getDminsttAccotSystmTyAccotArslt": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "mnllbrPrcrmntArsltAmt": {
+                              "type": "string",
+                              "description": "수기조달실적금액",
+                              "properties": {}
+                            },
+                            "linkSystmNm": {
+                              "type": "string",
+                              "description": "연계시스템명",
+                              "properties": {}
+                            },
+                            "dminsttCd": {
+                              "type": "string",
+                              "description": "수요기관코드",
+                              "properties": {}
+                            },
+                            "dminsttNm": {
+                              "type": "string",
+                              "description": "수요기관명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "centrPrcrmntArsltNum": {
+                              "type": "string",
+                              "description": "중앙조달실적건수",
+                              "properties": {}
+                            },
+                            "centrPrcrmntArsltAmt": {
+                              "type": "string",
+                              "description": "중앙조달실적금액",
+                              "properties": {}
+                            },
+                            "selfPrcrmntArsltNum": {
+                              "type": "string",
+                              "description": "자체조달실적건수",
+                              "properties": {}
+                            },
+                            "selfPrcrmntArsltAmt": {
+                              "type": "string",
+                              "description": "자체조달실적금액",
+                              "properties": {}
+                            },
+                            "systmPrcrmntArsltNum": {
+                              "type": "string",
+                              "description": "자체조달시스템실적건수",
+                              "properties": {}
+                            },
+                            "systmPrcrmntArsltAmt": {
+                              "type": "string",
+                              "description": "자체조달시스템실적금액",
+                              "properties": {}
+                            },
+                            "mnllbrPrcrmntArsltNum": {
+                              "type": "string",
+                              "description": "수기조달실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "수요기관별 시스템유형별 실적",
+        "description": "검색조건에 기준년월범위, 수요기관코드, 수요기관명, 하위기관실적포함여부, 연계시스템코드을 입력하여 수요기관코드, 수요기관명, 실적합계건수, 실적합계금액, 중앙조달실적건수, 중앙조달실적금액, 자체조달실적건수, 자체조달실적금액, 자체조달시스템실적건수, 자체조달시스템실적금액, 수기조달실적건수, 수기조달실적금액 등 수요기관별 시스템유형별 실적을 조회",
+        "operationId": "getDminsttAccotSystmTyAccotArslt",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "dminsttCd",
+          "description": "수요기관코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "dminsttNm",
+          "description": "수요기관명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "lwrInsttArsltInclsnYn",
+          "description": "하위기관실적포함여부",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "linkSystmCd",
+          "description": "연계시스템코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getDminsttAccotBsnsObjAccotArslt": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    },
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "unClsfcArsltAmt": {
+                              "type": "string",
+                              "description": "미분류실적금액",
+                              "properties": {}
+                            },
+                            "linkSystmNm": {
+                              "type": "string",
+                              "description": "연계시스템명",
+                              "properties": {}
+                            },
+                            "dminsttCd": {
+                              "type": "string",
+                              "description": "수요기관코드",
+                              "properties": {}
+                            },
+                            "dminsttNm": {
+                              "type": "string",
+                              "description": "수요기관명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "prdctArsltNum": {
+                              "type": "string",
+                              "description": "물품실적건수",
+                              "properties": {}
+                            },
+                            "prdctArsltAmt": {
+                              "type": "string",
+                              "description": "물품실적금액",
+                              "properties": {}
+                            },
+                            "cnstwkArsltNum": {
+                              "type": "string",
+                              "description": "공사실적건수",
+                              "properties": {}
+                            },
+                            "cnstwkArsltAmt": {
+                              "type": "string",
+                              "description": "공사실적금액",
+                              "properties": {}
+                            },
+                            "gnrlSrvceArsltNum": {
+                              "type": "string",
+                              "description": "일반용역실적건수",
+                              "properties": {}
+                            },
+                            "gnrlSrvceArsltAmt": {
+                              "type": "string",
+                              "description": "일반용역실적금액",
+                              "properties": {}
+                            },
+                            "techSrvceArsltNum": {
+                              "type": "string",
+                              "description": "기술용역실적건수",
+                              "properties": {}
+                            },
+                            "techSrvceArsltAmt": {
+                              "type": "string",
+                              "description": "기술용역실적금액",
+                              "properties": {}
+                            },
+                            "unClsfcArsltNum": {
+                              "type": "string",
+                              "description": "미분류실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "수요기관별 업무대상별 실적",
+        "description": "검색조건에 기준년월범위, 수요기관코드, 수요기관명, 하위기관실적포함여부, 연계시스템코드을 입력하여 수요기관코드, 수요기관명, 실적합계건수, 실적합계금액, 물품실적건수, 물품실적금액, 공사실적건수, 공사실적금액, 일반용역실적건수, 일반용역실적금액, 기술용역실적건수, 기술용역실적금액, 미분류실적건수, 미분류실적금액 등 수요기관별 업무대상별 실적을 조회",
+        "operationId": "getDminsttAccotBsnsObjAccotArslt",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "dminsttCd",
+          "description": "수요기관코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "dminsttNm",
+          "description": "수요기관명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "lwrInsttArsltInclsnYn",
+          "description": "하위기관실적포함여부",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "linkSystmCd",
+          "description": "연계시스템코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getDminsttAccotCntrctMthdAccotArslt": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "mnllbrRgstArsltAmt": {
+                              "type": "string",
+                              "description": "수기등록실적금액",
+                              "properties": {}
+                            },
+                            "linkSystmNm": {
+                              "type": "string",
+                              "description": "연계시스템명",
+                              "properties": {}
+                            },
+                            "dminsttCd": {
+                              "type": "string",
+                              "description": "수요기관코드",
+                              "properties": {}
+                            },
+                            "dminsttNm": {
+                              "type": "string",
+                              "description": "수요기관명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "gnrlCmptArsltNum": {
+                              "type": "string",
+                              "description": "일반경쟁실적건수",
+                              "properties": {}
+                            },
+                            "gnrlCmptArsltAmt": {
+                              "type": "string",
+                              "description": "일반경쟁실적금액",
+                              "properties": {}
+                            },
+                            "lmtCmptArsltNum": {
+                              "type": "string",
+                              "description": "제한경쟁실적건수",
+                              "properties": {}
+                            },
+                            "lmtCmptArsltAmt": {
+                              "type": "string",
+                              "description": "제한경쟁실적금액",
+                              "properties": {}
+                            },
+                            "dsgntCmptArsltNum": {
+                              "type": "string",
+                              "description": "지명경쟁실적건수",
+                              "properties": {}
+                            },
+                            "dsgntCmptArsltAmt": {
+                              "type": "string",
+                              "description": "지명경쟁실적금액",
+                              "properties": {}
+                            },
+                            "prvtcntrctArsltNum": {
+                              "type": "string",
+                              "description": "수의계약실적건수",
+                              "properties": {}
+                            },
+                            "prvtcntrctArsltAmt": {
+                              "type": "string",
+                              "description": "수의계약실적금액",
+                              "properties": {}
+                            },
+                            "unClsfcArsltNum": {
+                              "type": "string",
+                              "description": "미분류실적건수",
+                              "properties": {}
+                            },
+                            "unClsfcArsltAmt": {
+                              "type": "string",
+                              "description": "미분류실적금액",
+                              "properties": {}
+                            },
+                            "mnllbrRgstArsltNum": {
+                              "type": "string",
+                              "description": "수기등록실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "수요기관별 계약방법별 실적",
+        "description": "검색조건에 기준년월범위, 수요기관코드, 수요기관명, 하위기관실적포함여부, 연계시스템코드을 입력하여 수요기관코드, 수요기관명, 실적합계건수, 실적합계금액, 일반경쟁실적건수, 일반경쟁실적금액, 제한경쟁실적건수, 제한경쟁실적금액, 지명경쟁실적건수, 지명경쟁실적금액, 수의계약실적건수, 수의계약실적금액, 미분류실적건수, 미분류실적금액, 수기등록실적건수, 수기등록실적금액 등 수요기관별 계약방법별 실적을 조회",
+        "operationId": "getDminsttAccotCntrctMthdAccotArslt",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "dminsttCd",
+          "description": "수요기관코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "dminsttNm",
+          "description": "수요기관명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "lwrInsttArsltInclsnYn",
+          "description": "하위기관실적포함여부",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "linkSystmCd",
+          "description": "연계시스템코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getDminsttAccotEntrprsDivAccotArslt": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "unClsfcArsltAmt": {
+                              "type": "string",
+                              "description": "미분류실적금액",
+                              "properties": {}
+                            },
+                            "linkSystmNm": {
+                              "type": "string",
+                              "description": "연계시스템명",
+                              "properties": {}
+                            },
+                            "dminsttCd": {
+                              "type": "string",
+                              "description": "수요기관코드",
+                              "properties": {}
+                            },
+                            "dminsttNm": {
+                              "type": "string",
+                              "description": "수요기관명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "lrgeEntrprsArsltNum": {
+                              "type": "string",
+                              "description": "대기업실적건수",
+                              "properties": {}
+                            },
+                            "lrgeEntrprsArsltAmt": {
+                              "type": "string",
+                              "description": "대기업실적금액",
+                              "properties": {}
+                            },
+                            "entrprsOfMidStdArsltNum": {
+                              "type": "string",
+                              "description": "중견기업실적건수",
+                              "properties": {}
+                            },
+                            "entrprsOfMidStdArsltAmt": {
+                              "type": "string",
+                              "description": "중견기업실적금액",
+                              "properties": {}
+                            },
+                            "smetprArsltNum": {
+                              "type": "string",
+                              "description": "중소기업실적건수",
+                              "properties": {}
+                            },
+                            "smetprArsltAmt": {
+                              "type": "string",
+                              "description": "중소기업실적금액",
+                              "properties": {}
+                            },
+                            "frgncntryEntrprsArsltNum": {
+                              "type": "string",
+                              "description": "외국기업실적건수",
+                              "properties": {}
+                            },
+                            "frgncntryEntrprsArsltAmt": {
+                              "type": "string",
+                              "description": "외국기업실적금액",
+                              "properties": {}
+                            },
+                            "nonPrftmkCorprtArsltNum": {
+                              "type": "string",
+                              "description": "기타실적건수",
+                              "properties": {}
+                            },
+                            "nonPrftmkCorprtArsltAmt": {
+                              "type": "string",
+                              "description": "기타실적금액",
+                              "properties": {}
+                            },
+                            "unClsfcArsltNum": {
+                              "type": "string",
+                              "description": "미분류실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "수요기관별 기업구분별 실적",
+        "description": "검색조건에 기준년월범위, 수요기관코드, 수요기관명, 하위기관실적포함여부, 연계시스템코드을 입력하여 수요기관코드, 수요기관명, 실적합계건수, 실적합계금액, 대기업실적건수, 대기업실적금액, 중견기업실적건수, 중견기업실적금액, 중소기업실적건수, 중소기업실적금액, 외국기업실적건수, 외국기업실적금액, 기타실적건수, 기타실적금액, 미분류실적건수, 미분류실적금액 등 수요기관별 기업구분별 실적 (을)를 조회",
+        "operationId": "getDminsttAccotEntrprsDivAccotArslt",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "dminsttCd",
+          "description": "수요기관코드",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "dminsttNm",
+          "description": "수요기관명",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "lwrInsttArsltInclsnYn",
+          "description": "하위기관실적포함여부",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        },
+        {
+          "name": "linkSystmCd",
+          "description": "연계시스템코드",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getPrcrmntObjectBsnsObjAccotSttus": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "unClsfcArsltAmt": {
+                              "type": "string",
+                              "description": "미분류실적금액",
+                              "properties": {}
+                            },
+                            "bssYear": {
+                              "type": "string",
+                              "description": "기준년도",
+                              "properties": {}
+                            },
+                            "bssMnth": {
+                              "type": "string",
+                              "description": "기준월",
+                              "properties": {}
+                            },
+                            "statDivNm": {
+                              "type": "string",
+                              "description": "통계구분명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "prdctArsltNum": {
+                              "type": "string",
+                              "description": "물품실적건수",
+                              "properties": {}
+                            },
+                            "prdctArsltAmt": {
+                              "type": "string",
+                              "description": "물품실적금액",
+                              "properties": {}
+                            },
+                            "cnstwkArsltNum": {
+                              "type": "string",
+                              "description": "공사실적건수",
+                              "properties": {}
+                            },
+                            "cnstwkArsltAmt": {
+                              "type": "string",
+                              "description": "공사실적금액",
+                              "properties": {}
+                            },
+                            "gnrlSrvceArsltNum": {
+                              "type": "string",
+                              "description": "일반용역실적건수",
+                              "properties": {}
+                            },
+                            "gnrlSrvceArsltAmt": {
+                              "type": "string",
+                              "description": "일반용역실적금액",
+                              "properties": {}
+                            },
+                            "techSrvceArsltNum": {
+                              "type": "string",
+                              "description": "기술용역실적건수",
+                              "properties": {}
+                            },
+                            "techSrvceArsltAmt": {
+                              "type": "string",
+                              "description": "기술용역실적금액",
+                              "properties": {}
+                            },
+                            "unClsfcArsltNum": {
+                              "type": "string",
+                              "description": "미분류실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "조달목적물(업무대상)별 현황",
+        "description": "검색조건에 기준년월범위를 입력하여 기준년도, 기준월, 통계구분명, 실적합계건수, 실적합계금액, 물품실적건수, 물품실적금액, 공사실적건수, 공사실적금액, 일반용역실적건수, 일반용역실적금액, 기술용역실적건수, 기술용역실적금액, 미분류실적건수, 미분류실적금액 등 조달목적물(업무대상)별 현황(을)를 조회",
+        "operationId": "getPrcrmntObjectBsnsObjAccotSttus",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getRgnDutyCmmnCntrctSttus": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "rgnDutyCmmnCntrctTotamtRt": {
+                              "type": "string",
+                              "description": "지역의무공동계약총액비율",
+                              "properties": {}
+                            },
+                            "bssYear": {
+                              "type": "string",
+                              "description": "기준년도",
+                              "properties": {}
+                            },
+                            "bssMnth": {
+                              "type": "string",
+                              "description": "기준월",
+                              "properties": {}
+                            },
+                            "statDivNm": {
+                              "type": "string",
+                              "description": "통계구분명",
+                              "properties": {}
+                            },
+                            "cnstwkCntrctTotamt": {
+                              "type": "string",
+                              "description": "공사계약총액",
+                              "properties": {}
+                            },
+                            "bidCntrctTotamt": {
+                              "type": "string",
+                              "description": "입찰계약총액",
+                              "properties": {}
+                            },
+                            "unBidCntrctTotamt": {
+                              "type": "string",
+                              "description": "미입찰계약총액",
+                              "properties": {}
+                            },
+                            "rgnDutyCmmnCntrctTotamt": {
+                              "type": "string",
+                              "description": "지역의무공동계약총액",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "지역의무공동계약 현황",
+        "description": "검색조건에 기준년월범위를 입력하여 기준년도, 기준월, 통계구분명, 계약총액,입찰계약총액, 미입찰계약총액, 지역의무공동계약총액, 지역의무공동계약총액비율 등 지역의무공동계약 현황(을)를 조회",
+        "operationId": "getRgnDutyCmmnCntrctSttus",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getRgnLmtSttus": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "rgnLmtTotamtRt": {
+                              "type": "string",
+                              "description": "지역제한총액비율",
+                              "properties": {}
+                            },
+                            "bssYear": {
+                              "type": "string",
+                              "description": "기준년도",
+                              "properties": {}
+                            },
+                            "bssMnth": {
+                              "type": "string",
+                              "description": "기준월",
+                              "properties": {}
+                            },
+                            "statDivNm": {
+                              "type": "string",
+                              "description": "통계구분명",
+                              "properties": {}
+                            },
+                            "cntrctTotamt": {
+                              "type": "string",
+                              "description": "계약총액",
+                              "properties": {}
+                            },
+                            "bidCntrctTotamt": {
+                              "type": "string",
+                              "description": "입찰계약총액",
+                              "properties": {}
+                            },
+                            "unBidCntrctTotamt": {
+                              "type": "string",
+                              "description": "미입찰계약총액",
+                              "properties": {}
+                            },
+                            "rgnLmtTotamt": {
+                              "type": "string",
+                              "description": "지역제한총액",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "지역제한 현황",
+        "description": "검색조건에 기준년월범위를 입력하여 기준년도, 기준월, 통계구분명, 계약총액,입찰계약총액, 미입찰계약총액, 지역제한총액, 지역제한총액비율 등 지역제한 현황을 조회",
+        "operationId": "getRgnLmtSttus",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getCntrctMthdAccotSttus": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "unClsfcArsltAmt": {
+                              "type": "string",
+                              "description": "미분류실적금액",
+                              "properties": {}
+                            },
+                            "bssYear": {
+                              "type": "string",
+                              "description": "기준년도",
+                              "properties": {}
+                            },
+                            "bssMnth": {
+                              "type": "string",
+                              "description": "기준월",
+                              "properties": {}
+                            },
+                            "statDivNm": {
+                              "type": "string",
+                              "description": "통계구분명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "gnrlCmptArsltNum": {
+                              "type": "string",
+                              "description": "일반경쟁실적건수",
+                              "properties": {}
+                            },
+                            "gnrlCmptArsltAmt": {
+                              "type": "string",
+                              "description": "일반경쟁실적금액",
+                              "properties": {}
+                            },
+                            "lmtCmptArsltNum": {
+                              "type": "string",
+                              "description": "제한경쟁실적건수",
+                              "properties": {}
+                            },
+                            "lmtCmptArsltAmt": {
+                              "type": "string",
+                              "description": "제한경쟁실적금액",
+                              "properties": {}
+                            },
+                            "dsgntCmptArsltNum": {
+                              "type": "string",
+                              "description": "지명경쟁실적건수",
+                              "properties": {}
+                            },
+                            "dsgntCmptArsltAmt": {
+                              "type": "string",
+                              "description": "지명경쟁실적금액",
+                              "properties": {}
+                            },
+                            "prvtcntrctArsltNum": {
+                              "type": "string",
+                              "description": "수의계약실적건수",
+                              "properties": {}
+                            },
+                            "prvtcntrctArsltAmt": {
+                              "type": "string",
+                              "description": "수의계약실적금액",
+                              "properties": {}
+                            },
+                            "unClsfcArsltNum": {
+                              "type": "string",
+                              "description": "미분류실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "계약방법별 현황",
+        "description": "검색조건에 기준년월범위를 입력하여 기준년도, 기준월, 통계구분명, 실적합계건수, 실적합계금액, 일반경쟁실적건수, 일반경쟁실적금액, 제한경쟁실적건수, 제한경쟁실적금액, 지명경쟁실적건수, 지명경쟁실적금액, 수의계약실적건수, 수의계약실적금액, 미분류실적건수, 미분류실적금액 등 계약방법별 현황(을)를 조회",
+        "operationId": "getCntrctMthdAccotSttus",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getEntrprsDivAccotPrcrmntSttus": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "unClsfcArsltAmt": {
+                              "type": "string",
+                              "description": "미분류실적금액",
+                              "properties": {}
+                            },
+                            "bssYear": {
+                              "type": "string",
+                              "description": "기준년도",
+                              "properties": {}
+                            },
+                            "bssMnth": {
+                              "type": "string",
+                              "description": "기준월",
+                              "properties": {}
+                            },
+                            "statDivNm": {
+                              "type": "string",
+                              "description": "통계구분명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "lrgeEntrprsArsltNum": {
+                              "type": "string",
+                              "description": "대기업실적건수",
+                              "properties": {}
+                            },
+                            "lrgeEntrprsArsltAmt": {
+                              "type": "string",
+                              "description": "대기업실적금액",
+                              "properties": {}
+                            },
+                            "entrprsOfMidStdArsltNum": {
+                              "type": "string",
+                              "description": "중견기업실적건수",
+                              "properties": {}
+                            },
+                            "entrprsOfMidStdArsltAmt": {
+                              "type": "string",
+                              "description": "중견기업실적금액",
+                              "properties": {}
+                            },
+                            "smetprArsltNum": {
+                              "type": "string",
+                              "description": "중소기업실적건수",
+                              "properties": {}
+                            },
+                            "smetprArsltAmt": {
+                              "type": "string",
+                              "description": "중소기업실적금액",
+                              "properties": {}
+                            },
+                            "frgncntryEntrprsArsltNum": {
+                              "type": "string",
+                              "description": "외국기업실적건수",
+                              "properties": {}
+                            },
+                            "frgncntryEntrprsArsltAmt": {
+                              "type": "string",
+                              "description": "외국기업실적금액",
+                              "properties": {}
+                            },
+                            "etcArsltNum": {
+                              "type": "string",
+                              "description": "기타실적건수",
+                              "properties": {}
+                            },
+                            "etcArsltAmt": {
+                              "type": "string",
+                              "description": "기타실적금액",
+                              "properties": {}
+                            },
+                            "unClsfcArsltNum": {
+                              "type": "string",
+                              "description": "미분류실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "기업구분별 조달 현황",
+        "description": "검색조건에 기준년월 범위를 입력하여 기준년도, 기준월, 통계구분명, 실적합계건수, 실적합계금액, 대기업실적건수, 대기업실적금액, 중견기업실적건수, 중견기업실적금액, 중소기업실적건수, 중소기업실적금액, 외국기업실적건수, 외국기업실적금액, 기타실적건수, 기타실적금액, 미분류실적건, 미분류실적금액 등 기업구분별 조달 현황(을)를 조회",
+        "operationId": "getEntrprsDivAccotPrcrmntSttus",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    },
+    "/getInsttDivAccotPrcrmntSttus": {
+      "get": {
+        "responses": {
+          "10": {
+            "description": "OpenAPI 요청시 ServiceKey 파라미터가 없음"
+          },
+          "11": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          },
+          "200": {
+            "description": "성공",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "header": {
+                  "type": "object",
+                  "description": "header",
+                  "properties": {
+                    "resultCode": {
+                      "type": "string",
+                      "description": "결과코드",
+                      "properties": {}
+                    },
+                    "resultMsg": {
+                      "type": "string",
+                      "description": "결과메세지",
+                      "properties": {}
+                    }
+                  }
+                },
+                "body": {
+                  "type": "object",
+                  "description": "body",
+                  "properties": {
+                    "totalCount": {
+                      "type": "string",
+                      "description": "전체 결과 수",
+                      "properties": {}
+                    },
+                    "numOfRows": {
+                      "type": "string",
+                      "description": "한 페이지 결과 수",
+                      "properties": {}
+                    },
+                    "pageNo": {
+                      "type": "string",
+                      "description": "페이지번호",
+                      "properties": {}
+                    },
+                    "items": {
+                      "type": "object",
+                      "description": "items",
+                      "properties": {
+                        "item": {
+                          "type": "object",
+                          "description": "item",
+                          "properties": {
+                            "spclCorprtArsltAmt": {
+                              "type": "string",
+                              "description": "특수법인실적금액",
+                              "properties": {}
+                            },
+                            "bssYear": {
+                              "type": "string",
+                              "description": "기준년도",
+                              "properties": {}
+                            },
+                            "bssMnth": {
+                              "type": "string",
+                              "description": "기준월",
+                              "properties": {}
+                            },
+                            "statDivNm": {
+                              "type": "string",
+                              "description": "통계구분명",
+                              "properties": {}
+                            },
+                            "arsltSumNum": {
+                              "type": "string",
+                              "description": "실적합계건수",
+                              "properties": {}
+                            },
+                            "arsltSumAmt": {
+                              "type": "string",
+                              "description": "실적합계금액",
+                              "properties": {}
+                            },
+                            "cntryInsttArsltNum": {
+                              "type": "string",
+                              "description": "국가기관실적건수",
+                              "properties": {}
+                            },
+                            "cntryInsttArsltAmt": {
+                              "type": "string",
+                              "description": "국가기관실적금액",
+                              "properties": {}
+                            },
+                            "lcltyAutnGrpArsltNum": {
+                              "type": "string",
+                              "description": "지방자치단체실적건수",
+                              "properties": {}
+                            },
+                            "lcltyAutnGrpArsltAmt": {
+                              "type": "string",
+                              "description": "지방자치단체실적금액",
+                              "properties": {}
+                            },
+                            "eduAdministInsttArsltNum": {
+                              "type": "string",
+                              "description": "교육행정기관실적건수",
+                              "properties": {}
+                            },
+                            "eduAdministInsttArsltAmt": {
+                              "type": "string",
+                              "description": "교육행정기관실적금액",
+                              "properties": {}
+                            },
+                            "pblcorpArsltNum": {
+                              "type": "string",
+                              "description": "공기업실적건수",
+                              "properties": {}
+                            },
+                            "pblcorpArsltAmt": {
+                              "type": "string",
+                              "description": "공기업실적금액",
+                              "properties": {}
+                            },
+                            "quasiGovInsttArsltNum": {
+                              "type": "string",
+                              "description": "준정부기관실적건수",
+                              "properties": {}
+                            },
+                            "quasiGovInsttArsltAmt": {
+                              "type": "string",
+                              "description": "준정부기관실적금액",
+                              "properties": {}
+                            },
+                            "etcPubInsttArsltNum": {
+                              "type": "string",
+                              "description": "기타공공기관실적건수",
+                              "properties": {}
+                            },
+                            "etcPubInsttArsltAmt": {
+                              "type": "string",
+                              "description": "기타공공기관실적금액",
+                              "properties": {}
+                            },
+                            "lcltyPblcorpArsltNum": {
+                              "type": "string",
+                              "description": "지방공기업실적건수",
+                              "properties": {}
+                            },
+                            "lcltyPblcorpArsltAmt": {
+                              "type": "string",
+                              "description": "지방공기업실적금액",
+                              "properties": {}
+                            },
+                            "lcltyMdlcInsttArsltNum": {
+                              "type": "string",
+                              "description": "지방의료기관실적건수",
+                              "properties": {}
+                            },
+                            "lcltyMdlcInsttArsltAmt": {
+                              "type": "string",
+                              "description": "지방의료기관실적금액",
+                              "properties": {}
+                            },
+                            "lcltyAutnGrpDntRsrchArsltNum": {
+                              "type": "string",
+                              "description": "지방자치단체출연연구실적건수",
+                              "properties": {}
+                            },
+                            "lcltyAutnGrpDntRsrchArsltAmt": {
+                              "type": "string",
+                              "description": "지방자치단체출연연구실적금액",
+                              "properties": {}
+                            },
+                            "spclCorprtArsltNum": {
+                              "type": "string",
+                              "description": "특수법인실적건수",
+                              "properties": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "response"
+              }
+            }
+          },
+          "02": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "03": {
+            "description": "데이터 없음 에러"
+          },
+          "05": {
+            "description": "제공기관 서비스 제공 상태가 원할하지 않습니다."
+          },
+          "06": {
+            "description": "날짜 Default, Format Error"
+          },
+          "07": {
+            "description": "요청하신 OpenAPI의 파라미터 입력값 범위가 초과 되었습니다."
+          },
+          "08": {
+            "description": "요청하신 OpenAPI의 필수 파라미터가 누락되었습니다."
+          }
+        },
+        "tags": [
+          "API 목록"
+        ],
+        "summary": "기관구분별 조달 현황",
+        "description": "검색조건에 기준년도범위를 입력하여 기준년도, 기준월, 통계구분명, 실적합계건수, 실적합계금액, 국가기관실적건수, 국가기관실적금액, 지방자치단체실적건수, 지방자치단체실적금액, 교육행정기관실적건수, 교육행정기관실적금액, 공기업실적건수, 공기업실적금액 등 기관구분별 조달 현황(을)를 조회",
+        "operationId": "getInsttDivAccotPrcrmntSttus",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "serviceKey",
+          "description": "공공데이터포털에서 받은 인증키",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "pageNo",
+          "description": "페이지번호",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "numOfRows",
+          "description": "한 페이지 결과 수",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmBgn",
+          "description": "검색기준년월시작",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "srchBssYmEnd",
+          "description": "검색기준년월종료",
+          "type": "string",
+          "required": true,
+          "in": "query"
+        },
+        {
+          "name": "type",
+          "description": "타입",
+          "type": "string",
+          "required": false,
+          "in": "query"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "getTotlPubPrcrmntSttus_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "bssYear4Amt": {
+                      "type": "string",
+                      "description": "기준년도+4금액"
+                    },
+                    "bssMnth": {
+                      "type": "string",
+                      "description": "기준월"
+                    },
+                    "statDivNm": {
+                      "type": "string",
+                      "description": "통계구분명"
+                    },
+                    "bssYearAmt": {
+                      "type": "string",
+                      "description": "기준년도금액"
+                    },
+                    "bssYear1Amt": {
+                      "type": "string",
+                      "description": "기준년도+1금액"
+                    },
+                    "bssYear2Amt": {
+                      "type": "string",
+                      "description": "기준년도+2금액"
+                    },
+                    "bssYear3Amt": {
+                      "type": "string",
+                      "description": "기준년도+3금액"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getInsttDivAccotPrcrmntSttus_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "spclCorprtArsltAmt": {
+                      "type": "string",
+                      "description": "특수법인실적금액"
+                    },
+                    "bssYear": {
+                      "type": "string",
+                      "description": "기준년도"
+                    },
+                    "bssMnth": {
+                      "type": "string",
+                      "description": "기준월"
+                    },
+                    "statDivNm": {
+                      "type": "string",
+                      "description": "통계구분명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "cntryInsttArsltNum": {
+                      "type": "string",
+                      "description": "국가기관실적건수"
+                    },
+                    "cntryInsttArsltAmt": {
+                      "type": "string",
+                      "description": "국가기관실적금액"
+                    },
+                    "lcltyAutnGrpArsltNum": {
+                      "type": "string",
+                      "description": "지방자치단체실적건수"
+                    },
+                    "lcltyAutnGrpArsltAmt": {
+                      "type": "string",
+                      "description": "지방자치단체실적금액"
+                    },
+                    "eduAdministInsttArsltNum": {
+                      "type": "string",
+                      "description": "교육행정기관실적건수"
+                    },
+                    "eduAdministInsttArsltAmt": {
+                      "type": "string",
+                      "description": "교육행정기관실적금액"
+                    },
+                    "pblcorpArsltNum": {
+                      "type": "string",
+                      "description": "공기업실적건수"
+                    },
+                    "pblcorpArsltAmt": {
+                      "type": "string",
+                      "description": "공기업실적금액"
+                    },
+                    "quasiGovInsttArsltNum": {
+                      "type": "string",
+                      "description": "준정부기관실적건수"
+                    },
+                    "quasiGovInsttArsltAmt": {
+                      "type": "string",
+                      "description": "준정부기관실적금액"
+                    },
+                    "etcPubInsttArsltNum": {
+                      "type": "string",
+                      "description": "기타공공기관실적건수"
+                    },
+                    "etcPubInsttArsltAmt": {
+                      "type": "string",
+                      "description": "기타공공기관실적금액"
+                    },
+                    "lcltyPblcorpArsltNum": {
+                      "type": "string",
+                      "description": "지방공기업실적건수"
+                    },
+                    "lcltyPblcorpArsltAmt": {
+                      "type": "string",
+                      "description": "지방공기업실적금액"
+                    },
+                    "lcltyMdlcInsttArsltNum": {
+                      "type": "string",
+                      "description": "지방의료기관실적건수"
+                    },
+                    "lcltyMdlcInsttArsltAmt": {
+                      "type": "string",
+                      "description": "지방의료기관실적금액"
+                    },
+                    "lcltyAutnGrpDntRsrchArsltNum": {
+                      "type": "string",
+                      "description": "지방자치단체출연연구실적건수"
+                    },
+                    "lcltyAutnGrpDntRsrchArsltAmt": {
+                      "type": "string",
+                      "description": "지방자치단체출연연구실적금액"
+                    },
+                    "spclCorprtArsltNum": {
+                      "type": "string",
+                      "description": "특수법인실적건수"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getEntrprsDivAccotPrcrmntSttus_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "unClsfcArsltAmt": {
+                      "type": "string",
+                      "description": "미분류실적금액"
+                    },
+                    "bssYear": {
+                      "type": "string",
+                      "description": "기준년도"
+                    },
+                    "bssMnth": {
+                      "type": "string",
+                      "description": "기준월"
+                    },
+                    "statDivNm": {
+                      "type": "string",
+                      "description": "통계구분명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "lrgeEntrprsArsltNum": {
+                      "type": "string",
+                      "description": "대기업실적건수"
+                    },
+                    "lrgeEntrprsArsltAmt": {
+                      "type": "string",
+                      "description": "대기업실적금액"
+                    },
+                    "entrprsOfMidStdArsltNum": {
+                      "type": "string",
+                      "description": "중견기업실적건수"
+                    },
+                    "entrprsOfMidStdArsltAmt": {
+                      "type": "string",
+                      "description": "중견기업실적금액"
+                    },
+                    "smetprArsltNum": {
+                      "type": "string",
+                      "description": "중소기업실적건수"
+                    },
+                    "smetprArsltAmt": {
+                      "type": "string",
+                      "description": "중소기업실적금액"
+                    },
+                    "frgncntryEntrprsArsltNum": {
+                      "type": "string",
+                      "description": "외국기업실적건수"
+                    },
+                    "frgncntryEntrprsArsltAmt": {
+                      "type": "string",
+                      "description": "외국기업실적금액"
+                    },
+                    "etcArsltNum": {
+                      "type": "string",
+                      "description": "기타실적건수"
+                    },
+                    "etcArsltAmt": {
+                      "type": "string",
+                      "description": "기타실적금액"
+                    },
+                    "unClsfcArsltNum": {
+                      "type": "string",
+                      "description": "미분류실적건수"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getCntrctMthdAccotSttus_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "unClsfcArsltAmt": {
+                      "type": "string",
+                      "description": "미분류실적금액"
+                    },
+                    "bssYear": {
+                      "type": "string",
+                      "description": "기준년도"
+                    },
+                    "bssMnth": {
+                      "type": "string",
+                      "description": "기준월"
+                    },
+                    "statDivNm": {
+                      "type": "string",
+                      "description": "통계구분명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "gnrlCmptArsltNum": {
+                      "type": "string",
+                      "description": "일반경쟁실적건수"
+                    },
+                    "gnrlCmptArsltAmt": {
+                      "type": "string",
+                      "description": "일반경쟁실적금액"
+                    },
+                    "lmtCmptArsltNum": {
+                      "type": "string",
+                      "description": "제한경쟁실적건수"
+                    },
+                    "lmtCmptArsltAmt": {
+                      "type": "string",
+                      "description": "제한경쟁실적금액"
+                    },
+                    "dsgntCmptArsltNum": {
+                      "type": "string",
+                      "description": "지명경쟁실적건수"
+                    },
+                    "dsgntCmptArsltAmt": {
+                      "type": "string",
+                      "description": "지명경쟁실적금액"
+                    },
+                    "prvtcntrctArsltNum": {
+                      "type": "string",
+                      "description": "수의계약실적건수"
+                    },
+                    "prvtcntrctArsltAmt": {
+                      "type": "string",
+                      "description": "수의계약실적금액"
+                    },
+                    "unClsfcArsltNum": {
+                      "type": "string",
+                      "description": "미분류실적건수"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getRgnLmtSttus_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "rgnLmtTotamtRt": {
+                      "type": "string",
+                      "description": "지역제한총액비율"
+                    },
+                    "bssYear": {
+                      "type": "string",
+                      "description": "기준년도"
+                    },
+                    "bssMnth": {
+                      "type": "string",
+                      "description": "기준월"
+                    },
+                    "statDivNm": {
+                      "type": "string",
+                      "description": "통계구분명"
+                    },
+                    "cntrctTotamt": {
+                      "type": "string",
+                      "description": "계약총액"
+                    },
+                    "bidCntrctTotamt": {
+                      "type": "string",
+                      "description": "입찰계약총액"
+                    },
+                    "unBidCntrctTotamt": {
+                      "type": "string",
+                      "description": "미입찰계약총액"
+                    },
+                    "rgnLmtTotamt": {
+                      "type": "string",
+                      "description": "지역제한총액"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getRgnDutyCmmnCntrctSttus_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "rgnDutyCmmnCntrctTotamtRt": {
+                      "type": "string",
+                      "description": "지역의무공동계약총액비율"
+                    },
+                    "bssYear": {
+                      "type": "string",
+                      "description": "기준년도"
+                    },
+                    "bssMnth": {
+                      "type": "string",
+                      "description": "기준월"
+                    },
+                    "statDivNm": {
+                      "type": "string",
+                      "description": "통계구분명"
+                    },
+                    "cnstwkCntrctTotamt": {
+                      "type": "string",
+                      "description": "공사계약총액"
+                    },
+                    "bidCntrctTotamt": {
+                      "type": "string",
+                      "description": "입찰계약총액"
+                    },
+                    "unBidCntrctTotamt": {
+                      "type": "string",
+                      "description": "미입찰계약총액"
+                    },
+                    "rgnDutyCmmnCntrctTotamt": {
+                      "type": "string",
+                      "description": "지역의무공동계약총액"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getPrcrmntObjectBsnsObjAccotSttus_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "unClsfcArsltAmt": {
+                      "type": "string",
+                      "description": "미분류실적금액"
+                    },
+                    "bssYear": {
+                      "type": "string",
+                      "description": "기준년도"
+                    },
+                    "bssMnth": {
+                      "type": "string",
+                      "description": "기준월"
+                    },
+                    "statDivNm": {
+                      "type": "string",
+                      "description": "통계구분명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "prdctArsltNum": {
+                      "type": "string",
+                      "description": "물품실적건수"
+                    },
+                    "prdctArsltAmt": {
+                      "type": "string",
+                      "description": "물품실적금액"
+                    },
+                    "cnstwkArsltNum": {
+                      "type": "string",
+                      "description": "공사실적건수"
+                    },
+                    "cnstwkArsltAmt": {
+                      "type": "string",
+                      "description": "공사실적금액"
+                    },
+                    "gnrlSrvceArsltNum": {
+                      "type": "string",
+                      "description": "일반용역실적건수"
+                    },
+                    "gnrlSrvceArsltAmt": {
+                      "type": "string",
+                      "description": "일반용역실적금액"
+                    },
+                    "techSrvceArsltNum": {
+                      "type": "string",
+                      "description": "기술용역실적건수"
+                    },
+                    "techSrvceArsltAmt": {
+                      "type": "string",
+                      "description": "기술용역실적금액"
+                    },
+                    "unClsfcArsltNum": {
+                      "type": "string",
+                      "description": "미분류실적건수"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getDminsttAccotEntrprsDivAccotArslt_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "unClsfcArsltAmt": {
+                      "type": "string",
+                      "description": "미분류실적금액"
+                    },
+                    "linkSystmNm": {
+                      "type": "string",
+                      "description": "연계시스템명"
+                    },
+                    "dminsttCd": {
+                      "type": "string",
+                      "description": "수요기관코드"
+                    },
+                    "dminsttNm": {
+                      "type": "string",
+                      "description": "수요기관명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "lrgeEntrprsArsltNum": {
+                      "type": "string",
+                      "description": "대기업실적건수"
+                    },
+                    "lrgeEntrprsArsltAmt": {
+                      "type": "string",
+                      "description": "대기업실적금액"
+                    },
+                    "entrprsOfMidStdArsltNum": {
+                      "type": "string",
+                      "description": "중견기업실적건수"
+                    },
+                    "entrprsOfMidStdArsltAmt": {
+                      "type": "string",
+                      "description": "중견기업실적금액"
+                    },
+                    "smetprArsltNum": {
+                      "type": "string",
+                      "description": "중소기업실적건수"
+                    },
+                    "smetprArsltAmt": {
+                      "type": "string",
+                      "description": "중소기업실적금액"
+                    },
+                    "frgncntryEntrprsArsltNum": {
+                      "type": "string",
+                      "description": "외국기업실적건수"
+                    },
+                    "frgncntryEntrprsArsltAmt": {
+                      "type": "string",
+                      "description": "외국기업실적금액"
+                    },
+                    "nonPrftmkCorprtArsltNum": {
+                      "type": "string",
+                      "description": "기타실적건수"
+                    },
+                    "nonPrftmkCorprtArsltAmt": {
+                      "type": "string",
+                      "description": "기타실적금액"
+                    },
+                    "unClsfcArsltNum": {
+                      "type": "string",
+                      "description": "미분류실적건수"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getDminsttAccotCntrctMthdAccotArslt_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "mnllbrRgstArsltAmt": {
+                      "type": "string",
+                      "description": "수기등록실적금액"
+                    },
+                    "linkSystmNm": {
+                      "type": "string",
+                      "description": "연계시스템명"
+                    },
+                    "dminsttCd": {
+                      "type": "string",
+                      "description": "수요기관코드"
+                    },
+                    "dminsttNm": {
+                      "type": "string",
+                      "description": "수요기관명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "gnrlCmptArsltNum": {
+                      "type": "string",
+                      "description": "일반경쟁실적건수"
+                    },
+                    "gnrlCmptArsltAmt": {
+                      "type": "string",
+                      "description": "일반경쟁실적금액"
+                    },
+                    "lmtCmptArsltNum": {
+                      "type": "string",
+                      "description": "제한경쟁실적건수"
+                    },
+                    "lmtCmptArsltAmt": {
+                      "type": "string",
+                      "description": "제한경쟁실적금액"
+                    },
+                    "dsgntCmptArsltNum": {
+                      "type": "string",
+                      "description": "지명경쟁실적건수"
+                    },
+                    "dsgntCmptArsltAmt": {
+                      "type": "string",
+                      "description": "지명경쟁실적금액"
+                    },
+                    "prvtcntrctArsltNum": {
+                      "type": "string",
+                      "description": "수의계약실적건수"
+                    },
+                    "prvtcntrctArsltAmt": {
+                      "type": "string",
+                      "description": "수의계약실적금액"
+                    },
+                    "unClsfcArsltNum": {
+                      "type": "string",
+                      "description": "미분류실적건수"
+                    },
+                    "unClsfcArsltAmt": {
+                      "type": "string",
+                      "description": "미분류실적금액"
+                    },
+                    "mnllbrRgstArsltNum": {
+                      "type": "string",
+                      "description": "수기등록실적건수"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getDminsttAccotBsnsObjAccotArslt_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "unClsfcArsltAmt": {
+                      "type": "string",
+                      "description": "미분류실적금액"
+                    },
+                    "linkSystmNm": {
+                      "type": "string",
+                      "description": "연계시스템명"
+                    },
+                    "dminsttCd": {
+                      "type": "string",
+                      "description": "수요기관코드"
+                    },
+                    "dminsttNm": {
+                      "type": "string",
+                      "description": "수요기관명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "prdctArsltNum": {
+                      "type": "string",
+                      "description": "물품실적건수"
+                    },
+                    "prdctArsltAmt": {
+                      "type": "string",
+                      "description": "물품실적금액"
+                    },
+                    "cnstwkArsltNum": {
+                      "type": "string",
+                      "description": "공사실적건수"
+                    },
+                    "cnstwkArsltAmt": {
+                      "type": "string",
+                      "description": "공사실적금액"
+                    },
+                    "gnrlSrvceArsltNum": {
+                      "type": "string",
+                      "description": "일반용역실적건수"
+                    },
+                    "gnrlSrvceArsltAmt": {
+                      "type": "string",
+                      "description": "일반용역실적금액"
+                    },
+                    "techSrvceArsltNum": {
+                      "type": "string",
+                      "description": "기술용역실적건수"
+                    },
+                    "techSrvceArsltAmt": {
+                      "type": "string",
+                      "description": "기술용역실적금액"
+                    },
+                    "unClsfcArsltNum": {
+                      "type": "string",
+                      "description": "미분류실적건수"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getDminsttAccotSystmTyAccotArslt_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "mnllbrPrcrmntArsltAmt": {
+                      "type": "string",
+                      "description": "수기조달실적금액"
+                    },
+                    "linkSystmNm": {
+                      "type": "string",
+                      "description": "연계시스템명"
+                    },
+                    "dminsttCd": {
+                      "type": "string",
+                      "description": "수요기관코드"
+                    },
+                    "dminsttNm": {
+                      "type": "string",
+                      "description": "수요기관명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "centrPrcrmntArsltNum": {
+                      "type": "string",
+                      "description": "중앙조달실적건수"
+                    },
+                    "centrPrcrmntArsltAmt": {
+                      "type": "string",
+                      "description": "중앙조달실적금액"
+                    },
+                    "selfPrcrmntArsltNum": {
+                      "type": "string",
+                      "description": "자체조달실적건수"
+                    },
+                    "selfPrcrmntArsltAmt": {
+                      "type": "string",
+                      "description": "자체조달실적금액"
+                    },
+                    "systmPrcrmntArsltNum": {
+                      "type": "string",
+                      "description": "자체조달시스템실적건수"
+                    },
+                    "systmPrcrmntArsltAmt": {
+                      "type": "string",
+                      "description": "자체조달시스템실적금액"
+                    },
+                    "mnllbrPrcrmntArsltNum": {
+                      "type": "string",
+                      "description": "수기조달실적건수"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getPrcrmntEntrprsAccotCntrctMthdAccotArslt_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            },
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "mnllbrRgstArsltAmt": {
+                      "type": "string",
+                      "description": "수기등록실적금액"
+                    },
+                    "linkSystmNm": {
+                      "type": "string",
+                      "description": "연계시스템명"
+                    },
+                    "corpUntyNo": {
+                      "type": "string",
+                      "description": "업체통합번호"
+                    },
+                    "corpNm": {
+                      "type": "string",
+                      "description": "업체명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "gnrlCmptArsltNum": {
+                      "type": "string",
+                      "description": "일반경쟁실적건수"
+                    },
+                    "gnrlCmptArsltAmt": {
+                      "type": "string",
+                      "description": "일반경쟁실적금액"
+                    },
+                    "lmtCmptArsltNum": {
+                      "type": "string",
+                      "description": "제한경쟁실적건수"
+                    },
+                    "lmtCmptArsltAmt": {
+                      "type": "string",
+                      "description": "제한경쟁실적금액"
+                    },
+                    "dsgntCmptArsltNum": {
+                      "type": "string",
+                      "description": "지명경쟁실적건수"
+                    },
+                    "dsgntCmptArsltAmt": {
+                      "type": "string",
+                      "description": "지명경쟁실적금액"
+                    },
+                    "prvtcntrctArsltNum": {
+                      "type": "string",
+                      "description": "수의계약실적건수"
+                    },
+                    "prvtcntrctArsltAmt": {
+                      "type": "string",
+                      "description": "수의계약실적금액"
+                    },
+                    "unClsfcArsltNum": {
+                      "type": "string",
+                      "description": "미분류실적건수"
+                    },
+                    "unClsfcArsltAmt": {
+                      "type": "string",
+                      "description": "미분류실적금액"
+                    },
+                    "mnllbrRgstArsltNum": {
+                      "type": "string",
+                      "description": "수기등록실적건수"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "getPrcrmntEntrprsAccotBsnsObjAccotArslt_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            },
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "unClsfcArsltAmt": {
+                      "type": "string",
+                      "description": "미분류실적금액"
+                    },
+                    "linkSystmNm": {
+                      "type": "string",
+                      "description": "연계시스템명"
+                    },
+                    "corpUntyNo": {
+                      "type": "string",
+                      "description": "업체통합번호"
+                    },
+                    "corpNm": {
+                      "type": "string",
+                      "description": "업체명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "prdctArsltNum": {
+                      "type": "string",
+                      "description": "물품실적건수"
+                    },
+                    "prdctArsltAmt": {
+                      "type": "string",
+                      "description": "물품실적금액"
+                    },
+                    "cnstwkArsltNum": {
+                      "type": "string",
+                      "description": "공사실적건수"
+                    },
+                    "cnstwkArsltAmt": {
+                      "type": "string",
+                      "description": "공사실적금액"
+                    },
+                    "gnrlSrvceArsltNum": {
+                      "type": "string",
+                      "description": "일반용역실적건수"
+                    },
+                    "gnrlSrvceArsltAmt": {
+                      "type": "string",
+                      "description": "일반용역실적금액"
+                    },
+                    "techSrvceArsltNum": {
+                      "type": "string",
+                      "description": "기술용역실적건수"
+                    },
+                    "techSrvceArsltAmt": {
+                      "type": "string",
+                      "description": "기술용역실적금액"
+                    },
+                    "unClsfcArsltNum": {
+                      "type": "string",
+                      "description": "미분류실적건수"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    },
+    "getPrdctIdntNoServcAccotArslt_response": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "header",
+          "properties": {
+            "resultMsg": {
+              "type": "string",
+              "description": "결과메세지"
+            },
+            "resultCode": {
+              "type": "string",
+              "description": "결과코드"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "description": "body",
+          "properties": {
+            "items": {
+              "type": "object",
+              "description": "items",
+              "properties": {
+                "item": {
+                  "type": "object",
+                  "description": "item",
+                  "properties": {
+                    "unClsfcArsltAmt": {
+                      "type": "string",
+                      "description": "미분류실적금액"
+                    },
+                    "linkSystmNm": {
+                      "type": "string",
+                      "description": "연계시스템명"
+                    },
+                    "prdctClsfcNo": {
+                      "type": "string",
+                      "description": "물품분류번호"
+                    },
+                    "prdctClsfcNm": {
+                      "type": "string",
+                      "description": "품명"
+                    },
+                    "arsltSumNum": {
+                      "type": "string",
+                      "description": "실적합계건수"
+                    },
+                    "arsltSumAmt": {
+                      "type": "string",
+                      "description": "실적합계금액"
+                    },
+                    "gnrlCmptArsltNum": {
+                      "type": "string",
+                      "description": "일반경쟁실적건수"
+                    },
+                    "gnrlCmptArsltAmt": {
+                      "type": "string",
+                      "description": "일반경쟁실적금액"
+                    },
+                    "lmtCmptArsltNum": {
+                      "type": "string",
+                      "description": "제한경쟁실적건수"
+                    },
+                    "lmtCmptArsltAmt": {
+                      "type": "string",
+                      "description": "제한경쟁실적금액"
+                    },
+                    "dsgntCmptArsltNum": {
+                      "type": "string",
+                      "description": "지명경쟁실적건수"
+                    },
+                    "dsgntCmptArsltAmt": {
+                      "type": "string",
+                      "description": "지명경쟁실적금액"
+                    },
+                    "prvtcntrctArsltNum": {
+                      "type": "string",
+                      "description": "수의계약실적건수"
+                    },
+                    "prvtcntrctArsltAmt": {
+                      "type": "string",
+                      "description": "수의계약실적금액"
+                    },
+                    "unClsfcArsltNum": {
+                      "type": "string",
+                      "description": "미분류실적건수"
+                    }
+                  }
+                }
+              }
+            },
+            "totalCount": {
+              "type": "string",
+              "description": "전체 결과 수"
+            },
+            "numOfRows": {
+              "type": "string",
+              "description": "한 페이지 결과 수"
+            },
+            "pageNo": {
+              "type": "string",
+              "description": "페이지번호"
+            }
+          }
+        }
+      }
+    }
+  },
+  "swaggerOprtinVOs": [
+    {
+      "oprtinUrl": "https://nopenapi.g2b.go.kr/at/PubPrcrmntStatInfoService/getInsttDivAccotPrcrmntSttus",
+      "oprtinNm": "기관구분별 조달 현황",
+      "oprtinDc": "검색조건에 기준년도범위를 입력하여 기준년도, 기준월, 통계구분명, 실적합계건수, 실적합계금액, 국가기관실적건수, 국가기관실적금액, 지방자치단체실적건수, 지방자치단체실적금액, 교육행정기관실적건수, 교육행정기관실적금액, 공기업실적건수, 공기업실적금액 등 기관구분별 조달 현황(을)를 조회",
+      "gwSvcNm": "getInsttDivAccotPrcrmntSttus",
+      "operationId": "getInsttDivAccotPrcrmntSttus",
+      "publicDataTyDetailCode": "PRDE02",
+      "reqList": [
+        {
+          "paramtrNm": "serviceKey",
+          "paramtrDc": "공공데이터포털에서 받은 인증키",
+          "paramtrBassValue": "-",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "pageNo",
+          "paramtrDc": "페이지번호",
+          "paramtrBassValue": "1",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "numOfRows",
+          "paramtrDc": "한 페이지 결과 수",
+          "paramtrBassValue": "10",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "srchBssYmBgn",
+          "paramtrDc": "검색기준년월시작",
+          "paramtrBassValue": "201603",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "srchBssYmEnd",
+          "paramtrDc": "검색기준년월종료",
+          "paramtrBassValue": "201603",
+          "paramtrTy": "string",
+          "paramtrDivision": "필수",
+          "ck": true
+        },
+        {
+          "paramtrNm": "type",
+          "paramtrDc": "타입",
+          "paramtrBassValue": "json",
+          "paramtrTy": "string",
+          "paramtrDivision": "옵션",
+          "ck": true
+        }
+      ],
+      "resList": [
+        {
+          "paramtrNm": "header",
+          "paramtrDc": "header",
+          "arrayYn": "N",
+          "paramtrDefNm": "#/definitions/header",
+          "subDefNm": "header",
+          "paramtrTy": "object",
+          "paramtrDivision": "필수",
+          "ck": true,
+          "subParam": [
+            {
+              "paramtrNm": "resultCode",
+              "paramtrDc": "결과코드",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            },
+            {
+              "paramtrNm": "resultMsg",
+              "paramtrDc": "결과메세지",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            }
+          ]
+        },
+        {
+          "paramtrNm": "body",
+          "paramtrDc": "body",
+          "arrayYn": "N",
+          "paramtrDefNm": "#/definitions/body",
+          "subDefNm": "body",
+          "paramtrTy": "object",
+          "paramtrDivision": "필수",
+          "ck": true,
+          "subParam": [
+            {
+              "paramtrNm": "totalCount",
+              "paramtrDc": "전체 결과 수",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            },
+            {
+              "paramtrNm": "numOfRows",
+              "paramtrDc": "한 페이지 결과 수",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            },
+            {
+              "paramtrNm": "pageNo",
+              "paramtrDc": "페이지번호",
+              "arrayYn": "N",
+              "paramtrDefNm": "",
+              "paramtrTy": "string",
+              "paramtrDivision": "필수",
+              "ck": true
+            },
+            {
+              "paramtrNm": "items",
+              "paramtrDc": "items",
+              "arrayYn": "N",
+              "paramtrDefNm": "#/definitions/items",
+              "subDefNm": "items",
+              "paramtrTy": "object",
+              "paramtrDivision": "필수",
+              "ck": true,
+              "subParam": [
+                {
+                  "paramtrNm": "item",
+                  "paramtrDc": "item",
+                  "arrayYn": "N",
+                  "paramtrDefNm": "#/definitions/item",
+                  "subDefNm": "item",
+                  "paramtrTy": "object",
+                  "paramtrDivision": "옵션",
+                  "ck": true,
+                  "subParam": [
+                    {
+                      "paramtrNm": "spclCorprtArsltAmt",
+                      "paramtrDc": "특수법인실적금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "bssYear",
+                      "paramtrDc": "기준년도",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "bssMnth",
+                      "paramtrDc": "기준월",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "statDivNm",
+                      "paramtrDc": "통계구분명",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "arsltSumNum",
+                      "paramtrDc": "실적합계건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "arsltSumAmt",
+                      "paramtrDc": "실적합계금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "cntryInsttArsltNum",
+                      "paramtrDc": "국가기관실적건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "cntryInsttArsltAmt",
+                      "paramtrDc": "국가기관실적금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lcltyAutnGrpArsltNum",
+                      "paramtrDc": "지방자치단체실적건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lcltyAutnGrpArsltAmt",
+                      "paramtrDc": "지방자치단체실적금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "eduAdministInsttArsltNum",
+                      "paramtrDc": "교육행정기관실적건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "eduAdministInsttArsltAmt",
+                      "paramtrDc": "교육행정기관실적금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "pblcorpArsltNum",
+                      "paramtrDc": "공기업실적건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "pblcorpArsltAmt",
+                      "paramtrDc": "공기업실적금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "quasiGovInsttArsltNum",
+                      "paramtrDc": "준정부기관실적건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "quasiGovInsttArsltAmt",
+                      "paramtrDc": "준정부기관실적금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "etcPubInsttArsltNum",
+                      "paramtrDc": "기타공공기관실적건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "etcPubInsttArsltAmt",
+                      "paramtrDc": "기타공공기관실적금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lcltyPblcorpArsltNum",
+                      "paramtrDc": "지방공기업실적건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lcltyPblcorpArsltAmt",
+                      "paramtrDc": "지방공기업실적금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lcltyMdlcInsttArsltNum",
+                      "paramtrDc": "지방의료기관실적건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lcltyMdlcInsttArsltAmt",
+                      "paramtrDc": "지방의료기관실적금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lcltyAutnGrpDntRsrchArsltNum",
+                      "paramtrDc": "지방자치단체출연연구실적건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "lcltyAutnGrpDntRsrchArsltAmt",
+                      "paramtrDc": "지방자치단체출연연구실적금액",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    },
+                    {
+                      "paramtrNm": "spclCorprtArsltNum",
+                      "paramtrDc": "특수법인실적건수",
+                      "arrayYn": "N",
+                      "paramtrDefNm": "",
+                      "paramtrTy": "string",
+                      "paramtrDivision": "옵션",
+                      "ck": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

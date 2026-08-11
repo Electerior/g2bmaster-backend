@@ -103,9 +103,12 @@ g2b:
     page-size: ${G2B_PAGE_SIZE:100}
 
   # 국방전자조달(D2B) OpenAPI
+  # 기본값이 공공데이터포털 게이트웨이인 이유: 구 직접 호출형(openapi.d2b.go.kr)은
+  # data.go.kr 데이터셋이 전부 폐기(404)됐고 호스트도 WAF 400 만 돌려준다.
+  # 현행 서비스는 apis.data.go.kr/1690000 경유 _GW 서비스다 — docs/d2b-openapi/INDEX.md ①.
   d2b:
     service-key: ${D2B_SERVICE_KEY:}
-    base-url: ${D2B_BASE_URL:https://openapi.d2b.go.kr/openapi/service}
+    base-url: ${D2B_BASE_URL:https://apis.data.go.kr/1690000}
     timeout-ms: ${D2B_TIMEOUT_MS:20000}
 
   # AI 저장소(g2bmaster-AI)로 넘기는 호출. 이 백엔드는 추론을 직접 하지 않는다.

@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### 조달청 OpenAPI 원본 가이드 ###
+# 벤더가 배포하는 .docx 18개(약 5MB)다. 바이너리라 diff 가 안 되고, git 은 한 번 들어온
+# 것을 잊지 않는다. 저장소에는 같은 내용의 변환본(guides-md/*.md 18개)과 swagger JSON 만
+# 둔다 — 검토·검색·리뷰가 되는 형태가 그쪽이다.
+# 원본이 필요하면 docs/g2b-openapi/INDEX.md §서비스 목록의 data.go.kr 링크에서 다시 받는다.
+docs/g2b-openapi/guides/*.docx

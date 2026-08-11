@@ -40,12 +40,13 @@ public class BidNoticeIndexRepository {
 	 * 전문은 상세 조회({@link #findOne})에서만 준다.
 	 */
 	private static final String LIST_COLUMNS = """
-			n.id, n.notice_order, n.notice_name, n.category, n.state, n.business_division,
+			n.id, n.source, n.notice_order, n.notice_name, n.category, n.state, n.business_division,
 			n.region, n.demand_institution_code, n.demand_institution_name,
 			n.notice_institution_code, n.notice_institution_name, n.before_spec_rgst_no,
 			n.product_list, n.detail_product_code, n.lowest_bid_rate, n.price_detail,
 			n.created_date, n.close_date, n.updated_at, n.officer_name, n.officer_contact,
 			n.ai_summary, n.attachment_urls, n.source_url,
+			n.source_ext, n.g2b_pblanc_no, n.g2b_pblanc_odr,
 			LEFT(COALESCE(n.notice_body, ''), 300) AS body_preview
 			""";
 
@@ -77,7 +78,8 @@ public class BidNoticeIndexRepository {
 			"notice_institution_code", "notice_institution_name", "before_spec_rgst_no",
 			"product_list", "detail_product_code", "lowest_bid_rate", "price_detail",
 			"created_date", "close_date", "officer_name", "officer_contact",
-			"notice_body", "attachment_urls", "source_url");
+			"notice_body", "attachment_urls", "source_url",
+			"source_ext", "g2b_pblanc_no", "g2b_pblanc_odr");
 
 	private final NamedParameterJdbcTemplate jdbc;
 
@@ -161,6 +163,9 @@ public class BidNoticeIndexRepository {
 	private static List<String> allInsertColumns() {
 		List<String> columns = new ArrayList<>();
 		columns.add("id");
+		// PK 의 두 번째 성분(V13). upsert 의 중복 판정이 (id, source) 로 이뤄지므로
+		// INSERT 목록에 반드시 있어야 한다 — 빠지면 DEFAULT 'G2B' 로 들어가 소스가 섞인다.
+		columns.add("source");
 		columns.add("notice_order");
 		columns.add("region");
 		columns.addAll(UPSERT_COLUMNS);
@@ -184,6 +189,7 @@ public class BidNoticeIndexRepository {
 	private static SqlParameterSource bind(BidNoticeRow row) {
 		return new MapSqlParameterSource()
 				.addValue("id", row.id())
+				.addValue("source", row.sourceName())
 				.addValue("noticeOrder", row.noticeOrder())
 				.addValue("noticeName", row.noticeName())
 				.addValue("category", row.categoryName())
@@ -207,7 +213,10 @@ public class BidNoticeIndexRepository {
 				.addValue("officerContact", row.officerContact())
 				.addValue("noticeBody", row.noticeBody())
 				.addValue("attachmentUrls", row.attachmentUrls(), Types.VARCHAR)
-				.addValue("sourceUrl", row.sourceUrl());
+				.addValue("sourceUrl", row.sourceUrl())
+				.addValue("sourceExt", row.sourceExt(), Types.VARCHAR)
+				.addValue("g2bPblancNo", row.g2bPblancNo())
+				.addValue("g2bPblancOdr", row.g2bPblancOdr());
 	}
 
 	/**
@@ -221,13 +230,17 @@ public class BidNoticeIndexRepository {
 	 * @param regions 공고번호 → 지역 문자열
 	 * @return 실제로 갱신된 행 수
 	 */
-	public int updateRegions(Map<String, String> regions) {
+	public int updateRegions(Map<String, String> regions, NoticeSource source) {
 		if (regions == null || regions.isEmpty()) {
 			return 0;
 		}
+		// 지역 오퍼레이션은 소스별로 따로 있다(나라장터·누리장터). PK 가 (id, source) 이므로
+		// 소스 조건 없이 id 로만 갱신하면 번호가 겹치는 다른 소스의 행까지 물든다.
+		String sourceName = (source == null ? NoticeSource.G2B : source).name();
 		SqlParameterSource[] batch = regions.entrySet().stream()
 				.map(entry -> (SqlParameterSource) new MapSqlParameterSource()
 						.addValue("id", entry.getKey())
+						.addValue("source", sourceName)
 						.addValue("region", entry.getValue()))
 				.toArray(SqlParameterSource[]::new);
 
@@ -236,7 +249,7 @@ public class BidNoticeIndexRepository {
 		int[] affected = jdbc.batchUpdate("""
 				UPDATE bid_notice
 				   SET region = :region, updated_at = NOW(6)
-				 WHERE id = :id AND region <> :region
+				 WHERE id = :id AND source = :source AND region <> :region
 				""", batch);
 		int total = 0;
 		for (int count : affected) {
@@ -247,16 +260,72 @@ public class BidNoticeIndexRepository {
 
 	// ── 검색 ────────────────────────────────────────────────────────────────
 
-	/** 한 페이지. {@code where} 는 {@link BidNoticeQueryBuilder} 가 만든 것을 그대로 받는다. */
+	/**
+	 * 한 페이지. {@code where} 는 {@link BidNoticeQueryBuilder} 가 만든 것을 그대로 받는다.
+	 *
+	 * @param relevanceSorted 관련도 순으로 정렬하는가. 그렇다면 전문검색 전용 2단 질의를 쓴다
+	 *                        ({@link #fullTextSql} 참고)
+	 */
 	public List<Map<String, Object>> search(BidNoticeQueryBuilder.Where where, String orderBy,
-			int limit, int offset) {
+			int limit, int offset, boolean relevanceSorted) {
+		int page = Math.min(Math.max(limit, 1), MAX_LIMIT);
+		int skip = Math.max(offset, 0);
 		MapSqlParameterSource params = new MapSqlParameterSource(where.params())
-				.addValue("limit", Math.min(Math.max(limit, 1), MAX_LIMIT))
-				.addValue("offset", Math.max(offset, 0));
+				.addValue("limit", page)
+				.addValue("offset", skip);
 
-		String sql = "SELECT " + LIST_COLUMNS + where.relevanceSelect() + LIST_FROM
-				+ where.sql() + "\n ORDER BY " + orderBy + "\n LIMIT :limit OFFSET :offset";
+		String sql;
+		if (relevanceSorted && where.fullText()) {
+			params.addValue("innerLimit", skip + page);
+			sql = fullTextSql(where, orderBy);
+		}
+		else {
+			sql = "SELECT " + LIST_COLUMNS + where.relevanceSelect() + LIST_FROM
+					+ where.sql() + "\n ORDER BY " + orderBy + "\n LIMIT :limit OFFSET :offset";
+		}
 		return jdbc.queryForList(sql, params);
+	}
+
+	/**
+	 * 관련도 정렬 전용 2단 질의.
+	 *
+	 * <p><b>왜 평범하게 못 쓰는가.</b> InnoDB 전문검색은 {@code ORDER BY <점수> LIMIT n} 을 보면
+	 * 스토리지 엔진에 "점수순 상위 n건만 달라"는 힌트({@code Ft_hints: sorted, limit = n})를 내려
+	 * 매치 전체를 올려 받지 않는다. 그런데 {@code ORDER BY} 에 <b>점수 말고 다른 것이 하나라도
+	 * 붙으면</b> 그 힌트가 사라지고, 매치된 행을 전부 서버로 올려 정렬한다. 우리는 페이징
+	 * 안정성 때문에 {@code n.id} 타이브레이커를 반드시 붙여야 하므로 정면충돌이다.
+	 *
+	 * <p>실측(bid_notice 20,403행, {@code '구매'} → 매치 4,752건):
+	 * <pre>
+	 *   ORDER BY rel DESC, id ASC          24.6ms   4,752행을 읽어 정렬
+	 *   ORDER BY rel DESC (타이브레이커 X)   0.70ms      20행   ← 빠르지만 페이징이 흔들린다
+	 *   2단 (아래)                          0.79ms      20행   ← 둘 다 얻는다
+	 * </pre>
+	 *
+	 * <p><b>구조.</b> 안쪽은 점수만으로 정렬해 힌트를 살린 채 {@code offset + limit} 건의 id 만
+	 * 뽑고, 바깥이 그 결과에 타이브레이커를 걸어 페이지를 자른다. 바깥 정렬 대상은 최대
+	 * {@code offset + limit} 건이라 비용이 없다.
+	 *
+	 * <p>남는 한계: 안쪽 컷오프 경계에서 점수가 같은 행이 걸치면 어느 쪽이 창에 들어올지는
+	 * 엔진이 정한다. 표가 바뀌지 않는 한 결정적이므로 실사용에서는 드러나지 않지만,
+	 * '완전한' 안정성은 아니다 — 그 대가로 31배를 얻는다.
+	 *
+	 * <p>관련도 정렬이 <b>아닐</b> 때는 이 경로를 타지 않는다. 검색어가 있어도 최신순으로
+	 * 정렬하면 어차피 매치 전체를 정렬해야 해서 힌트가 성립하지 않기 때문이다.
+	 */
+	private static String fullTextSql(BidNoticeQueryBuilder.Where where, String orderBy) {
+		// relevanceSelect 는 ", MATCH(…) AS relevance" 형태다 — 식을 여기에 복제하지 않고
+		// 그대로 이어 붙인다. 두 곳에 적으면 한쪽만 고쳐져 점수가 갈린다.
+		//
+		// ⚠ PK 는 (id, source) 복합키다(V13). 조인 키에서 source 를 빼면 같은 공고번호를 가진
+		// 다른 소스의 행과 팬아웃되어 한 건이 여러 줄로 나온다 — 안쪽에서 두 컬럼을 다 들고 온다.
+		String inner = "SELECT n.id AS fid, n.source AS fsource" + where.relevanceSelect() + LIST_FROM
+				+ where.sql() + "\n         ORDER BY relevance DESC\n         LIMIT :innerLimit";
+		return "SELECT " + LIST_COLUMNS + ", t.relevance AS relevance"
+				+ "\n  FROM (" + inner + ") t"
+				+ "\n  JOIN bid_notice n ON n.id = t.fid AND n.source = t.fsource"
+				+ "\n ORDER BY " + orderBy
+				+ "\n LIMIT :limit OFFSET :offset";
 	}
 
 	public int count(BidNoticeQueryBuilder.Where where) {
@@ -268,12 +337,25 @@ public class BidNoticeIndexRepository {
 	/**
 	 * 상세 한 건 — 본문 전문 포함.
 	 *
+	 * <p>PK 가 {@code (id, source)} 라 같은 번호가 소스별로 최대 3행일 수 있다. 소스를
+	 * 지정하지 않은 기존 호출(프론트 구계약)은 G2B → NURI → D2B 순으로 첫 행을 준다 —
+	 * 어느 행이 올지 엔진에 맡기면 같은 URL 이 새로고침마다 다른 공고를 보여준다.
+	 *
+	 * @param source {@code null} 이면 소스 무지정(우선순위 픽)
 	 * @return 없으면 {@code null}
 	 */
-	public Map<String, Object> findOne(String id) {
+	public Map<String, Object> findOne(String id, NoticeSource source) {
+		MapSqlParameterSource params = new MapSqlParameterSource("id", id);
+		String sourceFilter = "";
+		if (source != null) {
+			params.addValue("source", source.name());
+			sourceFilter = " AND n.source = :source";
+		}
 		List<Map<String, Object>> rows = jdbc.queryForList(
-				"SELECT " + LIST_COLUMNS + ", n.notice_body" + LIST_FROM + " WHERE n.id = :id",
-				new MapSqlParameterSource("id", id));
+				"SELECT " + LIST_COLUMNS + ", n.notice_body" + LIST_FROM
+						+ " WHERE n.id = :id" + sourceFilter
+						+ "\n ORDER BY FIELD(n.source, 'G2B', 'NURI', 'D2B')\n LIMIT 1",
+				params);
 		return rows.isEmpty() ? null : new LinkedHashMap<>(rows.get(0));
 	}
 
@@ -377,12 +459,13 @@ public class BidNoticeIndexRepository {
 				""", new MapSqlParameterSource());
 	}
 
-	/** 색인 규모 요약 — 분류별 건수와 가장 최근 적재 시각. */
+	/** 색인 규모 요약 — 소스×분류별 건수와 가장 최근 적재 시각. */
 	public List<Map<String, Object>> indexSummary() {
 		return jdbc.queryForList("""
-				SELECT category, COUNT(*) AS count, MAX(updated_at) AS last_indexed_at
+				SELECT source, category, COUNT(*) AS count, MAX(updated_at) AS last_indexed_at
 				  FROM bid_notice
-				 GROUP BY category
+				 GROUP BY source, category
+				 ORDER BY source, category
 				""", new MapSqlParameterSource());
 	}
 }

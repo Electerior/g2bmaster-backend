@@ -1,0 +1,1046 @@
+{
+  "documented": [
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListBidPrceCalclAInfo",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListEvaluationIndstrytyMfrcInfo",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoChgHstryCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoChgHstryServc",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoChgHstryThng",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoCnstwkBsisAmount",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoCnstwkPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoEorderAtchFileInfo",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoEtc",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoEtcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoFrgcptPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoFrgcptPurchsObjPrdct",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoLicenseLimit",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoPrtcptPsblRgn",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoServc",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoServcBsisAmount",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoServcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoServcPurchsObjPrdct",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoThng",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoThngBsisAmount",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoThngPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListInfoThngPurchsObjPrdct",
+      "code": "30"
+    },
+    {
+      "tag": "BidPublicInfoService",
+      "path": "ad/BidPublicInfoService/getBidPblancListPPIFnlRfpIssAtchFileInfo",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoCnstwkPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoCnstwkPreparPcDetail",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoFailing",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoFrgcptPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoFrgcptPreparPcDetail",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoOpengCompt",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoRebid",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoServc",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoServcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoServcPreparPcDetail",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoThng",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoThngPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getOpengResultListInfoThngPreparPcDetail",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getScsbidListSttusCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getScsbidListSttusCnstwkPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getScsbidListSttusFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getScsbidListSttusFrgcptPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getScsbidListSttusServc",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getScsbidListSttusServcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getScsbidListSttusThng",
+      "code": "30"
+    },
+    {
+      "tag": "ScsbidInfoService",
+      "path": "as/ScsbidInfoService/getScsbidListSttusThngPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListCnstwkChgHstry",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListCnstwkDltHstry",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListCnstwkPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListCnstwkServcInfo",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListFrgcptChgHstry",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListFrgcptDetail",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListFrgcptDltHstry",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListFrgcptPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListGnrlServcServcInfo",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListServc",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListServcChgHstry",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListServcDltHstry",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListServcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListTechServcServcInfo",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListThng",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListThngChgHstry",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListThngDetail",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListThngDltHstry",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctInfoService",
+      "path": "ao/CntrctInfoService/getCntrctInfoListThngPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getInsttAcctoThngListInfoCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getInsttAcctoThngListInfoFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getInsttAcctoThngListInfoServc",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getInsttAcctoThngListInfoThng",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngInfoCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngInfoCnstwkPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngInfoFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngInfoFrgcptPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngInfoServc",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngInfoServcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngInfoThng",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngInfoThngPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngOpinionInfoCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngOpinionInfoFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngOpinionInfoServc",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getPublicPrcureThngOpinionInfoThng",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getThngDetailMetaInfoCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getThngDetailMetaInfoFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getThngDetailMetaInfoServc",
+      "code": "30"
+    },
+    {
+      "tag": "HrcspSsstndrdInfoService",
+      "path": "ao/HrcspSsstndrdInfoService/getThngDetailMetaInfoThng",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListCnstwkPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListFrgcptDetail",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListFrgcptPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListGnrlServc",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListGnrlServcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListTechServc",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListTechServcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListThng",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListThngDetail",
+      "code": "30"
+    },
+    {
+      "tag": "PrcrmntReqInfoService",
+      "path": "ao/PrcrmntReqInfoService/getPrcrmntReqInfoListThngPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "OrderPlanSttusService",
+      "path": "ao/OrderPlanSttusService/getOrderPlanSttusListCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "OrderPlanSttusService",
+      "path": "ao/OrderPlanSttusService/getOrderPlanSttusListCnstwkPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "OrderPlanSttusService",
+      "path": "ao/OrderPlanSttusService/getOrderPlanSttusListFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "OrderPlanSttusService",
+      "path": "ao/OrderPlanSttusService/getOrderPlanSttusListFrgcptPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "OrderPlanSttusService",
+      "path": "ao/OrderPlanSttusService/getOrderPlanSttusListServc",
+      "code": "30"
+    },
+    {
+      "tag": "OrderPlanSttusService",
+      "path": "ao/OrderPlanSttusService/getOrderPlanSttusListServcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "OrderPlanSttusService",
+      "path": "ao/OrderPlanSttusService/getOrderPlanSttusListThng",
+      "code": "30"
+    },
+    {
+      "tag": "OrderPlanSttusService",
+      "path": "ao/OrderPlanSttusService/getOrderPlanSttusListThngPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getCnsttyClsfcInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getNetRsceinfoList",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getPriceInfoListFcltyCmmnMtrilBildng",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getPriceInfoListFcltyCmmnMtrilElctyIrmc",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getPriceInfoListFcltyCmmnMtrilEngrk",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getPriceInfoListFcltyCmmnMtrilMchnEqp",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getPriceInfoListFcltyCmmnMtrilTotal",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getPriceInfoListMrktCnstrctPcBildng",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getPriceInfoListMrktCnstrctPcEngrk",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getPriceInfoListMrktCnstrctPcMchnEqp",
+      "code": "30"
+    },
+    {
+      "tag": "PriceInfoService",
+      "path": "ao/PriceInfoService/getStdMarkUprcinfoList",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctProcssIntgOpenService",
+      "path": "ao/CntrctProcssIntgOpenService/getCntrctProcssIntgOpenCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctProcssIntgOpenService",
+      "path": "ao/CntrctProcssIntgOpenService/getCntrctProcssIntgOpenFrgcpt",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctProcssIntgOpenService",
+      "path": "ao/CntrctProcssIntgOpenService/getCntrctProcssIntgOpenServc",
+      "code": "30"
+    },
+    {
+      "tag": "CntrctProcssIntgOpenService",
+      "path": "ao/CntrctProcssIntgOpenService/getCntrctProcssIntgOpenThng",
+      "code": "30"
+    },
+    {
+      "tag": "UsrInfoService02",
+      "path": "ao/UsrInfoService02/getDminsttInfo02",
+      "code": "30"
+    },
+    {
+      "tag": "UsrInfoService02",
+      "path": "ao/UsrInfoService02/getPrcrmntCorpBasicInfo02",
+      "code": "30"
+    },
+    {
+      "tag": "UsrInfoService02",
+      "path": "ao/UsrInfoService02/getPrcrmntCorpIndstrytyInfo02",
+      "code": "30"
+    },
+    {
+      "tag": "UsrInfoService02",
+      "path": "ao/UsrInfoService02/getPrcrmntCorpSplyPrdctInfo02",
+      "code": "30"
+    },
+    {
+      "tag": "UsrInfoService02",
+      "path": "ao/UsrInfoService02/getUnptRsttCorpInfo02",
+      "code": "30"
+    },
+    {
+      "tag": "IndstrytyBaseLawrgltInfoService",
+      "path": "ao/IndstrytyBaseLawrgltInfoService/getIndstrytyBaseLawrgltInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "ShoppingMallPrdctInfoService",
+      "path": "at/ShoppingMallPrdctInfoService/getDlvrReqDtlInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "ShoppingMallPrdctInfoService",
+      "path": "at/ShoppingMallPrdctInfoService/getDlvrReqInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "ShoppingMallPrdctInfoService",
+      "path": "at/ShoppingMallPrdctInfoService/getMASCntrctPrdctInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "ShoppingMallPrdctInfoService",
+      "path": "at/ShoppingMallPrdctInfoService/getShoppingMallPrdctInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "ShoppingMallPrdctInfoService",
+      "path": "at/ShoppingMallPrdctInfoService/getSpcifyPrdlstPrcureInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "ShoppingMallPrdctInfoService",
+      "path": "at/ShoppingMallPrdctInfoService/getSpcifyPrdlstPrcureTotList",
+      "code": "30"
+    },
+    {
+      "tag": "ShoppingMallPrdctInfoService",
+      "path": "at/ShoppingMallPrdctInfoService/getThptyUcntrctPrdctInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "ShoppingMallPrdctInfoService",
+      "path": "at/ShoppingMallPrdctInfoService/getUcntrctPrdctInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "ShoppingMallPrdctInfoService",
+      "path": "at/ShoppingMallPrdctInfoService/getVntrPrdctOrderDealDtlsInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getLsfgdNdPrdlstChghstlnfoSttus02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getPrdctClsfcNoChgHstry02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getPrdctClsfcNoUnit10Info02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getPrdctClsfcNoUnit2Info02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getPrdctClsfcNoUnit4Info02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getPrdctClsfcNoUnit6Info02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getPrdctClsfcNoUnit8Info02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getPrdctIndvAtrbInfoList02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getThngGuidanceMapInfo02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getThngListClChangeHistInfo02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getThngPrdnmLocplcAccotListInfoInfoLocplcSearch02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getThngPrdnmLocplcAccotListInfoInfoPrdlstSearch02",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService02",
+      "path": "ao/ThngListInfoService02/getThngPrdnmLocplcAccotListInfoInfoPrdnmSearch02",
+      "code": "30"
+    },
+    {
+      "tag": "PrdctMngInfoService",
+      "path": "ao/PrdctMngInfoService/getPrdctClsfcNoUslfsvc",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getCntrctMthdAccotSttus",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getDminsttAccotBsnsObjAccotArslt",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getDminsttAccotCntrctMthdAccotArslt",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getDminsttAccotEntrprsDivAccotArslt",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getDminsttAccotSystmTyAccotArslt",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getEntrprsDivAccotPrcrmntSttus",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getInsttDivAccotPrcrmntSttus",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getPrcrmntEntrprsAccotBsnsObjAccotArslt",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getPrcrmntEntrprsAccotCntrctMthdAccotArslt",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getPrcrmntObjectBsnsObjAccotSttus",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getPrdctIdntNoServcAccotArslt",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getRgnDutyCmmnCntrctSttus",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getRgnLmtSttus",
+      "code": "30"
+    },
+    {
+      "tag": "PubPrcrmntStatInfoService",
+      "path": "at/PubPrcrmntStatInfoService/getTotlPubPrcrmntSttus",
+      "code": "30"
+    },
+    {
+      "tag": "PubDataOpnStdService",
+      "path": "ao/PubDataOpnStdService/getDataSetOpnStdBidPblancInfo",
+      "code": "30"
+    },
+    {
+      "tag": "PubDataOpnStdService",
+      "path": "ao/PubDataOpnStdService/getDataSetOpnStdCntrctInfo",
+      "code": "30"
+    },
+    {
+      "tag": "PubDataOpnStdService",
+      "path": "ao/PubDataOpnStdService/getDataSetOpnStdScsbidInfo",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtBidNtceService",
+      "path": "ao/PrvtBidNtceService/getPrvtBidPblancListInfoCnstwk",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtBidNtceService",
+      "path": "ao/PrvtBidNtceService/getPrvtBidPblancListInfoCnstwkPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtBidNtceService",
+      "path": "ao/PrvtBidNtceService/getPrvtBidPblancListInfoEtc",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtBidNtceService",
+      "path": "ao/PrvtBidNtceService/getPrvtBidPblancListInfoEtcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtBidNtceService",
+      "path": "ao/PrvtBidNtceService/getPrvtBidPblancListInfoLicenseLimit",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtBidNtceService",
+      "path": "ao/PrvtBidNtceService/getPrvtBidPblancListInfoPrtcptPsblRgn",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtBidNtceService",
+      "path": "ao/PrvtBidNtceService/getPrvtBidPblancListInfoServc",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtBidNtceService",
+      "path": "ao/PrvtBidNtceService/getPrvtBidPblancListInfoServcPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtBidNtceService",
+      "path": "ao/PrvtBidNtceService/getPrvtBidPblancListInfoThng",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtBidNtceService",
+      "path": "ao/PrvtBidNtceService/getPrvtBidPblancListInfoThngPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtScsbidInfoService",
+      "path": "ao/PrvtScsbidInfoService/getPrvtOpengResultListInfo",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtScsbidInfoService",
+      "path": "ao/PrvtScsbidInfoService/getPrvtOpengResultListInfoFailing",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtScsbidInfoService",
+      "path": "ao/PrvtScsbidInfoService/getPrvtOpengResultListInfoOpengCompt",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtScsbidInfoService",
+      "path": "ao/PrvtScsbidInfoService/getPrvtOpengResultListInfoPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtScsbidInfoService",
+      "path": "ao/PrvtScsbidInfoService/getPrvtOpengResultListInfoRebid",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtScsbidInfoService",
+      "path": "ao/PrvtScsbidInfoService/getPrvtScsbidListSttus",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtScsbidInfoService",
+      "path": "ao/PrvtScsbidInfoService/getPrvtScsbidListSttusPPSSrch",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtCntrctInfoService",
+      "path": "ao/PrvtCntrctInfoService/getPrvtCntrctInfoList",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtCntrctInfoService",
+      "path": "ao/PrvtCntrctInfoService/getPrvtCntrctInfoListChgHstry",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtCntrctInfoService",
+      "path": "ao/PrvtCntrctInfoService/getPrvtCntrctInfoListDltHstry",
+      "code": "30"
+    },
+    {
+      "tag": "PrvtCntrctInfoService",
+      "path": "ao/PrvtCntrctInfoService/getPrvtCntrctInfoListPPSSrch",
+      "code": "30"
+    }
+  ],
+  "legacy": [
+    {
+      "tag": "IndstrytyBaseLawrgltInfoService(repo)",
+      "path": "ao/IndstrytyBaseLawrgltInfoService/getIndstrytyBaseLawrgltInfoList02",
+      "code": "12"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getLsfgdNdPrdlstChghstlnfoSttus",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getPrdctClsfcNoChgHstry",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getPrdctClsfcNoUnit10Info",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getPrdctClsfcNoUnit2Info",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getPrdctClsfcNoUnit4Info",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getPrdctClsfcNoUnit6Info",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getPrdctClsfcNoUnit8Info",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getThngGuidanceMapInfo",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getThngListClChangeHistInfo",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getThngPrdnmLocplcAccotListInfoInfoLocplcSearch",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getThngPrdnmLocplcAccotListInfoInfoPrdlstSearch",
+      "code": "30"
+    },
+    {
+      "tag": "ThngListInfoService(repo)",
+      "path": "ao/ThngListInfoService/getThngPrdnmLocplcAccotListInfoInfoPrdnmSearch",
+      "code": "30"
+    },
+    {
+      "tag": "UsrInfoService(repo)",
+      "path": "ao/UsrInfoService/getDminsttInfo",
+      "code": "12"
+    },
+    {
+      "tag": "UsrInfoService(repo)",
+      "path": "ao/UsrInfoService/getPrcrmntCorpBasicInfo",
+      "code": "12"
+    },
+    {
+      "tag": "UsrInfoService(repo)",
+      "path": "ao/UsrInfoService/getPrcrmntCorpIndstrytyInfo",
+      "code": "12"
+    },
+    {
+      "tag": "UsrInfoService(repo)",
+      "path": "ao/UsrInfoService/getPrcrmntCorpSplyPrdctInfo",
+      "code": "12"
+    }
+  ]
+}
