@@ -21,6 +21,9 @@
 		<poi.version>5.5.1</poi.version>
 		<jsoup.version>1.23.1</jsoup.version>
 		<icu4j.version>77.1</icu4j.version>
+		<hwpxlib.version>1.0.5</hwpxlib.version>
+		<hwplib.version>1.1.1</hwplib.version>
+		<pdfbox.version>3.0.3</pdfbox.version>
 	</properties>
 
 	<dependencies>
@@ -84,6 +87,35 @@
 			<groupId>org.jsoup</groupId>
 			<artifactId>jsoup</artifactId>
 			<version>${jsoup.version}</version>
+		</dependency>
+
+		<!--
+			첨부(규격서) 텍스트 추출. 원본 lib/hwp.js + lib/files.js 의 이식 대상.
+			HWPX 는 hwpxlib(OLE/CFB 가 아니라 zip+xml 이라 순수 Java 로 안전),
+			PDF 는 PDFBox 로 뽑고, 둘 다 attachment.DocumentTextExtractor 의 공통
+			규격(ParsedDocument: 파일명 + markdown 텍스트)으로 맞춘다.
+			구형 HWP 5.0 바이너리는 이 라이브러리로 못 읽는다 — porting-status.md 의
+			사이드카 권고대로 별도다. 지금 규격서 첨부는 대부분 HWPX/PDF 다.
+		-->
+		<dependency>
+			<groupId>kr.dogfoot</groupId>
+			<artifactId>hwpxlib</artifactId>
+			<version>${hwpxlib.version}</version>
+		</dependency>
+		<!--
+			구형 HWP 5.0 바이너리(OLE/CFB). 나라장터 규격서에 아직 .hwp 가 흔해 이식했다.
+			hwplib 의 표 추출은 hwpxlib 과 정확히 같진 않지만(porting-status.md 주의), 규격서를
+			"못 읽어서 통째로 건너뛰는 것"보다 낫다 — 텍스트만 뽑아 부품 추출·규격서 채점에 쓴다.
+		-->
+		<dependency>
+			<groupId>kr.dogfoot</groupId>
+			<artifactId>hwplib</artifactId>
+			<version>${hwplib.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>${pdfbox.version}</version>
 		</dependency>
 
 		<!--

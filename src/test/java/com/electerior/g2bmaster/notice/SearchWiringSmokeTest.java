@@ -32,6 +32,12 @@ class SearchWiringSmokeTest {
 			"com.electerior.g2bmaster.trend",
 			"com.electerior.g2bmaster.market",
 			"com.electerior.g2bmaster.cache",
+			// deal-analysis 가 시가·딜 계산·규격서 파싱을 엮으면서 market 컨트롤러가
+			// pricing·attachment 빈에 의존하게 됐다 — 좁은 스캔에도 그 둘을 넣어야 조립된다.
+			"com.electerior.g2bmaster.pricing",
+			"com.electerior.g2bmaster.attachment",
+			// 저장 공고 일괄 딜 분석(backfill)이 SavedNoticeRepository 에 의존한다.
+			"com.electerior.g2bmaster.saved",
 			"com.electerior.g2bmaster.integration.d2b",
 			"com.electerior.g2bmaster.integration.g2b",
 	})
@@ -42,12 +48,25 @@ class SearchWiringSmokeTest {
 			return new G2bProperties(
 					new G2bProperties.OpenApi("test-key", "https://apis.data.go.kr/1230000", 20000, 3, 100),
 					new G2bProperties.D2b("", "https://openapi.d2b.go.kr/openapi/service", 20000),
-					new G2bProperties.Ai("http://localhost:8000", 120000, false),
+					new G2bProperties.Ai("http://localhost:8000", 120000, false, ""),
 					new G2bProperties.Cors(List.of("http://localhost:5173")),
 					new G2bProperties.Security("", ""),
 					new G2bProperties.Alert("", "", "", ""),
 					new G2bProperties.Sync(false),
 					new G2bProperties.Index(false, 600_000, 300_000, 7));
+		}
+
+		// deal-analysis 는 AI(HTTP)와 결과 저장(DB)에 의존한다. 이 스모크는 조회 계층 '조립'만
+		// 보므로 그 둘은 mock 으로 채운다 — 실제 RestClient·DataSource 를 끌어들이면 무관한
+		// 이유로 깨진다. DealAnalysisRepository 는 pricing 스캔으로 잡히므로 jdbc mock 만 준다.
+		@Bean
+		com.electerior.g2bmaster.integration.ai.AiClient aiClient() {
+			return org.mockito.Mockito.mock(com.electerior.g2bmaster.integration.ai.AiClient.class);
+		}
+
+		@Bean
+		org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate namedParameterJdbcTemplate() {
+			return org.mockito.Mockito.mock(org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.class);
 		}
 	}
 

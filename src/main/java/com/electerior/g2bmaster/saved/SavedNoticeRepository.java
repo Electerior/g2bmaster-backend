@@ -97,6 +97,21 @@ public class SavedNoticeRepository {
 				""".formatted(where), params);
 	}
 
+	/**
+	 * 일괄 딜 분석용 목록 — {@code raw}(공고 원본 JSON, 첨부 URL 포함)를 함께 준다.
+	 *
+	 * <p>목록 조회({@link #list})는 화면 표시용이라 raw 를 빼지만, 분석은 공고 객체 원본이
+	 * 있어야 규격서 첨부를 열 수 있다.
+	 */
+	public List<Map<String, Object>> findAllForAnalysis(int limit) {
+		return jdbc.queryForList("""
+				SELECT bid_ntce_no, bid_ntce_ord, title, amount, real_estimate, raw
+				  FROM saved_notice
+				 ORDER BY updated_at DESC
+				 LIMIT :limit
+				""", new MapSqlParameterSource("limit", Math.max(1, limit)));
+	}
+
 	/** 단건 전문(요약본 + 가격표 전체). 목록은 미리보기만 주므로 열 때 이걸 부른다. */
 	public Map<String, Object> findOne(String bidNtceNo, String bidNtceOrd) {
 		List<Map<String, Object>> rows = jdbc.queryForList(

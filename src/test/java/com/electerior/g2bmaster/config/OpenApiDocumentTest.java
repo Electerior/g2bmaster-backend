@@ -72,6 +72,9 @@ class OpenApiDocumentTest {
 			"POST /api/company-history",
 			"POST /api/officer-search",
 			"POST /api/collusion-analysis",
+			"POST /api/deal-analysis",
+			"POST /api/deal-analysis/backfill",
+			"POST /api/prebuilt-comparables",
 			// AI 분석
 			"POST /api/analysis-jobs/status",
 			// 첨부·파일
@@ -81,6 +84,13 @@ class OpenApiDocumentTest {
 			"GET /api/saved-notices",
 			"GET /api/saved-notices/{no}",
 			"DELETE /api/saved-notices/{no}",
+			// 가격 DB
+			"GET /api/price-catalog",
+			"POST /api/price-catalog",
+			"PUT /api/price-catalog/{id}",
+			"DELETE /api/price-catalog/{id}",
+			"POST /api/price-catalog/ingest",
+			"GET /api/price-catalog/history",
 			// 시스템·운영
 			"GET /api/system/status",
 			"GET /api/system/calls",
@@ -121,7 +131,7 @@ class OpenApiDocumentTest {
 		assertThat(tags).containsExactly(
 				OpenApiConfig.TAG_SEARCH, OpenApiConfig.TAG_INDEX_SEARCH, OpenApiConfig.TAG_TREND,
 				OpenApiConfig.TAG_MARKET, OpenApiConfig.TAG_ANALYSIS, OpenApiConfig.TAG_ATTACHMENT,
-				OpenApiConfig.TAG_SAVED, OpenApiConfig.TAG_SYSTEM);
+				OpenApiConfig.TAG_SAVED, OpenApiConfig.TAG_PRICE, OpenApiConfig.TAG_SYSTEM);
 	}
 
 	/**
@@ -143,6 +153,15 @@ class OpenApiDocumentTest {
 		// 색인 적재는 나라장터 쿼터를 태우는 경로라 앱 키를 요구한다.
 		assertThat(schemes(paths, "/api/search/notices/sync", "post"))
 				.containsExactlyInAnyOrder(OpenApiConfig.APP_KEY_SCHEME, OpenApiConfig.APP_KEY_BEARER_SCHEME);
+
+		// 가격 DB — 쓰기(등록/수정/삭제/적재)는 잠그고, 읽기(검색·이력)는 연다.
+		assertThat(schemes(paths, "/api/price-catalog", "post"))
+				.containsExactlyInAnyOrder(OpenApiConfig.APP_KEY_SCHEME, OpenApiConfig.APP_KEY_BEARER_SCHEME);
+		assertThat(schemes(paths, "/api/price-catalog/{id}", "put")).isNotEmpty();
+		assertThat(schemes(paths, "/api/price-catalog/{id}", "delete")).isNotEmpty();
+		assertThat(schemes(paths, "/api/price-catalog/ingest", "post")).isNotEmpty();
+		assertThat(schemes(paths, "/api/price-catalog", "get")).isEmpty();
+		assertThat(schemes(paths, "/api/price-catalog/history", "get")).isEmpty();
 
 		assertThat(schemes(paths, "/api/bid-announce", "get")).isEmpty();
 		// 조회는 로컬 DB만 보므로 비용이 없다 — 잠그지 않는다.
