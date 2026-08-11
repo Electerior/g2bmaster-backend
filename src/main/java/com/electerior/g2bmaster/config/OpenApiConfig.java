@@ -38,6 +38,7 @@ public class OpenApiConfig {
 	public static final String TAG_ANALYSIS = "AI 분석";
 	public static final String TAG_ATTACHMENT = "첨부·파일";
 	public static final String TAG_SAVED = "저장 공고";
+	public static final String TAG_PRICE = "가격 DB";
 	public static final String TAG_SYSTEM = "시스템·운영";
 
 	@Bean
@@ -67,6 +68,8 @@ public class OpenApiConfig {
 						new Tag().name(TAG_ANALYSIS).description("분석 작업 큐 상태. 추론 자체는 g2bmaster-AI 가 한다"),
 						new Tag().name(TAG_ATTACHMENT).description("첨부 다운로드 프록시"),
 						new Tag().name(TAG_SAVED).description("저장 공고 CRUD"),
+						new Tag().name(TAG_PRICE).description(
+								"가격 카탈로그 — 다나와·아이티마야·에누리 단가 검색·수동 등록/수정·AI 적재·이력"),
 						new Tag().name(TAG_SYSTEM).description("운영 현황·오퍼레이션 카탈로그·예약·적재")))
 				.components(new Components()
 						.addSecuritySchemes(APP_KEY_SCHEME, new SecurityScheme()

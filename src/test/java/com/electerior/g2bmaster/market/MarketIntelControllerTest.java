@@ -35,7 +35,16 @@ class MarketIntelControllerTest {
 	@BeforeEach
 	void setUp() {
 		service = mock(MarketIntelService.class);
-		mockMvc = MockMvcBuilders.standaloneSetup(new MarketIntelController(service))
+		MarketIntelController controller = new MarketIntelController(
+				service,
+				new com.electerior.g2bmaster.pricing.DealAnalysisService(),
+				new com.electerior.g2bmaster.attachment.DocumentTextExtractor(),
+				mock(com.electerior.g2bmaster.attachment.AttachmentFetcher.class),
+				mock(com.electerior.g2bmaster.integration.ai.AiClient.class),
+				mock(com.electerior.g2bmaster.pricing.DealAnalysisRepository.class),
+				mock(com.electerior.g2bmaster.saved.SavedNoticeRepository.class),
+				mock(com.electerior.g2bmaster.notice.BidResultService.class));
+		mockMvc = MockMvcBuilders.standaloneSetup(controller)
 				.setControllerAdvice(new GlobalExceptionHandler(new G2bErrorTranslator()))
 				.build();
 	}

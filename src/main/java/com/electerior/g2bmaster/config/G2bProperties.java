@@ -32,8 +32,19 @@ public record G2bProperties(
 	/** 국방전자조달(D2B) OpenAPI. */
 	public record D2b(String serviceKey, String baseUrl, int timeoutMs) {}
 
-	/** g2bmaster-AI 저장소로 넘기는 추론 호출. */
-	public record Ai(String baseUrl, int timeoutMs, boolean enabled) {}
+	/**
+	 * g2bmaster-AI 저장소로 넘기는 추론 호출.
+	 *
+	 * @param baseUrl       AI 서비스 주소. 언어도 프레임워크도 백엔드는 모른다
+	 * @param timeoutMs     읽기 타임아웃. <b>AI 자체 데드라인보다 크고 분석 작업 리스보다 작아야 한다</b> —
+	 *                      순서가 깨지면 백엔드가 먼저 포기한 작업을 다른 워커가 다시 집어
+	 *                      LLM 비용이 두 배로 난다
+	 * @param enabled       꺼 두면 AI 없이 되는 기능만으로 동작한다({@code AiClient} 가 호출 전에 막는다)
+	 * @param serviceSecret AI 서비스의 호출자 인증 값({@code AI_SERVICE_SECRET}). AI 쪽 미들웨어가
+	 *                      이 값을 설정하면 {@code X-Internal-Secret} 또는 Bearer 토큰을 요구하고,
+	 *                      없으면 11개 표면이 전부 401 이 된다. 양쪽이 같은 값을 봐야 한다
+	 */
+	public record Ai(String baseUrl, int timeoutMs, boolean enabled, String serviceSecret) {}
 
 	/** 프론트가 별도 오리진에서 뜨므로 필요한 CORS 허용 목록. */
 	public record Cors(List<String> allowedOrigins) {}

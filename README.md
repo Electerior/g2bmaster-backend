@@ -134,6 +134,8 @@ Flyway 는 버전을 숫자로 비교하므로 `20260812093015` 는 `14` 뒤에 
 | `ALERT_SECRET` | — | 알림 배치 트리거 보호 |
 | `AI_BASE_URL` | `http://localhost:8000` | g2bmaster-AI 주소 |
 | `AI_ENABLED` | `true` | `false` 면 AI 없는 기능만으로 동작 |
+| `AI_TIMEOUT_MS` | `120000` | **AI 자체 데드라인 < 이 값 < `ANALYSIS_LEASE_MS`** 를 지킬 것 |
+| `AI_SERVICE_SECRET` | — | AI 저장소의 같은 이름 값과 **한 쌍**이다. 한쪽만 설정하면 AI 호출이 전부 401 |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | 프론트 오리진 |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` | — | 알림 메일 |
 | `ALERT_EMAIL` / `ALERT_KEYWORDS` | — | |

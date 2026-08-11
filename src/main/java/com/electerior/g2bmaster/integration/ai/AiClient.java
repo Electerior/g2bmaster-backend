@@ -89,6 +89,24 @@ public class AiClient {
 		return post("/api/price/resolve", payload);
 	}
 
+	/**
+	 * 규격서 텍스트 → 부품 추출(LLM) → 부품별 가격(다나와) → 원가 추정.
+	 *
+	 * <p>deal-analysis 의 {@code estimatedUnitCost} 갈래를 채운다. 못 찾으면 예외가 아니라
+	 * {@code {matched:false, reason}} 로 온다 — 규격서에 부품이 없을 수 있다.
+	 */
+	public Map<String, Object> estimateUnitCost(Map<String, Object> payload) {
+		return post("/api/estimate-unit-cost", payload);
+	}
+
+	/**
+	 * 번들이 완제품인지 부품 조달인지 판정하고, 완제품이면 유사 완제품을 찾는다.
+	 * 부품 단가 추정과 반대 방향이다 — 완제품 PC 만 남긴다.
+	 */
+	public Map<String, Object> prebuiltComparables(Map<String, Object> payload) {
+		return post("/api/prebuilt-comparables", payload);
+	}
+
 	/** URL 하나를 직접 지목한 가격 조회. */
 	public Map<String, Object> resolvePriceByUrl(Map<String, Object> payload) {
 		return post("/api/price/url", payload);
