@@ -2,7 +2,9 @@ package com.electerior.g2bmaster.attachment;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +43,40 @@ public final class SpecFileSelector {
 	private static final Pattern UNIT = Pattern.compile(
 			"\\d+\\s*(?:GB|TB|EA|개|대|식|mm|cm|kg|인치|W|㎡|장|매|세트|core|코어)",
 			Pattern.CASE_INSENSITIVE);
+
+	// ── HYBRID 판정 (밀도 + 부품명 유사도) ──────────────────────────────────────
+	// 기존 specContentScore/chooseSpec 과 그 튜닝 상수는 건드리지 않는다. 아래는 그 위에 얹는
+	// 별도 신호다. 규격서 자동판정은 백엔드 소유(offline, ai.enabled=false 에서도 동작)라
+	// 부품명 어휘를 HTTP 로 가져오지 않고 여기 인라인한다 — g2bmaster-AI 의 세 어휘
+	// (estimate.py PART_CATEGORIES · spec_parser.py _KINDS · prebuilt.py _COMPONENT_SIGNALS)의
+	// 합집합을 카테고리별 정규식 하나로 포팅했다. \b 는 ASCII 약어에만 — Java \b 는 한글에서 오작동한다.
+
+	/** PC 부품 어휘. "이 텍스트가 부품을 나열하는가"를 카테고리 단위로 센다. */
+	private static final List<Pattern> PART_CATEGORY = List.of(
+			Pattern.compile("\\bCPU\\b|프로세서|processor|라이젠|ryzen|코어\\s*i|core\\s*i|\\bxeon\\b|제온|\\bepyc\\b|스레드리퍼|threadripper", Pattern.CASE_INSENSITIVE),
+			Pattern.compile("\\bGPU\\b|그래픽\\s*카드|\\bVGA\\b|\\bVRAM\\b|RTX|GTX|\\bRX\\b|지포스|geforce|라데온|radeon|quadro|tesla|엔비디아|nvidia", Pattern.CASE_INSENSITIVE),
+			Pattern.compile("메모리|\\bRAM\\b|\\bDIMM\\b|\\bDDR\\d", Pattern.CASE_INSENSITIVE),
+			Pattern.compile("\\bSSD\\b|\\bNVMe\\b|\\bHDD\\b|저장\\s*장치|하드\\s*디스크|\\bM\\.?2\\b", Pattern.CASE_INSENSITIVE),
+			Pattern.compile("메인\\s*보드|마더\\s*보드|main\\s*board|mother\\s*board|\\bM/?B\\b", Pattern.CASE_INSENSITIVE),
+			Pattern.compile("파워|전원\\s*공급|\\bPSU\\b|power\\s*supply", Pattern.CASE_INSENSITIVE),
+			Pattern.compile("케이스|\\bcase\\b|미들\\s*타워|미니\\s*타워|빅\\s*타워", Pattern.CASE_INSENSITIVE),
+			Pattern.compile("쿨러|쿨링|냉각|히트\\s*싱크|heatsink|수랭|공랭", Pattern.CASE_INSENSITIVE),
+			Pattern.compile("네트워크|랜\\s*카드|\\bNIC\\b|\\bLAN\\b|이더넷|ethernet|\\bSFP\\b", Pattern.CASE_INSENSITIVE));
+
+	/**
+	 * 탭으로 나뉜 표 행(셀 3개 이상). HWPX 는 표 셀을 <b>탭</b>으로 뽑으므로
+	 * ({@link DocumentTextExtractor} 참조) 파이프 전용 {@link #TABLE_ROW} 이 지배적 형식에서
+	 * 0 점을 준다 — 밀도 사전선별에서만 이 탭 패턴을 함께 본다(튜닝된 내용 점수는 건드리지 않음).
+	 */
+	private static final Pattern TAB_ROW = Pattern.compile("^[^\\t\\n]*\\t[^\\t\\n]*\\t.*$", Pattern.MULTILINE);
+	private static final Pattern NON_BLANK_LINE = Pattern.compile("^.*\\S.*$", Pattern.MULTILINE);
+
+	/** 이보다 짧으면 규격서가 아니다(표지·서식 한 장). */
+	public static final int DENSITY_MIN_CHARS = 400;
+	/** 부품명 유사도(0..1)를 내용 점수에 더할 때의 가중치. */
+	public static final int SIMILARITY_WEIGHT = 30;
+	/** 유사도 측정 시 텍스트를 나누는 구획 수. */
+	public static final int SIMILARITY_SECTIONS = 4;
 
 	/** 규격서 후보 하나. {@code score} 는 {@link #specContentScore} 결과를 담는다. */
 	public record Candidate(String name, String markdown, int score) {
@@ -151,6 +187,148 @@ public final class SpecFileSelector {
 		return sorted.stream()
 				.skip(1)
 				.filter(c -> c.score() >= minScore)
+				.findFirst()
+				.map(next -> new Choice(next, "heuristic"))
+				.orElseGet(() -> new Choice(top, "estimated"));
+	}
+
+	// ── HYBRID: 밀도 · 부품명 유사도 · 결합 선택 ─────────────────────────────────
+
+	/** 규격서다움을 값싸게 사전선별하기 위한 밀도 지표. */
+	public record Density(int textLength, double tableRowDensity, double unitTokenDensity) {}
+
+	/**
+	 * 표 밀도(파이프 <b>또는</b> 탭 행 / 비어있지 않은 줄)와 단위 토큰 밀도(500자당 단위 수).
+	 * 표는 HWPX(탭)·PDF/마크다운(파이프) 양쪽을 함께 세어 형식 편향을 없앤다.
+	 */
+	public static Density density(String markdown) {
+		String text = markdown == null ? "" : markdown;
+		if (text.isBlank()) {
+			return new Density(0, 0, 0);
+		}
+		int nonBlank = Math.max(1, count(NON_BLANK_LINE, text));
+		int tableRows = count(TABLE_ROW, text) + count(TAB_ROW, text);
+		double tableRowDensity = (double) tableRows / nonBlank;
+		double unitTokenDensity = count(UNIT, text) / Math.max(1.0, text.length() / 500.0);
+		return new Density(text.length(), tableRowDensity, unitTokenDensity);
+	}
+
+	/**
+	 * 명백한 비-규격서(표지·서약서·안내문 한 장)만 걸러 내는 <b>느슨한</b> 바닥선. 애매하면 통과시키고
+	 * 최종 판단은 점수·fallback 에 맡긴다 — 여기서 진짜 규격서를 떨구면 다음 후보로도 못 돌아온다.
+	 */
+	public static boolean passesDensityFloor(Density d) {
+		if (d == null || d.textLength() < DENSITY_MIN_CHARS) {
+			return false;
+		}
+		// 표도 없고 단위도 드물고 본문도 짧으면 규격서가 아니다.
+		return !(d.tableRowDensity() == 0 && d.unitTokenDensity() < 0.5 && d.textLength() < 1500);
+	}
+
+	/** {@link #partNameSimilarity(String, int)} 를 기본 {@value #SIMILARITY_SECTIONS} 구획으로. */
+	public static double partNameSimilarity(String markdown) {
+		return partNameSimilarity(markdown, SIMILARITY_SECTIONS);
+	}
+
+	/**
+	 * 텍스트를 {@code sections} 구획으로 나눠 각 구획이 건드리는 PC 부품 카테고리 비율의 평균(0..1).
+	 *
+	 * <p>부품이 문서 전반에 퍼져 있으면(진짜 규격서) 높고, 한 번만 스치면("GPU 서버 구매" 공고문)
+	 * 낮다. 그래서 이름만 흘린 공고와 실제 부품표를 가른다.
+	 */
+	public static double partNameSimilarity(String markdown, int sections) {
+		String text = markdown == null ? "" : markdown;
+		if (text.isBlank() || sections <= 0) {
+			return 0;
+		}
+		int len = text.length();
+		int chunk = Math.max(1, (int) Math.ceil((double) len / sections));
+		double sum = 0;
+		for (int i = 0; i < sections; i++) {
+			int start = Math.min(i * chunk, len);
+			int end = Math.min(start + chunk, len);
+			if (start >= end) {
+				continue;
+			}
+			String slice = text.substring(start, end);
+			int hit = 0;
+			for (Pattern p : PART_CATEGORY) {
+				if (p.matcher(slice).find()) {
+					hit++;
+				}
+			}
+			sum += (double) hit / PART_CATEGORY.size();
+		}
+		return sum / sections;
+	}
+
+	/**
+	 * 후보를 선택 순서대로 정렬한다 — 밀도 바닥선 통과분이 앞, 미통과분이 뒤,
+	 * 각 구간 안에서는 {@link #hybridScore} 내림차순.
+	 *
+	 * <p>{@link #chooseSpecHybrid} 가 쓰는 바로 그 순서다. 검증 층
+	 * ({@link SpecDocumentValidator})이 최고점 하나만 보지 않고 <b>걸어 내려가며</b>
+	 * 쓸 만한 문서를 찾을 수 있도록 노출한다 — 최고점이 공고문이어도 세 번째 후보가
+	 * 진짜 규격서일 수 있다.
+	 */
+	public static List<Candidate> rankHybrid(List<Candidate> candidates) {
+		if (candidates == null || candidates.isEmpty()) {
+			return List.of();
+		}
+		Map<Candidate, Integer> hybrid = new IdentityHashMap<>();
+		List<Candidate> passing = new ArrayList<>();
+		List<Candidate> failing = new ArrayList<>();
+		for (Candidate c : candidates) {
+			hybrid.put(c, hybridScore(c));
+			(passesDensityFloor(density(c.markdown())) ? passing : failing).add(c);
+		}
+		Comparator<Candidate> byHybrid = Comparator.comparingInt((Candidate c) -> hybrid.get(c)).reversed();
+		passing.sort(byHybrid);
+		failing.sort(byHybrid);
+		// 밀도 통과분을 먼저, 미통과분을 뒤로 — 미통과분도 fallback 으로 남긴다.
+		List<Candidate> ranked = new ArrayList<>(passing);
+		ranked.addAll(failing);
+		return ranked;
+	}
+
+	/** 내용 점수 + 부품명 유사도 보너스. 규격서 확신을 하나의 정수로 합친다. */
+	public static int hybridScore(Candidate candidate) {
+		if (candidate == null) {
+			return Integer.MIN_VALUE;
+		}
+		return candidate.score()
+				+ (int) Math.round(partNameSimilarity(candidate.markdown()) * SIMILARITY_WEIGHT);
+	}
+
+	/**
+	 * {@link #chooseSpec} 의 하이브리드판. 밀도 바닥선을 통과한 후보를 앞세우고(떨구지 않음),
+	 * {@link #hybridScore} 로 정렬해 고른다. LLM 이 최고점을 부정하면 전체 목록을 걸어 내려가
+	 * 다음 유효 후보를 찾는다(강화된 fallback).
+	 */
+	public static Choice chooseSpecHybrid(List<Candidate> candidates, Boolean llmSaysSpec, int minScore) {
+		if (candidates == null || candidates.isEmpty()) {
+			return new Choice(null, "none");
+		}
+		List<Candidate> ranked = rankHybrid(candidates);
+		Map<Candidate, Integer> hybrid = new IdentityHashMap<>();
+		for (Candidate c : ranked) {
+			hybrid.put(c, hybridScore(c));
+		}
+
+		Candidate top = ranked.getFirst();
+		if (hybrid.get(top) < minScore) {
+			return new Choice(top, "estimated");
+		}
+		if (llmSaysSpec == null) {
+			return new Choice(top, "heuristic");
+		}
+		if (llmSaysSpec) {
+			return new Choice(top, "confirmed");
+		}
+		// LLM 이 최고점을 규격서가 아니라 함 — 다음 유효 후보로 내려간다.
+		return ranked.stream()
+				.skip(1)
+				.filter(c -> hybrid.get(c) >= minScore)
 				.findFirst()
 				.map(next -> new Choice(next, "heuristic"))
 				.orElseGet(() -> new Choice(top, "estimated"));

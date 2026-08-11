@@ -79,8 +79,15 @@ HTTP 클라이언트로, 자기 서버의 `/api/item-summary` 를 호출하고 �
 | POST | `/api/legal/review-clauses` | 조항 위법성 검토 |
 | POST | `/api/legal/outreach-draft` | 콜드메일 초안 |
 | POST | `/api/pledge/revision-workflow` | 서약서 수정본 생성 |
-| POST | `/api/price/resolve` | 품목명 → 웹 가격 |
+| POST | `/api/price/resolve` | 품목명 → 다중소스 가격 후보(다나와·에누리·아이티마야) |
 | POST | `/api/price/url` | URL 지정 가격 조회 |
+
+> **Contract A (가격 봉투, 2026-08 확장).** `resolve` 는 이제 여러 소스를 합쳐 `quotes[]` 를
+> 돌려주는 단일 애그리게이터다. `quotes[].source ∈ { danawa, enuri, itmaya, index }` — **enuri 추가**.
+> `itmaya` 는 정형 카탈로그라 `basis="stale"`·`stale=true`(수집시각=xlsx mtime)로 온다. 한 소스가
+> 실패해도 다른 소스가 성공하면 `degraded=true` + `degradedReasons[]`·`searchInfo.misses[]` 가 채워진다
+> (전부 실패해야 `PRICE_SOURCE_BROKEN`). 경계는 그대로다: **AI 는 `quotes[]` 만 주고 선택·검증은 백엔드**,
+> AI 는 `result=null` 을 만들지 않는다. 가격 카탈로그 적재(`/api/price-catalog/ingest`)가 이 봉투를 읽는다.
 | POST | `/api/embed` | 텍스트 임베딩 (유사도 계산은 백엔드가 함) |
 | GET | `/api/ai/prompt-version` | 분석 재사용 키에 들어가는 프롬프트 버전 |
 | GET | `/api/ai/capacity` | 워커 용량 (내보내기 ETA 계산용) |

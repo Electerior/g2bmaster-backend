@@ -22,6 +22,12 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class AiClientConfig {
 
+	/**
+	 * AI 서비스가 호출자를 가릴 때 보는 헤더. 원본 {@code module_server.py} 가 쓰던 이름 그대로다
+	 * (AI 쪽은 {@code Authorization: Bearer} 도 받지만, 그 자리는 외부 LLM API 키와 헷갈리기 쉽다).
+	 */
+	private static final String SERVICE_SECRET_HEADER = "X-Internal-Secret";
+
 	@Bean
 	RestClient aiRestClient(G2bProperties properties) {
 		G2bProperties.Ai ai = properties.ai();
@@ -30,9 +36,18 @@ public class AiClientConfig {
 		factory.setConnectTimeout(Duration.ofSeconds(10));
 		factory.setReadTimeout(Duration.ofMillis(ai.timeoutMs()));
 
-		return RestClient.builder()
+		RestClient.Builder builder = RestClient.builder()
 				.baseUrl(ai.baseUrl())
-				.requestFactory(factory)
-				.build();
+				.requestFactory(factory);
+
+		// 값이 없으면 헤더 자체를 붙이지 않는다. 빈 문자열을 보내면 AI 쪽 비교
+		// (provided != SERVICE_SECRET)에서 똑같이 떨어지므로 구분해 봐야 이득이 없고,
+		// 시크릿을 쓰지 않는 개발 환경의 요청에 빈 헤더만 남는다.
+		String secret = ai.serviceSecret();
+		if (secret != null && !secret.isBlank()) {
+			builder.defaultHeader(SERVICE_SECRET_HEADER, secret.trim());
+		}
+
+		return builder.build();
 	}
 }
