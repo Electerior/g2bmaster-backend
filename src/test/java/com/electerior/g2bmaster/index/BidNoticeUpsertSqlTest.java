@@ -77,8 +77,10 @@ class BidNoticeUpsertSqlTest {
 		assertThat(columns.split(",")).hasSameSizeAs(values.split(","));
 		// ERD 22개 중 ai_summary(적재 제외)와 updated_at(NOW())을 뺀 20개
 		// + 공고명 1개 + 기관명 2개(V8 — dm_institution 조인이 성립하지 않아 색인에 담는다)
-		// + V13 의 소스 차원 4개(source, source_ext, g2b_pblanc_no, g2b_pblanc_odr).
-		assertThat(columns.split(",")).hasSize(27);
+		// + V13 의 소스 차원 4개(source, source_ext, g2b_pblanc_no, g2b_pblanc_odr)
+		// + 첨부 색인의 attachments_hash 1개.
+		// documents_indexed_at 은 여기 없다 — 새 행은 '아직 색인 안 됨'(NULL)에서 시작한다.
+		assertThat(columns.split(",")).hasSize(28);
 	}
 
 	@Test
@@ -93,5 +95,32 @@ class BidNoticeUpsertSqlTest {
 				"before_spec_rgst_no", "product_list", "detail_product_code", "lowest_bid_rate",
 				"price_detail", "created_date", "close_date", "officer_name", "officer_contact",
 				"notice_body", "attachment_urls", "source_url");
+	}
+
+	/**
+	 * notice_order 와 똑같은 함정이다. 해시를 먼저 대입하면 그 다음 줄의 비교가
+	 * '새 해시 &lt;=&gt; 새 해시' 가 되어 항상 같다고 나오고, 첨부가 바뀌어도 무효화가
+	 * 영원히 일어나지 않는다. 색인은 낡은 규격서 본문을 계속 검색에 내주고, 증상은
+	 * "정정된 공고인데 예전 규격서 내용으로 검색된다" 로만 나타난다.
+	 */
+	@Test
+	@DisplayName("documents_indexed_at 무효화가 attachments_hash 갱신보다 앞선다")
+	void invalidationPrecedesHashUpdate() {
+		int invalidation = SQL.indexOf("documents_indexed_at = IF(");
+		int hashUpdate = SQL.indexOf("attachments_hash = IF(");
+
+		assertThat(invalidation).isPositive();
+		assertThat(hashUpdate).isPositive();
+		assertThat(invalidation).isLessThan(hashUpdate);
+	}
+
+	/**
+	 * 첨부가 없다가 생긴 경우는 NULL → 값이다. 보통의 {@code <>} 는 NULL 이 끼면 결과가
+	 * NULL 이라 IF 가 거짓 가지로 빠져, 첫 첨부가 붙은 공고가 영영 색인되지 않는다.
+	 */
+	@Test
+	@DisplayName("첨부 목록 비교는 NULL 안전 연산자를 쓴다")
+	void hashComparisonIsNullSafe() {
+		assertThat(SQL).contains("NOT (new.attachments_hash <=> bid_notice.attachments_hash)");
 	}
 }

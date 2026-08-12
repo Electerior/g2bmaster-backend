@@ -19,7 +19,8 @@ public record G2bProperties(
 		Security security,
 		Alert alert,
 		Sync sync,
-		Index index) {
+		Index index,
+		Documents documents) {
 
 	/** 나라장터 OpenAPI (조달청 공공데이터). */
 	public record OpenApi(
@@ -80,4 +81,29 @@ public record G2bProperties(
 	 * @param backfillDays 워터마크가 없는 첫 회차에 거슬러 올라갈 기간(일)
 	 */
 	public record Index(boolean enabled, long intervalMs, long sweepMs, int backfillDays) {}
+
+	/**
+	 * 첨부 본문 추출 워커.
+	 *
+	 * <p>색인 적재와 <b>주기를 따로 두는 이유</b>: 적재는 HTTP 호출 수십 번이고, 추출은 하루
+	 * 3,643개 파일 · 약 0.9GB 를 내려받는 일이다. 한 주기에 묶으면 전체가 무거운 쪽에 맞춰진다.
+	 *
+	 * @param enabled     주기 실행 on/off. 기본은 꺼 둔다 — 여러 인스턴스가 같이 켜면 같은 파일을
+	 *                    중복으로 내려받는다. 적재 인스턴스 하나만 켠다
+	 * @param intervalMs  회차 간격. 하루치를 야간에 소화하면 충분하므로 적재보다 드물게 돈다
+	 * @param batchSize   한 회차에 뽑을 파일 수. 회차 하나가 지나치게 길어지지 않게 자르는 값이다
+	 * @param seedBatch   한 회차에 첨부 슬롯을 세울 공고 수. 상류 호출이 없어 batchSize 보다 크게 잡는다
+	 * @param concurrency 동시 다운로드 수. 원본 모놀리스는 2였지만 그것은 사용자 요청 중에 도는
+	 *                    전경 작업이라 보수적이었다. 야간 배경 작업이라 4로 둔다
+	 * @param closeBefore 백필 범위 제한. 값이 있으면 <b>지금부터 이 시각까지 마감되는 공고만</b>
+	 *                    색인한다(ISO {@code 2026-08-18T00:00}). 전량은 109,284파일이지만 실무에서
+	 *                    급한 것은 "지금 들어갈 수 있는 건"이라, 마감이 임박한 쪽부터 채우는 편이
+	 *                    체감 효용이 훨씬 크다. 비워 두면 전량이 대상이다
+	 * @param createdBefore 게시일 기준의 다른 축. 값이 있으면 <b>이 시각까지 게시된 공고만</b>
+	 *                    색인한다(ISO {@code 2026-08-03T23:59:59}). 마감 축과 달리 <b>이미 마감된
+	 *                    공고도 대상</b>이다 — "지난주까지의 공고를 분석해 달라" 같은 소급 분석은
+	 *                    마감 임박 순으로는 차례가 영영 오지 않는다. 비워 두면 제한하지 않는다
+	 */
+	public record Documents(boolean enabled, long intervalMs, int batchSize, int seedBatch, int concurrency,
+			String closeBefore, String createdBefore) {}
 }

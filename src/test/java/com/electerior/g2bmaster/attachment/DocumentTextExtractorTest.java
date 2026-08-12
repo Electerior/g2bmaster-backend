@@ -169,6 +169,56 @@ class DocumentTextExtractorTest {
 	}
 
 	@Test
+	void ZIP_안의_HWP_는_넘겨받은_파서로_보낸다() throws Exception {
+		// 백필을 20시간 멈춰 세운 자리다. 최상위 .hwp 는 워커가 별도 프로세스로 보내는데,
+		// zip 을 푸는 것은 이 클래스라 안의 .hwp 는 인프로세스 hwplib 으로 돌아갔다.
+		// hwplib 은 어떤 파일에서 예외 없이 안 끝나므로, 그 경로도 밖에서 갈아끼울 수 있어야 한다.
+		byte[] zip = makeZip(
+				"규격서.hwp", "이건 진짜 HWP 가 아니다".getBytes(),
+				"안내문.hwpx", makeHwpx("입찰 유의사항 안내"));
+
+		List<ParsedDocument> docs = extractor.expandArchive("붙임.zip", zip,
+				(name, bytes) -> new ParsedDocument(name, ParsedDocument.DocumentFormat.HWP, "대신 뽑은 본문", 0, false));
+
+		assertThat(docs).extracting(ParsedDocument::filename)
+				.containsExactlyInAnyOrder("규격서.hwp", "안내문.hwpx");
+		ParsedDocument hwp = docs.stream()
+				.filter(d -> d.filename().equals("규격서.hwp")).findFirst().orElseThrow();
+		assertThat(hwp.text()).isEqualTo("대신 뽑은 본문");
+
+		// 파서를 안 주면 종전대로 인프로세스다 — 깨진 HWP 는 그 자리에서 실패하고 빠진다.
+		// (자식 프로세스 HwpTextMain 이 이 경로를 쓴다. 필드로 박으면 자식이 또 자식을 낳는다.)
+		assertThat(extractor.expandArchive("붙임.zip", zip))
+				.extracting(ParsedDocument::filename).containsExactly("안내문.hwpx");
+	}
+
+	@Test
+	void 파일명이_CP949_인_ZIP_도_읽는다() throws Exception {
+		// 국내 첨부 zip 은 대개 한글 파일명이 CP949 로 적혀 있다. 기본값(UTF-8)으로 열면
+		// 첫 엔트리에서 ZipException: invalid LOC header 가 나고 **묶음 전체**가 날아간다 —
+		// 실측 백필 실패 60건이 이 사유였다. 이름은 규격서 선택의 입력이라 깨져도 안 된다.
+		byte[] zip = makeZip(java.nio.charset.Charset.forName("MS949"),
+				"과업내용서.hwpx", makeHwpx("과업 내용: 노후 서버 교체"),
+				"공내역서.hwpx", makeHwpx("내역"));
+
+		List<ParsedDocument> docs = extractor.expandArchive("붙임.zip", zip);
+
+		assertThat(docs).extracting(ParsedDocument::filename)
+				.containsExactlyInAnyOrder("과업내용서.hwpx", "공내역서.hwpx");
+	}
+
+	@Test
+	void 파일명이_UTF8_인_ZIP_도_그대로_읽힌다() throws Exception {
+		// CP949 로 여는 것이 UTF-8 zip 을 깨뜨리지 않는다 — 압축기가 UTF-8 을 쓰면 엔트리
+		// 플래그 11번 비트가 서고, ZipInputStream 은 그 엔트리를 인코딩과 무관하게 UTF-8 로 읽는다.
+		byte[] zip = makeZip(java.nio.charset.StandardCharsets.UTF_8,
+				"과업내용서.hwpx", makeHwpx("과업 내용"));
+
+		assertThat(extractor.expandArchive("붙임.zip", zip))
+				.extracting(ParsedDocument::filename).containsExactly("과업내용서.hwpx");
+	}
+
+	@Test
 	void ZIP_이_아니면_빈_목록을_돌려주고_파이프라인을_막지_않는다() {
 		// zip 서명이 없는 바이트는 엔트리 0개다 — 예외로 분석 전체를 세우지 않고 다음 첨부로 넘긴다.
 		assertThat(extractor.expandArchive("가짜.zip", "이건 zip 이 아니다".getBytes())).isEmpty();
@@ -177,8 +227,13 @@ class DocumentTextExtractorTest {
 
 	/** 이름/바이트 쌍을 zip 으로 묶는다. */
 	private static byte[] makeZip(Object... nameThenBytes) throws Exception {
+		return makeZip(java.nio.charset.StandardCharsets.UTF_8, nameThenBytes);
+	}
+
+	/** 엔트리 이름을 지정한 인코딩으로 적는 zip. 국내 첨부는 CP949 가 흔하다. */
+	private static byte[] makeZip(java.nio.charset.Charset names, Object... nameThenBytes) throws Exception {
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-				ZipOutputStream zip = new ZipOutputStream(out)) {
+				ZipOutputStream zip = new ZipOutputStream(out, names)) {
 			for (int i = 0; i < nameThenBytes.length; i += 2) {
 				zip.putNextEntry(new ZipEntry((String) nameThenBytes[i]));
 				zip.write((byte[]) nameThenBytes[i + 1]);

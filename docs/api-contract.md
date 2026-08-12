@@ -151,7 +151,8 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
 | 라우트 | 비고 |
 |---|---|
 | `POST /api/parse-file` | multipart, 20MB. HWP/HWPX/DOCX/XLSX/PDF/ZIP 텍스트 추출 |
-| `POST /api/scan-attachments` | 대량 첨부 스캔. 즉시 처리분 + 백그라운드 워밍업 큐 |
+| `POST /api/scan-attachments` | **이식됨(2026-08-11) — 속이 다르다.** 원본은 요청마다 첨부를 내려받았고, 지금은 색인(`bid_notice_document`)만 조회한다(상류 호출 0). 봉투는 그대로이고 `warmQueued`·`warmActive` 는 항상 0, `exclusions` 는 항상 빈 목록(입찰 불가 조항 미이식), `notIndexed` 가 추가됐다 → `docs/attachment-text-index.md` |
+| `GET /api/documents/status`, `POST /api/documents/extract` | **추가.** 첨부 본문 색인 현황·수동 추출 |
 | `GET /api/download-attachment` | **바이너리 스트림.** SSRF 가드: http(s) 만, IP 리터럴 금지, 호스트가 `g2b.go.kr\|data.go.kr\|d2b.go.kr\|naramarket.go.kr` 계열이어야 하며 **리다이렉트 홉마다 재검증**(최대 5회) |
 | `GET /api/related-attachments/metrics` | **앱 키**. 프로세스 수명 카운터 |
 
