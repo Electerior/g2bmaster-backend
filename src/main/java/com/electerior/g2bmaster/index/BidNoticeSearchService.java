@@ -109,8 +109,14 @@ public class BidNoticeSearchService {
 
 	// ── 검색 ────────────────────────────────────────────────────────────────
 
-	public PagedResponse<Map<String, Object>> search(NoticeSearchRequest request) {
-		BidNoticeQueryBuilder.Where where = buildWhere(request);
+	/**
+	 * 한 페이지.
+	 *
+	 * @param includeAttachments 첨부 본문까지 검색 대상에 넣는가. {@code GET /api/search/notices} 는
+	 *                           켠 채로, {@code GET /api/search/notices/text} 는 끈 채로 부른다
+	 */
+	public PagedResponse<Map<String, Object>> search(NoticeSearchRequest request, boolean includeAttachments) {
+		BidNoticeQueryBuilder.Where where = buildWhere(request, includeAttachments);
 		String sortKey = effectiveSortKey(request, where.fullText());
 		String orderBy = orderBy(request, sortKey);
 
@@ -121,7 +127,34 @@ public class BidNoticeSearchService {
 
 		LocalDateTime now = LocalDateTime.now();
 		List<Map<String, Object>> items = rows.stream().map(row -> shape(row, now)).toList();
-		return new PagedResponse<>(items, total, request.pageValue(), request.perPageValue());
+		return new PagedResponse<>(items, total, request.pageValue(), request.perPageValue(),
+				searchMeta(where, includeAttachments));
+	}
+
+	/**
+	 * 응답 메타 — "첨부까지 봤는가, 어디까지 봤는가".
+	 *
+	 * <p>첨부 검색은 <b>색인된 만큼만</b> 동작한다. 그 사실을 응답에 적지 않으면 화면에서
+	 * "그 낱말이 없는 공고"와 "아직 읽지 못한 공고"가 똑같이 보이고, 사용자는 규격서에
+	 * 답이 있는 공고를 조용히 놓친다({@code bid_notice_document} 의 {@code needs_ocr} 과 같은 이유다).
+	 *
+	 * <p>스코프를 껐을 때도 메타를 낸다 — 프론트가 두 엔드포인트를 같은 렌더러로 그리는데
+	 * 한쪽에만 칸이 있으면 분기가 생긴다.
+	 */
+	private Map<String, Object> searchMeta(BidNoticeQueryBuilder.Where where, boolean includeAttachments) {
+		Map<String, Object> meta = new LinkedHashMap<>();
+		Map<String, Object> attachment = new LinkedHashMap<>();
+		attachment.put("scope", includeAttachments);
+		// 스코프를 켰어도 실제로 첨부를 뒤졌는지는 별개다 — 검색어가 없거나 한 글자뿐이면 안 뒤진다.
+		attachment.put("applied", where.unionsAttachments());
+		attachment.put("excludeApplied", where.excludesByAttachment());
+		attachment.put("skippedTerms", where.attachment() == null
+				? List.of() : where.attachment().skippedTerms());
+		if (includeAttachments) {
+			attachment.putAll(repository.attachmentCoverage());
+		}
+		meta.put("attachmentSearch", attachment);
+		return meta;
 	}
 
 	/**
@@ -130,8 +163,8 @@ public class BidNoticeSearchService {
 	 * <p>화면의 필터 칩에 건수를 붙이려면 필요하다. "0건짜리 필터"를 눌러 보고 나서야 아는
 	 * 것과, 누르기 전에 아는 것의 차이가 크다.
 	 */
-	public Map<String, Object> facets(NoticeSearchRequest request) {
-		BidNoticeQueryBuilder.Where where = buildWhere(request);
+	public Map<String, Object> facets(NoticeSearchRequest request, boolean includeAttachments) {
+		BidNoticeQueryBuilder.Where where = buildWhere(request, includeAttachments);
 		Map<String, Object> facets = new LinkedHashMap<>();
 		FACET_COLUMNS.forEach((name, column) ->
 				facets.put(name, repository.facet(where, column, FACET_LIMIT).stream()
@@ -152,8 +185,9 @@ public class BidNoticeSearchService {
 	 * <p>검색과 패싯이 <b>반드시 같은 조건</b>을 써야 하므로 한 곳에서만 만든다. 갈라 두면
 	 * 언젠가 한쪽에만 필터가 추가되고, 화면은 "12건"이라 써 놓고 3건을 보여준다.
 	 */
-	private BidNoticeQueryBuilder buildBuilder(NoticeSearchRequest request) {
+	private BidNoticeQueryBuilder buildBuilder(NoticeSearchRequest request, boolean includeAttachments) {
 		return new BidNoticeQueryBuilder()
+				.attachmentScope(includeAttachments)
 				.keywords(request.and(), request.or(), request.not())
 				.category(request.categoryValue())
 				.state(request.stateValue())
@@ -172,8 +206,8 @@ public class BidNoticeSearchService {
 				.estimatedPriceBetween(request.minAmount(), request.maxAmount());
 	}
 
-	private BidNoticeQueryBuilder.Where buildWhere(NoticeSearchRequest request) {
-		return buildBuilder(request).build();
+	private BidNoticeQueryBuilder.Where buildWhere(NoticeSearchRequest request, boolean includeAttachments) {
+		return buildBuilder(request, includeAttachments).build();
 	}
 
 	/**
@@ -291,10 +325,44 @@ public class BidNoticeSearchService {
 			out.put("relevance", row.get("relevance"));
 		}
 
+		// 첨부 본문에서만 걸린 공고는 제목·본문 어디에도 그 낱말이 없다 — 표시하지 않으면
+		// 사용자는 관계없는 공고가 섞였다고 읽는다. 어느 쪽에서 걸렸는지를 그대로 내려준다.
+		List<String> matchedIn = matchedIn(row);
+		if (matchedIn != null) {
+			out.put("matchedIn", matchedIn);
+		}
+		// "안 걸림"과 "아직 못 읽음"을 화면이 가를 수 있게. 첨부가 없는 공고도 false 다 —
+		// 어느 쪽이든 "이 공고의 첨부 본문으로는 판단할 수 없다"는 뜻이라 화면에는 같은 사실이다.
+		out.put("attachmentIndexed", row.get("documents_indexed_at") != null);
+
 		// 화면이 매번 계산하지 않도록 서버에서 붙인다. 마감이 없으면(계획) null.
 		out.put("dday", dday(row.get("close_date"), now));
 		out.put("estimatedPrice", numberIn(out.get("priceDetail"), "estimatedPrice"));
 		return out;
+	}
+
+	/**
+	 * 이 행이 걸린 경로. 첨부 스코프를 타지 않은 질의는 두 칸이 아예 없으므로 {@code null} 이다.
+	 *
+	 * <p>MySQL 이 {@code 1 AS notice_hit} 를 {@code Long}·{@code BigDecimal} 중 무엇으로 줄지는
+	 * UNION 분기와 드라이버 버전에 달렸다. 타입을 가정하지 않고 수치로 읽는다.
+	 */
+	private static List<String> matchedIn(Map<String, Object> row) {
+		if (!row.containsKey("notice_hit") && !row.containsKey("doc_hit")) {
+			return null;
+		}
+		List<String> matched = new java.util.ArrayList<>(2);
+		if (isTrue(row.get("notice_hit"))) {
+			matched.add("notice");
+		}
+		if (isTrue(row.get("doc_hit"))) {
+			matched.add("attachment");
+		}
+		return List.copyOf(matched);
+	}
+
+	private static boolean isTrue(Object value) {
+		return value instanceof Number number && number.longValue() > 0;
 	}
 
 	/**

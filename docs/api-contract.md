@@ -81,11 +81,22 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
 
 | 라우트 | 비고 |
 |---|---|
-| `GET /api/search/notices` | 봉투는 §1.1 의 1번(`items`/`totalCount`/`pageNo`/`numOfRows`) |
-| `GET /api/search/notices/facets` | 같은 조건에서 `category`/`division`/`region`/`state` 별 건수 |
+| `GET /api/search/notices` | **공고 텍스트 + 첨부 본문**. 봉투는 §1.1 의 1번 + `meta` 한 칸 |
+| `GET /api/search/notices/facets` | 검색과 **같은 후보 집합**에서 `category`/`division`/`region`/`state` 별 건수 |
+| `GET /api/search/notices/text` | **첨부를 보지 않는** 검색. 파라미터·봉투는 위와 같다 |
+| `GET /api/search/notices/text/facets` | `/text` 와 같은 후보 집합의 패싯 |
 | `GET /api/search/notices/status` | 출처별 워터마크·마지막 결과 + 분류별 색인 건수 |
 | `GET /api/search/notices/{id}` | 상세. 목록의 `bodyPreview`(300자) 대신 `noticeBody` 전문 |
 | `POST /api/search/notices/sync` | 수동 적재. **앱 키 필요**(나라장터 쿼터를 태운다). 진행 중이면 409 |
+
+**기본 검색은 첨부 본문(`bid_notice_document`)까지 본다.** 제외 낱말(`notTerms`)도 첨부까지
+적용한다 — 첨부에 그 낱말이 있으면 공고째로 뺀다. 관련도는 공고 텍스트 매치 점수라
+첨부에서만 걸린 공고는 관련도순에서 뒤로 간다. 첨부를 보지 않는 가벼운 검색이 필요하면
+파라미터가 아니라 `/text` 를 쓴다(설계 근거·실측은 `docs/notice-search-index.md` §4.0·§4.5).
+
+이 계열의 항목에는 `matchedIn`(`notice`/`attachment`)과 `attachmentIndexed` 가 붙고,
+응답에 `meta.attachmentSearch`(스코프·적용 여부·건너뛴 낱말·색인 커버리지)가 실린다.
+`meta` 는 다른 페이징 응답에는 없다 — 값이 없으면 칸 자체가 사라지므로 기존 계약은 그대로다.
 
 질의 파라미터: `q`(공백 구분, 모두 포함), `andTerms`/`orTerms`/`notTerms`,
 `category`(`계획|사전규격|입찰|마감`), `state`(`취소|재|다시|정정`),

@@ -143,6 +143,13 @@ g2b:
     keywords: ${ALERT_KEYWORDS:}
     public-base-url: ${PUBLIC_BASE_URL:}
 
+  # 공고 검색 동작.
+  # attachment-body: GET /api/search/notices 가 첨부 본문까지 보는가. 기본 켬 —
+  # 첨부를 안 보는 검색이 필요하면 끄는 것이 아니라 GET /api/search/notices/text 를 쓴다.
+  # 이 스위치는 색인이 커져 검색이 느려졌을 때 배포 없이 되돌리기 위한 비상 손잡이다.
+  search:
+    attachment-body: ${SEARCH_ATTACHMENT_BODY:true}
+
   # 동기화 스케줄러 — 기본은 꺼둔다(운영 인스턴스에서만 켠다).
   sync:
     enabled: ${SYNC_ENABLED:false}

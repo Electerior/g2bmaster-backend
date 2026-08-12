@@ -20,7 +20,7 @@ class G2bApiClientParseTest {
 	private final G2bApiClient client = new G2bApiClient(
 			new G2bProperties(
 					new G2bProperties.OpenApi("test-key", "https://apis.data.go.kr/1230000", 20_000, 3, 100),
-					null, null, null, null, null, null, null, null),
+					null, null, null, null, null, null, null, null, null),
 			new G2bErrorTranslator());
 
 	private static final String URL = "https://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoThng";

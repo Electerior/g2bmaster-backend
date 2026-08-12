@@ -48,6 +48,7 @@ public class BidNoticeIndexRepository {
 			n.created_date, n.close_date, n.updated_at, n.officer_name, n.officer_contact,
 			n.ai_summary, n.attachment_urls, n.source_url,
 			n.source_ext, n.g2b_pblanc_no, n.g2b_pblanc_odr,
+			n.documents_indexed_at,
 			LEFT(COALESCE(n.notice_body, ''), 300) AS body_preview
 			""";
 
@@ -296,15 +297,114 @@ public class BidNoticeIndexRepository {
 				.addValue("offset", skip);
 
 		String sql;
-		if (relevanceSorted && where.fullText()) {
+		if (where.unionsAttachments()) {
+			// 관련도 정렬일 때만 안쪽을 잘라도 된다 — 다른 정렬은 매치 전체를 세워야 하므로
+			// 상한을 걸면 뒤쪽 공고가 페이지에서 사라진다.
+			String innerOrder = "";
+			if (relevanceSorted) {
+				params.addValue("innerLimit", skip + page);
+				innerOrder = "\n         ORDER BY relevance DESC\n         LIMIT :innerLimit";
+			}
+			sql = "SELECT " + LIST_COLUMNS
+					+ ", t.relevance AS relevance, t.notice_hit AS notice_hit, t.doc_hit AS doc_hit"
+					+ "\n  FROM (" + candidateSql(where) + innerOrder + ") t"
+					+ "\n  JOIN bid_notice n ON n.id = t.fid AND n.source = t.fsource"
+					+ "\n ORDER BY " + orderBy + "\n LIMIT :limit OFFSET :offset";
+		}
+		else if (relevanceSorted && where.fullText()) {
 			params.addValue("innerLimit", skip + page);
 			sql = fullTextSql(where, orderBy);
 		}
 		else {
-			sql = "SELECT " + LIST_COLUMNS + where.relevanceSelect() + LIST_FROM
-					+ where.sql() + "\n ORDER BY " + orderBy + "\n LIMIT :limit OFFSET :offset";
+			sql = "SELECT " + LIST_COLUMNS + where.relevanceSelect() + fromClause(where)
+					+ where.sql() + attachmentExcludeCondition(where)
+					+ "\n ORDER BY " + orderBy + "\n LIMIT :limit OFFSET :offset";
 		}
 		return jdbc.queryForList(sql, params);
+	}
+
+	// ── 첨부 본문까지 보는 검색 ─────────────────────────────────────────────
+
+	/**
+	 * 첨부 본문 브랜치를 뽑아내는 파생 테이블.
+	 *
+	 * <p><b>왜 {@code OR} 이 아니라 {@code UNION ALL} 인가.</b> 읽기에는
+	 * {@code MATCH(공고) OR EXISTS(MATCH(첨부))} 가 자연스럽지만, 그렇게 쓰면 두 FULLTEXT
+	 * 인덱스 중 <b>어느 쪽도 구동 경로가 되지 못한다</b> — 옵티마이저가 {@code bid_notice} 를
+	 * 전수 훑으며 행마다 상관 서브쿼리를 돌린다. 브랜치를 갈라 놓으면 각자 자기 인덱스를 탄다.
+	 *
+	 * <p>실측(2026-08-12, {@code bid_notice} 45,736행 · {@code bid_notice_document} done 3,704행,
+	 * 검색어 '서버' → 공고 571건 · 첨부 502행, 마감 전 + 입찰문서 필터, 관련도순 20건):
+	 * <pre>
+	 *   공고 텍스트만(현행 2단 질의)          5.3ms
+	 *   UNION ALL (공고 ∪ 첨부)              19.9ms   ← 이 경로
+	 *   UNION + 첨부 제외 반조인             21.5ms
+	 *   MATCH(공고) OR EXISTS(MATCH(첨부))  424.0ms   ← 80배. 쓰면 안 되는 형태
+	 * </pre>
+	 *
+	 * <p><b>관련도는 공고 텍스트 점수만 쓴다.</b> 첨부에서만 걸린 행은 0점이라 관련도순에서
+	 * 뒤로 간다 — 제목·본문 매치가 더 강한 신호라는 판단이고, 덕분에 두 점수를 합산하느라
+	 * GROUP BY 뒤에 다시 정렬하는 비용도 들지 않는다. 어느 쪽에서 걸렸는지는
+	 * {@code notice_hit}/{@code doc_hit} 로 그대로 내려보내 화면이 표시한다.
+	 *
+	 * <p><b>첨부의 AND 는 파일 단위다.</b> {@code +"서버" +"스토리지"} 는 <em>한 파일 안에</em>
+	 * 둘 다 있어야 걸린다. 규격서 하나가 곧 그 공고의 사양이라 실무 의미가 있고, 공고 단위로
+	 * 접으려면 낱말마다 서브쿼리를 따로 걸어야 해서 비용이 낱말 수에 비례한다.
+	 */
+	static String candidateSql(BidNoticeQueryBuilder.Where where) {
+		String filters = where.filterSql().isEmpty() ? "" : "\n             AND " + where.filterSql();
+		String noticeBranch = "SELECT n.id AS fid, n.source AS fsource" + where.relevanceSelect()
+				+ ", 1 AS notice_hit, 0 AS doc_hit"
+				+ "\n             FROM bid_notice n"
+				+ "\n            WHERE " + where.keywordSql() + filters;
+		String docBranch = "SELECT n.id AS fid, n.source AS fsource, 0 AS relevance"
+				+ ", 0 AS notice_hit, 1 AS doc_hit"
+				+ "\n             FROM bid_notice_document d"
+				+ "\n             JOIN bid_notice n ON n.id = d.notice_id AND n.source = d.source"
+				+ "\n            WHERE d.status = 'done'"
+				+ "\n              AND MATCH(d.body_text) AGAINST (:ftDocQuery IN BOOLEAN MODE)" + filters;
+
+		String union = "\n           " + noticeBranch + "\n           UNION ALL\n           " + docBranch;
+		String antiJoin = "";
+		String antiWhere = "";
+		if (where.excludesByAttachment()) {
+			antiJoin = "\n         LEFT JOIN (" + attachmentExcludeSetSql() + ") xd"
+					+ "\n                ON xd.notice_id = u.fid AND xd.source = u.fsource";
+			antiWhere = "\n          WHERE xd.notice_id IS NULL";
+		}
+		return "\n         SELECT u.fid, u.fsource, MAX(u.relevance) AS relevance,"
+				+ " MAX(u.notice_hit) AS notice_hit, MAX(u.doc_hit) AS doc_hit"
+				+ "\n           FROM (" + union + "\n           ) u" + antiJoin + antiWhere
+				+ "\n          GROUP BY u.fid, u.fsource";
+	}
+
+	/**
+	 * 제외 낱말이 첨부에 들어 있는 공고 집합.
+	 *
+	 * <p>상관 {@code NOT EXISTS} 로 브랜치마다 거는 것보다 <b>한 번 뽑아 반조인</b>하는 편이 싸다 —
+	 * 같은 조건의 count 로 실측 34.6ms → 24.2ms. 제외 낱말은 후보마다 달라지지 않으므로
+	 * 집합을 한 번만 만들면 되는데, 상관 서브쿼리는 그것을 행마다 되풀이한다.
+	 */
+	private static String attachmentExcludeSetSql() {
+		return "SELECT DISTINCT notice_id, source FROM bid_notice_document"
+				+ "\n                     WHERE status = 'done'"
+				+ "\n                       AND MATCH(body_text) AGAINST (:ftDocExclude IN BOOLEAN MODE)";
+	}
+
+	/** UNION 을 타지 않는 경로(키워드가 없거나 한 글자뿐)에도 첨부 제외는 걸어야 한다. */
+	private static String fromClause(BidNoticeQueryBuilder.Where where) {
+		if (!where.excludesByAttachment()) {
+			return LIST_FROM;
+		}
+		return LIST_FROM + "  LEFT JOIN (" + attachmentExcludeSetSql() + ") xd"
+				+ "\n         ON xd.notice_id = n.id AND xd.source = n.source\n";
+	}
+
+	private static String attachmentExcludeCondition(BidNoticeQueryBuilder.Where where) {
+		if (!where.excludesByAttachment()) {
+			return "";
+		}
+		return where.sql().isEmpty() ? "\n WHERE xd.notice_id IS NULL" : "\n   AND xd.notice_id IS NULL";
 	}
 
 	/**
@@ -350,10 +450,50 @@ public class BidNoticeIndexRepository {
 	}
 
 	public int count(BidNoticeQueryBuilder.Where where) {
-		Integer total = jdbc.queryForObject("SELECT COUNT(*)" + LIST_FROM + where.sql(),
-				new MapSqlParameterSource(where.params()), Integer.class);
+		// UNION 은 같은 공고를 두 브랜치에서 낼 수 있다. GROUP BY 로 접은 뒤에 세지 않으면
+		// 제목과 규격서 양쪽에 걸린 공고가 총건수에서 두 번 세어져, 화면의 '12건'과 실제
+		// 목록 길이가 어긋난다.
+		String sql = where.unionsAttachments()
+				? "SELECT COUNT(*) FROM (" + candidateSql(where) + "\n       ) c"
+				: "SELECT COUNT(*)" + fromClause(where) + where.sql() + attachmentExcludeCondition(where);
+		Integer total = jdbc.queryForObject(sql, new MapSqlParameterSource(where.params()), Integer.class);
 		return total == null ? 0 : total;
 	}
+
+	/**
+	 * 첨부 본문 색인 커버리지 — 검색 응답의 메타가 쓴다.
+	 *
+	 * <p><b>왜 이 숫자를 응답에 싣나.</b> 첨부까지 찾는다고 해 놓고 색인이 일부에만 있으면,
+	 * 사용자는 "이 공고엔 그 낱말이 없구나"와 "아직 안 읽은 공고구나"를 구분할 수 없다.
+	 * 커버리지를 같이 주면 화면이 그 경계를 말할 수 있다.
+	 *
+	 * <p>60초 캐시를 두는 이유는 값이 아니라 <b>비용</b> 때문이다 — 실측 6.3ms 로, 20ms 짜리
+	 * 검색에 매번 붙이면 30% 를 커버리지 세는 데 쓴다. 색인은 30분 주기로 늘어나므로
+	 * 1분 낡은 값이 화면에서 문제가 되지 않는다.
+	 */
+	public Map<String, Object> attachmentCoverage() {
+		CoverageSnapshot snapshot = coverage;
+		long now = System.currentTimeMillis();
+		if (snapshot != null && now - snapshot.takenAt() < COVERAGE_TTL_MS) {
+			return snapshot.value();
+		}
+		Map<String, Object> fresh = jdbc.queryForMap("""
+				SELECT COUNT(*) AS totalNotices,
+				       COUNT(documents_indexed_at) AS indexedNotices
+				  FROM bid_notice
+				""", new MapSqlParameterSource());
+		Map<String, Object> value = Map.copyOf(fresh);
+		coverage = new CoverageSnapshot(value, now);
+		return value;
+	}
+
+	/** 커버리지 캐시 수명. 첨부 추출 워커가 30분 주기라 1분이면 충분히 새 값이다. */
+	private static final long COVERAGE_TTL_MS = 60_000;
+
+	/** {@code volatile} 하나면 충분하다 — 경합해서 두 번 세어도 결과가 같다. */
+	private volatile CoverageSnapshot coverage;
+
+	private record CoverageSnapshot(Map<String, Object> value, long takenAt) {}
 
 	/**
 	 * 상세 한 건 — 본문 전문 포함.
@@ -387,9 +527,17 @@ public class BidNoticeIndexRepository {
 	 * 의 상수). 사용자 입력을 여기에 넘기면 SQL 주입이 되므로 절대 넓히지 말 것.
 	 */
 	public List<Map<String, Object>> facet(BidNoticeQueryBuilder.Where where, String column, int limit) {
-		return jdbc.queryForList("SELECT n." + column + " AS value, COUNT(*) AS count"
-				+ LIST_FROM + where.sql()
-				+ "\n GROUP BY n." + column + "\n ORDER BY count DESC\n LIMIT :facetLimit",
+		// 패싯은 검색과 반드시 같은 후보 집합을 세야 한다 — 칩에 붙는 건수가 목록과 어긋나면
+		// 그 화면은 거짓말을 하는 것이다. 그래서 검색과 똑같은 파생 테이블을 재사용한다.
+		String sql = where.unionsAttachments()
+				? "SELECT n." + column + " AS value, COUNT(*) AS count"
+						+ "\n  FROM (" + candidateSql(where) + "\n       ) t"
+						+ "\n  JOIN bid_notice n ON n.id = t.fid AND n.source = t.fsource"
+						+ "\n GROUP BY n." + column + "\n ORDER BY count DESC\n LIMIT :facetLimit"
+				: "SELECT n." + column + " AS value, COUNT(*) AS count"
+						+ fromClause(where) + where.sql() + attachmentExcludeCondition(where)
+						+ "\n GROUP BY n." + column + "\n ORDER BY count DESC\n LIMIT :facetLimit";
+		return jdbc.queryForList(sql,
 				new MapSqlParameterSource(where.params()).addValue("facetLimit", limit));
 	}
 
