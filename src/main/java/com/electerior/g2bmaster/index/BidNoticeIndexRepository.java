@@ -1,5 +1,6 @@
 package com.electerior.g2bmaster.index;
 
+import com.electerior.g2bmaster.attachment.AttachmentsHash;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -147,6 +148,20 @@ public class BidNoticeIndexRepository {
 				.append(" AND new.region <> '', new.region, bid_notice.region),\n");
 		updates.append("  updated_at = IF(").append(guard())
 				.append(", NOW(6), bid_notice.updated_at),\n");
+
+		// 첨부가 바뀌었으면 이 공고의 첨부 색인을 무효로 돌린다.
+		//
+		// **반드시 attachments_hash 보다 먼저다.** (2)와 같은 함정이다 — 해시를 먼저 대입하면
+		// 그 다음 줄의 비교가 '새 해시 <=> 새 해시' 가 되어 항상 같다고 나오고, 무효화가
+		// 영원히 일어나지 않는다. 조용히 틀리는 종류라 테스트로 순서를 고정해 둔다.
+		//
+		// <=> 는 NULL 안전 비교다. 첨부가 없다가 생긴 경우(NULL → 값)도 '달라졌다'로 잡아야
+		// 하는데, 보통의 <> 는 NULL 이 끼면 결과가 NULL 이라 IF 가 거짓 가지로 빠진다.
+		updates.append("  documents_indexed_at = IF(").append(guard())
+				.append(" AND NOT (new.attachments_hash <=> bid_notice.attachments_hash)")
+				.append(", NULL, bid_notice.documents_indexed_at),\n");
+		updates.append("  attachments_hash = IF(").append(guard())
+				.append(", new.attachments_hash, bid_notice.attachments_hash),\n");
 		// 반드시 마지막 — 위 (2) 참고.
 		updates.append("  notice_order = IF(").append(guard())
 				.append(", new.notice_order, bid_notice.notice_order)");
@@ -169,6 +184,9 @@ public class BidNoticeIndexRepository {
 		columns.add("notice_order");
 		columns.add("region");
 		columns.addAll(UPSERT_COLUMNS);
+		// UPSERT_COLUMNS 에 넣지 않는다 — 그러면 일반 루프가 대입 순서를 정하게 되어
+		// documents_indexed_at 보다 앞서 버린다. 갱신은 buildUpsertSql 이 순서를 지켜 붙인다.
+		columns.add("attachments_hash");
 		return columns;
 	}
 
@@ -213,6 +231,9 @@ public class BidNoticeIndexRepository {
 				.addValue("officerContact", row.officerContact())
 				.addValue("noticeBody", row.noticeBody())
 				.addValue("attachmentUrls", row.attachmentUrls(), Types.VARCHAR)
+				// 행이 아니라 여기서 만든다. 저장되는 JSON 문자열 그 자체에서 뽑으므로
+				// 저장값과 해시가 어긋날 수 없다(AttachmentsHash 주석 참고).
+				.addValue("attachmentsHash", AttachmentsHash.of(row.attachmentUrls()))
 				.addValue("sourceUrl", row.sourceUrl())
 				.addValue("sourceExt", row.sourceExt(), Types.VARCHAR)
 				.addValue("g2bPblancNo", row.g2bPblancNo())

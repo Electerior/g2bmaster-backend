@@ -79,6 +79,9 @@ class OpenApiDocumentTest {
 			"POST /api/analysis-jobs/status",
 			// 첨부·파일
 			"GET /api/download-attachment",
+			"POST /api/scan-attachments",
+			"GET /api/documents/status",
+			"POST /api/documents/extract",
 			// 저장 공고
 			"POST /api/saved-notices",
 			"GET /api/saved-notices",

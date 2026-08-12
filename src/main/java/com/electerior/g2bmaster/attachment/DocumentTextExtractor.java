@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -51,7 +52,7 @@ public class DocumentTextExtractor {
 	 * 텍스트 상한. 잘린 텍스트로 단가를 확정하면 안 되므로, 넘으면 자르되 {@code truncated=true}
 	 * 로 표시한다. 규격서 본문은 대개 수만 자이고, LLM 컨텍스트 클램프는 상류(AI)가 따로 한다.
 	 */
-	static final int MAX_CHARS = 2_000_000;
+	public static final int MAX_CHARS = 2_000_000;
 
 	/**
 	 * 파일명으로 형식을 판정해 알맞은 파서로 보낸다.
@@ -95,6 +96,22 @@ public class DocumentTextExtractor {
 	private static final long MAX_ARCHIVE_UNCOMPRESSED = 200L * 1024 * 1024;
 
 	/**
+	 * zip 엔트리 <b>이름</b>을 읽을 인코딩.
+	 *
+	 * <p>기본값(UTF-8)으로 열면 국내 첨부 zip 이 통째로 실패한다 — 한글 파일명이 CP949 로 적혀
+	 * 있어서 {@code ZipException: invalid LOC header (bad entry name)} 가 나고, 첫 엔트리에서
+	 * 터지므로 <b>묶음 전체</b>가 날아간다. 실측 표본 2개가 정확히 그랬고, MS949 로 열자 3개씩
+	 * 정상적으로 읽혔다(백필 실패 60건이 이 사유다).
+	 *
+	 * <p>UTF-8 로 적힌 zip 이 깨지지는 않는다. 압축기가 UTF-8 을 쓰면 엔트리 플래그 11번 비트를
+	 * 세우고, {@link ZipInputStream} 은 그 비트가 선 엔트리를 이 인코딩과 무관하게 UTF-8 로 읽는다.
+	 *
+	 * <p>이름은 버리는 값이 아니다 — {@code SpecFileSelector} 가 zip 안에서 규격서를 고를 때
+	 * 읽는 입력이라, 깨진 이름은 곧 잘못된 규격서 선택이다.
+	 */
+	public static final Charset ZIP_NAME_CHARSET = Charset.forName("MS949");
+
+	/**
 	 * zip 을 풀어 안의 HWPX/PDF 를 각각 텍스트로 뽑는다. 깨진 엔트리 하나가 나머지를 막지 않는다.
 	 *
 	 * <p>엔트리 이름을 {@link ParsedDocument#filename()} 으로 그대로 쓴다 — 선택 로직이 그 이름으로
@@ -104,17 +121,43 @@ public class DocumentTextExtractor {
 	 * @return 텍스트를 뽑은 문서들. 지원 형식이 없으면 빈 목록(예외 아님 — 다른 첨부로 넘어간다)
 	 */
 	public List<ParsedDocument> expandArchive(String filename, byte[] bytes) {
+		return expandArchive(filename, bytes, null);
+	}
+
+	/**
+	 * zip 안의 <b>HWP 만</b> 다른 파서로 보내는 변형.
+	 *
+	 * <p><b>왜 필요한가.</b> 워커는 최상위 {@code .hwp} 를 이미 별도 프로세스로 보낸다 —
+	 * hwplib 이 안 끝나는 파일이 있기 때문이다({@code HwpTextMain} 주석). 그런데 zip 을 푸는
+	 * 것은 이 클래스이고, 그 안의 엔트리는 {@link #extract} 를 그대로 타서 <b>인프로세스</b>로
+	 * 돌아갔다. 실측에서 백필이 정확히 그 구멍으로 멈췄다 — {@code expandInto → extractHwp} 에
+	 * 물린 스레드 하나가 20시간 동안 CPU 를 태웠고, 회차가 끝나지 않아 그 뒤 2,242번의 호출이
+	 * 전부 "이미 실행 중"으로 물러났다.
+	 *
+	 * <p>파서를 인자로 받는 이유: 자식 프로세스({@code HwpTextMain})도 이 클래스를 쓴다.
+	 * 필드로 박아 두면 자식이 또 자식을 낳는다.
+	 *
+	 * @param hwpParser zip 안의 {@code .hwp} 를 맡길 파서. {@code null} 이면 종전대로 인프로세스
+	 */
+	public List<ParsedDocument> expandArchive(String filename, byte[] bytes, HwpParser hwpParser) {
 		List<ParsedDocument> docs = new ArrayList<>();
-		expandInto(filename, bytes, docs, 1);
+		expandInto(filename, bytes, docs, 1, hwpParser);
 		return docs;
 	}
 
-	private void expandInto(String archiveName, byte[] bytes, List<ParsedDocument> out, int depth) {
+	/** HWP 한 건을 뽑는 방법. 실패는 {@link DocumentParseException} 으로 올린다. */
+	@FunctionalInterface
+	public interface HwpParser {
+		ParsedDocument parse(String filename, byte[] bytes);
+	}
+
+	private void expandInto(String archiveName, byte[] bytes, List<ParsedDocument> out, int depth,
+			HwpParser hwpParser) {
 		if (bytes == null || bytes.length == 0) {
 			return;
 		}
 		long budget = MAX_ARCHIVE_UNCOMPRESSED;
-		try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes))) {
+		try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes), ZIP_NAME_CHARSET)) {
 			ZipEntry entry;
 			while ((entry = zip.getNextEntry()) != null) {
 				if (out.size() >= MAX_ARCHIVE_ENTRIES) {
@@ -134,11 +177,13 @@ public class DocumentTextExtractor {
 				}
 				budget -= inner.length;
 				if (nested) {
-					expandInto(name, inner, out, depth + 1);
+					expandInto(name, inner, out, depth + 1, hwpParser);
 					continue;
 				}
 				try {
-					out.add(extract(name, inner));
+					out.add(hwpParser != null && name.toLowerCase().endsWith(".hwp")
+							? hwpParser.parse(name, inner)
+							: extract(name, inner));
 				}
 				catch (RuntimeException e) {
 					// 깨진 문서 하나가 묶음 전체를 막지 않는다 — 다음 엔트리로.
@@ -218,13 +263,38 @@ public class DocumentTextExtractor {
 	}
 
 	// ── HWP 5.0 (바이너리) ─────────────────────────────────────────────────────
+	/**
+	 * HWP 한 건의 파싱 상한.
+	 *
+	 * <p><b>hwplib 은 어떤 파일에서 사실상 끝나지 않는다.</b> 백필 실측에서 워커 6개가 전부
+	 * 여기에 물려 7분 넘게 CPU 를 태우며 한 건도 진전이 없었다. 스택은 늘 같았다:
+	 *
+	 * <pre>
+	 *   ForParagraph.controlAndMemo → skipETCRecord
+	 *     → StreamReaderForCompress.readBytes → InputStream.read   (RUNNABLE, 100% CPU)
+	 * </pre>
+	 *
+	 * 레코드 헤더가 말하는 길이가 실제와 어긋나면 압축 스트림에서 그 길이만큼 <b>한 바이트씩</b>
+	 * 읽으려 든다. 예외도 안 나고 그냥 안 끝난다.
+	 *
+	 * <p>그래서 시간을 스트림에 건다. 취소로는 못 막는다 — CPU 를 태우는 루프는 인터럽트를
+	 * 확인하지 않으므로 {@code Future.cancel} 은 스레드를 영영 놔주지 않는다. 반면 이 루프는
+	 * <b>읽기를 계속하므로</b>, 읽기마다 마감을 보게 하면 즉시 빠져나온다.
+	 *
+	 * <p>20초로 잡은 근거: 정상 HWP 는 실측 평균 <b>0.8초</b>에 끝난다(첫 회차 200파일/41초,
+	 * 동시 4). 25배를 줘도 넉넉하고, 반대로 상한이 크면 물린 파일 하나가 워커 하나를 그만큼
+	 * 붙든다 — 6개가 동시에 물리면 회차가 통째로 멈춘다.
+	 */
+	private static final long HWP_PARSE_TIMEOUT_MS = 20_000;
+
 	// hwplib 은 hwpxlib 과 클래스 이름이 겹친다(TextExtractor·TextExtractMethod) — 그래서
 	// 여기선 전부 완전수식명으로 쓴다. HWP 내부는 UCS-2 라 hwplib 이 디코딩해 자바 String(유니코드)로
 	// 준다 — 한글/UTF-8 은 그대로 보존된다.
 	private ParsedDocument extractHwp(String filename, byte[] bytes) {
 		try {
 			kr.dogfoot.hwplib.object.HWPFile hwp =
-					kr.dogfoot.hwplib.reader.HWPReader.fromInputStream(new ByteArrayInputStream(bytes));
+					kr.dogfoot.hwplib.reader.HWPReader.fromInputStream(
+							new DeadlineInputStream(new ByteArrayInputStream(bytes), HWP_PARSE_TIMEOUT_MS));
 			// 컨트롤(표·글상자) 텍스트도 문단 사이에 끼워 뽑는다 — 규격서의 표 안 값이 핵심이다.
 			String text = kr.dogfoot.hwplib.tool.textextractor.TextExtractor.extract(
 					hwp, kr.dogfoot.hwplib.tool.textextractor.TextExtractMethod.InsertControlTextBetweenParagraphText);
@@ -232,6 +302,55 @@ public class DocumentTextExtractor {
 		}
 		catch (Exception e) {   // hwplib 은 checked Exception 을 던진다
 			throw new DocumentParseException("HWP 파싱 실패: " + filename, e);
+		}
+	}
+
+	/**
+	 * 마감시한이 지나면 읽기를 거부하는 스트림.
+	 *
+	 * <p>파서가 다음 바이트를 요구하는 순간 {@link IOException} 이 나고, 호출부의 catch 가 그것을
+	 * {@link DocumentParseException} 으로 바꾼다 — 그 파일 하나만 실패로 닫히고 나머지는 계속 간다.
+	 *
+	 * <p>{@code available()} 까지 막는 이유: 파서가 그 값을 보고 버퍼를 잡는 경로가 있어서,
+	 * 읽기만 막으면 마감 이후에도 큰 배열을 한 번 더 할당하려 들 수 있다.
+	 */
+	static final class DeadlineInputStream extends java.io.FilterInputStream {
+
+		private final long deadlineNanos;
+
+		DeadlineInputStream(java.io.InputStream in, long timeoutMs) {
+			super(in);
+			this.deadlineNanos = System.nanoTime() + timeoutMs * 1_000_000L;
+		}
+
+		private void check() throws IOException {
+			if (System.nanoTime() > deadlineNanos) {
+				throw new IOException("파싱 시간 초과 — 파일이 파서를 멈춰 세웠습니다");
+			}
+		}
+
+		@Override
+		public int read() throws IOException {
+			check();
+			return super.read();
+		}
+
+		@Override
+		public int read(byte[] buffer, int offset, int length) throws IOException {
+			check();
+			return super.read(buffer, offset, length);
+		}
+
+		@Override
+		public long skip(long n) throws IOException {
+			check();
+			return super.skip(n);
+		}
+
+		@Override
+		public int available() throws IOException {
+			check();
+			return super.available();
 		}
 	}
 

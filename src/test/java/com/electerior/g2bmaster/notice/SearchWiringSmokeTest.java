@@ -53,7 +53,8 @@ class SearchWiringSmokeTest {
 					new G2bProperties.Security("", ""),
 					new G2bProperties.Alert("", "", "", ""),
 					new G2bProperties.Sync(false),
-					new G2bProperties.Index(false, 600_000, 300_000, 7));
+					new G2bProperties.Index(false, 600_000, 300_000, 7),
+					new G2bProperties.Documents(false, 1_800_000, 200, 500, 4, null, null));
 		}
 
 		// deal-analysis 는 AI(HTTP)와 결과 저장(DB)에 의존한다. 이 스모크는 조회 계층 '조립'만
