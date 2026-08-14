@@ -189,6 +189,24 @@ class BidNoticeQueryBuilderTest {
 		assertThat(where.sql()).contains("n.category IN ('입찰', '마감')");
 	}
 
+	/**
+	 * 단계 패싯은 <b>단계를 뺀</b> 질의로 센다(자기 축을 자기가 필터하면 고른 칩만 남는다).
+	 * 그 질의에 스코프가 그대로 걸리면 GROUP BY 가 입찰·마감 두 줄밖에 못 내고 계획·사전규격
+	 * 칩이 0건으로 그려진다 — 눌러 보면 1,887건·1,859건이 나오는데도 그랬다(2026-08-14).
+	 */
+	@Test
+	@DisplayName("단계 패싯은 스코프를 뺀다 — 계획·사전규격 칩이 0건으로 그려지면 안 된다")
+	void stageFacetDropsTheScope() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.activeOnly(true)
+				.withoutActiveStageScope()
+				.build();
+
+		assertThat(where.sql()).doesNotContain("IN ('입찰', '마감')");
+		// 마감일시 조건은 그대로다 — 빼면 칩의 수가 '누르면 나오는 수'와 또 어긋난다.
+		assertThat(where.sql()).contains("n.close_date IS NULL OR n.close_date >= NOW(6)");
+	}
+
 	/** 화면의 단계 칩은 activeOnly 기본 ON 과 함께 온다 — 스코프가 이기면 '계획' 칩이 항상 0건이 된다. */
 	@Test
 	@DisplayName("단계를 직접 고르면 스코프를 걸지 않는다 — '계획'+마감 전만이 0건이 되면 안 된다")
