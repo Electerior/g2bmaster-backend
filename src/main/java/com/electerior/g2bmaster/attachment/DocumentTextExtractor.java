@@ -3,8 +3,10 @@ package com.electerior.g2bmaster.attachment;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -17,6 +19,7 @@ import kr.dogfoot.hwpxlib.tool.textextractor.TextMarks;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -75,14 +78,25 @@ public class DocumentTextExtractor {
 		if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
 			return extractXlsx(filename, bytes);
 		}
+		if (lower.endsWith(".htm") || lower.endsWith(".html")) {
+			return extractHtml(filename, bytes);
+		}
+		if (lower.endsWith(".txt")) {
+			return extractPlainText(filename, bytes);
+		}
+		if (lower.endsWith(".hml")) {
+			return extractHml(filename, bytes);
+		}
 		throw new UnsupportedDocumentException(
-				"지원하지 않는 형식입니다(HWPX·HWP·PDF·XLSX 만): " + filename);
+				"지원하지 않는 형식입니다(HWPX·HWP·HML·PDF·XLSX·HTML·TXT 만): " + filename);
 	}
 
 	public boolean supports(String filename) {
 		String lower = filename == null ? "" : filename.toLowerCase();
 		return lower.endsWith(".hwpx") || lower.endsWith(".hwp") || lower.endsWith(".pdf")
-				|| lower.endsWith(".xlsx") || lower.endsWith(".xls");
+				|| lower.endsWith(".xlsx") || lower.endsWith(".xls")
+				|| lower.endsWith(".htm") || lower.endsWith(".html") || lower.endsWith(".txt")
+				|| lower.endsWith(".hml");
 	}
 
 	public boolean isArchive(String filename) {
@@ -242,11 +256,155 @@ public class DocumentTextExtractor {
 			return clampInto(filename, ParsedDocument.DocumentFormat.HWPX, text, sectionCount);
 		}
 		catch (Exception e) {
+			// **본문 XML 을 직접 읽는 것이 먼저다.** HWPX 는 zip 안에 Contents/sectionN.xml 로
+			// 본문을 그대로 갖고 있어서, hwpxlib 이 넘어져도 텍스트는 <hp:t> 에 온전히 있다.
+			// 미리보기와 달리 이것은 발췌가 아니라 전문이다(실측 표본: 618개 <hp:t>, 449문단).
+			String body = sectionXmlText(bytes);
+			if (body != null && !body.isBlank()) {
+				return clampInto(filename, ParsedDocument.DocumentFormat.HWPX, body, 0);
+			}
+			// 본문 XML 도 못 읽으면 미리보기라도. 이쪽은 앞부분뿐이라 truncated 로 올린다.
+			String preview = zipPreviewText(bytes);
+			if (preview != null && !preview.isBlank()) {
+				ParsedDocument partial =
+						clampInto(filename, ParsedDocument.DocumentFormat.HWPX, preview, 0);
+				return new ParsedDocument(partial.filename(), partial.format(), partial.text(), 0, true);
+			}
 			throw new DocumentParseException("HWPX 파싱 실패: " + filename, e);
 		}
 		finally {
 			deleteQuietly(temp);
 		}
+	}
+
+	/**
+	 * HWPX 의 미리보기 텍스트({@code Preview/PrvText.txt}). HWP 쪽 {@link #previewText} 와 같은 취지다.
+	 *
+	 * <p>인코딩은 UTF-8 이다(HWP 의 OLE 스트림이 UTF-16LE 인 것과 다르다 — 실측 확인).
+	 */
+	/**
+	 * HWPX 본문 XML({@code Contents/sectionN.xml})에서 직접 텍스트를 뽑는다.
+	 *
+	 * <p>hwpxlib 이 못 여는 파일이 있는데(실측 14건, 전부 계약예규·일반조건 같은 표준 문서),
+	 * 그 파일들도 본문 XML 자체는 멀쩡하다. 미리보기 폴백이 그것들을 못 건진 이유는 단순하다 —
+	 * {@code Preview/PrvText.txt} 가 아예 없는 포장이었다.
+	 *
+	 * <p>문단은 {@code <hp:p>}, 글자는 {@code <hp:t>} 다. 문단 단위로 줄을 나눠야 표와 조항이
+	 * 붙지 않는다. 이름공간 접두사({@code hp:})는 jsoup XML 파서에서 태그 이름의 일부다.
+	 */
+	private static String sectionXmlText(byte[] bytes) {
+		StringBuilder text = new StringBuilder();
+		try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes), ZIP_NAME_CHARSET)) {
+			ZipEntry entry;
+			while ((entry = zip.getNextEntry()) != null) {
+				String name = entry.getName() == null ? "" : entry.getName().toLowerCase();
+				if (!name.startsWith("contents/section") || !name.endsWith(".xml")) {
+					continue;
+				}
+				org.jsoup.nodes.Document xml = org.jsoup.Jsoup.parse(
+						new String(zip.readAllBytes(), StandardCharsets.UTF_8), "",
+						org.jsoup.parser.Parser.xmlParser());
+				for (org.jsoup.nodes.Element paragraph : xml.select("hp|p")) {
+					String line = paragraph.text();
+					if (!line.isBlank()) {
+						text.append(line).append('\n');
+					}
+				}
+			}
+		}
+		catch (IOException | RuntimeException e) {
+			return null;
+		}
+		return text.toString();
+	}
+
+	private static String zipPreviewText(byte[] bytes) {
+		try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes), ZIP_NAME_CHARSET)) {
+			ZipEntry entry;
+			while ((entry = zip.getNextEntry()) != null) {
+				if ("Preview/PrvText.txt".equalsIgnoreCase(entry.getName())) {
+					return new String(zip.readAllBytes(), StandardCharsets.UTF_8);
+				}
+			}
+			return null;
+		}
+		catch (IOException | RuntimeException e) {
+			return null;
+		}
+	}
+
+	// ── 평문·HTML ────────────────────────────────────────────────────────────
+	/**
+	 * 매직 넘버가 없는 형식들. 첨부에 실제로 섞여 온다(실측 {@code .htm} 18건 · {@code .txt} 1건).
+	 *
+	 * <p>{@code .htm} 은 태그를 걷어내야 본문이 된다 — 안 그러면 색인에 {@code <table>} 같은
+	 * 마크업이 그대로 들어가 발췌가 읽히지 않는다. jsoup 은 이미 의존성에 있다.
+	 */
+	private ParsedDocument extractHtml(String filename, byte[] bytes) {
+		String html = decodeText(bytes);
+		String text = org.jsoup.Jsoup.parse(html).wholeText();
+		return clampInto(filename, ParsedDocument.DocumentFormat.TEXT, text, 0);
+	}
+
+	private ParsedDocument extractPlainText(String filename, byte[] bytes) {
+		return clampInto(filename, ParsedDocument.DocumentFormat.TEXT, decodeText(bytes), 0);
+	}
+
+	/**
+	 * HML/HWPML — 한글의 XML 저장 형식.
+	 *
+	 * <p><b>이름이 {@code .hwp} 인 채로 온다.</b> 실측에서 "형식 미지원" 으로 닫힌 {@code .hwp}
+	 * 23건이 전부 이것이었다(표본 3개 모두 루트가 {@code <HWPML>}). 바이너리 HWP 파서에 넣으면
+	 * OLE 컨테이너가 아니라 넘어지므로, 판정은 {@link DocumentSniffer} 가 루트 요소로 한다.
+	 *
+	 * <p>문단({@code <P>}) 단위로 줄을 나눈다 — 전체 텍스트를 한 덩어리로 뽑으면 표와 문단이
+	 * 붙어 버려 {@code specContentScore} 가 구조를 못 읽는다. {@code BINDATA}(그림·OLE 를
+	 * base64 로 품고 있다)는 <b>반드시 걷어낸다</b>: 그대로 두면 수백 KB 의 base64 가 본문으로
+	 * 들어가 색인이 부풀고 발췌가 쓰레기가 된다.
+	 */
+	private ParsedDocument extractHml(String filename, byte[] bytes) {
+		try {
+			org.jsoup.nodes.Document xml =
+					org.jsoup.Jsoup.parse(decodeText(bytes), "", org.jsoup.parser.Parser.xmlParser());
+			xml.select("BINDATA, BINITEM, SCRIPT, SCRIPTCODE").remove();
+			StringBuilder text = new StringBuilder();
+			for (org.jsoup.nodes.Element paragraph : xml.select("P")) {
+				String line = paragraph.text();
+				if (!line.isBlank()) {
+					text.append(line).append('\n');
+				}
+			}
+			String body = text.length() > 0 ? text.toString() : xml.text();
+			if (body.isBlank()) {
+				throw new DocumentParseException("HML 본문이 비어 있습니다: " + filename, null);
+			}
+			return clampInto(filename, ParsedDocument.DocumentFormat.HWP, body, 0);
+		}
+		catch (DocumentParseException e) {
+			throw e;
+		}
+		catch (RuntimeException e) {
+			throw new DocumentParseException("HML 파싱 실패: " + filename, e);
+		}
+	}
+
+	/**
+	 * 평문 디코딩. UTF-8 로 <b>엄격하게</b> 시도하고 실패하면 CP949 로 본다.
+	 *
+	 * <p>대체문자(U+FFFD)를 허용하는 느슨한 디코딩을 쓰면 CP949 문서가 조용히 물음표 덩어리가
+	 * 되어 색인에 들어간다 — 검색이 안 되는데 실패로도 안 잡히는 최악의 상태다.
+	 */
+	private static String decodeText(byte[] bytes) {
+		String text;
+		try {
+			text = StandardCharsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(bytes)).toString();
+		}
+		catch (java.nio.charset.CharacterCodingException e) {
+			text = new String(bytes, ZIP_NAME_CHARSET);   // MS949
+		}
+		// BOM 은 본문이 아니다. 남겨 두면 XML 파서가 첫 요소를 못 찾고, 색인에는 보이지 않는
+		// 문자가 첫 글자로 들어가 발췌 앞이 어긋난다.
+		return text.startsWith("﻿") ? text.substring(1) : text;
 	}
 
 	// ── PDF ──────────────────────────────────────────────────────────────────
@@ -301,7 +459,43 @@ public class DocumentTextExtractor {
 			return clampInto(filename, ParsedDocument.DocumentFormat.HWP, text, sectionCount(hwp));
 		}
 		catch (Exception e) {   // hwplib 은 checked Exception 을 던진다
+			// 본문을 못 읽어도 미리보기는 대개 살아 있다 — 아래 주석 참고.
+			String preview = previewText(bytes);
+			if (preview != null && !preview.isBlank()) {
+				ParsedDocument partial =
+						clampInto(filename, ParsedDocument.DocumentFormat.HWP, preview, 0);
+				// **잘렸다고 표시한다.** 미리보기는 문서의 앞부분일 뿐이라, 온전한 본문인 척하면
+				// "그 키워드가 없는 공고" 와 "앞부분까지만 읽은 공고" 가 화면에서 똑같아진다.
+				return new ParsedDocument(partial.filename(), partial.format(), partial.text(), 0, true);
+			}
 			throw new DocumentParseException("HWP 파싱 실패: " + filename, e);
+		}
+	}
+
+	/**
+	 * HWP 의 미리보기 텍스트({@code PrvText} 스트림).
+	 *
+	 * <p><b>왜 이 폴백이 필요한가.</b> hwplib 이 {@code This is not paragraph} 로 넘어지는 문서군이
+	 * 있다(실측 232건, 백필 실패의 최대 항목). 그런데 그 파일들도 CFB 안에 미리보기 스트림은
+	 * 온전히 갖고 있다 — 표본 3개 전부 그랬다. 본문을 못 읽었다고 <b>아무것도 없는 것으로</b>
+	 * 두면 "규격서에 그 부품이 없다"와 "규격서를 못 읽었다"가 검색 결과에서 구분되지 않는다.
+	 *
+	 * <p>완전한 본문이 아니다. 한글이 저장할 때 만들어 두는 앞부분 발췌라, 제목·발주기관·개요는
+	 * 대개 들어 있고 뒤쪽 세부 사양은 없다. 그래서 {@code truncated} 로 표시해 올린다.
+	 *
+	 * <p>hwplib 을 전혀 건드리지 않는다 — 그래서 <b>파서가 멈춰 세워진 뒤에도</b> 쓸 수 있다
+	 * ({@code HwpSubprocessExtractor} 의 타임아웃 경로가 이것을 부른다).
+	 *
+	 * @return 미리보기 평문. 스트림이 없거나 읽지 못하면 {@code null}(실패로 만들지 않는다)
+	 */
+	public static String previewText(byte[] bytes) {
+		try (POIFSFileSystem fs = new POIFSFileSystem(new ByteArrayInputStream(bytes));
+				InputStream stream = fs.getRoot().createDocumentInputStream("PrvText")) {
+			// PrvText 는 UTF-16LE 평문이다(압축도 암호화도 없다).
+			return new String(stream.readAllBytes(), StandardCharsets.UTF_16LE);
+		}
+		catch (IOException | RuntimeException e) {
+			return null;
 		}
 	}
 

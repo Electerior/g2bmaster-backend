@@ -341,26 +341,34 @@ public final class BidNoticeQueryBuilder {
 	// ── 금액 ────────────────────────────────────────────────────────────────
 
 	/**
-	 * 추정가격 구간.
+	 * 금액 구간.
 	 *
-	 * <p>{@code price_detail} JSON 안의 값을 {@code V11} 에서 생성 컬럼 {@code estimated_price} 로
-	 * 승격했으므로 <b>여기서는 컬럼을 그대로 참조한다.</b> JSON 함수를 식으로 걸던 때는
-	 * 금액만 지정한 검색이 전체 훑기(type=ALL, rows=17477)였다.
+	 * <p><b>추정가격이 아니라 {@code filter_amount} 를 본다.</b> 추정가격 키를 가진 행은
+	 * 나라장터의 입찰·마감·계획뿐이라, 이 조건이 {@code estimated_price} 를 보던 때는
+	 * {@code ?minAmount=1} 한 줄에 사전규격 12,119건과 누리·D2B 2,045건이 통째로 사라졌다
+	 * (전체의 28%). 사전규격은 배정예산을 가지고 있어 금액을 아는데도 빠졌다.
+	 * {@code filter_amount} 는 추정가격→배정예산→기준금액→기초예비가격 순으로 하나를 고른
+	 * 생성 컬럼이다 — 무엇이 골라졌는지는 응답의 {@code amountKind} 로 화면까지 내려간다
+	 * ({@code V20260814113541}, {@link BidNoticeSearchService#amountOf}).
 	 *
-	 * <p>식을 다시 인라인하지 말 것 — 함수를 씌우는 순간 {@code ix_bid_notice_amount} 를
-	 * 못 쓰게 되고, 증상이 '느려짐' 뿐이라 리뷰에서 잡히지 않는다.
+	 * <p>금액이 아예 없는 행(실측 2,180건)은 {@code NULL} 이라 이 조건에서 빠진다. 줄일 수 없는
+	 * 손실이라 화면이 그 사실을 문장으로 적는다 — 조용히 빼는 것만은 하지 않는다.
+	 *
+	 * <p>식을 다시 인라인하지 말 것 — 컬럼에 함수를 씌우거나 {@code COALESCE} 를 여기에 펼치는
+	 * 순간 {@code ix_bid_notice_filter_amount} 를 못 쓰게 되고, 증상이 '느려짐' 뿐이라
+	 * 리뷰에서 잡히지 않는다. 그래서 {@code BidNoticeQueryBuilderTest} 가 SQL 문자열을 직접 본다.
 	 */
-	public BidNoticeQueryBuilder estimatedPriceBetween(Long min, Long max) {
+	public BidNoticeQueryBuilder amountBetween(Long min, Long max) {
 		if (min == null && max == null) {
 			return this;
 		}
 		if (min != null) {
 			params.put("minAmount", min);
-			filters.add("n.estimated_price >= :minAmount");
+			filters.add("n.filter_amount >= :minAmount");
 		}
 		if (max != null) {
 			params.put("maxAmount", max);
-			filters.add("n.estimated_price <= :maxAmount");
+			filters.add("n.filter_amount <= :maxAmount");
 		}
 		return this;
 	}

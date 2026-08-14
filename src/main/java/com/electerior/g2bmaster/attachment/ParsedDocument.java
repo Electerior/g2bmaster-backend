@@ -29,7 +29,9 @@ public record ParsedDocument(
 		HWPX,
 		HWP,
 		PDF,
-		XLSX
+		XLSX,
+		/** 태그를 걷어낸 HTML 과 평문. 첨부에 실제로 섞여 온다(실측 htm 18건·txt 1건). */
+		TEXT
 	}
 
 	public boolean isEmpty() {

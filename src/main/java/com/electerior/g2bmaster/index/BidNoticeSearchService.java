@@ -47,9 +47,10 @@ public class BidNoticeSearchService {
 			"close", "n.close_date IS NULL, n.close_date %s",
 			"name", "n.notice_name %s",
 			"updated", "n.updated_at %s",
-			// V11 에서 price_detail JSON 을 생성 컬럼으로 승격했다. 식을 다시 인라인하면
-			// ix_bid_notice_category_amount 를 못 쓰고 정렬이 filesort 로 떨어진다.
-			"amount", "n.estimated_price %s",
+			// price_detail JSON 을 생성 컬럼으로 승격한 것(V11)을 소스별 대표 금액으로 넓혔다
+			// (V20260814113541). 식을 다시 인라인하면 ix_bid_notice_category_filter_amount 를
+			// 못 쓰고 정렬이 filesort 로 떨어진다.
+			"amount", "n.filter_amount %s",
 			"relevance", "relevance %s");
 
 	/**
@@ -84,8 +85,22 @@ public class BidNoticeSearchService {
 			"created", "DESC",
 			// V7: ix_bid_notice_updated (updated_at)  — 방향 미지정이므로 ASC
 			"updated", "ASC",
-			// V11: ix_bid_notice_category_amount (category, estimated_price DESC)
+			// V20260814113541: ix_bid_notice_category_filter_amount (category, filter_amount DESC)
 			"amount", "DESC");
+
+	/**
+	 * 대표 금액 후보 — <b>앞자리가 이긴다</b>.
+	 *
+	 * <p>생성 컬럼 {@code filter_amount}({@code V20260814113541})의 {@code COALESCE} 순서와
+	 * 같은 표다. 필터·정렬은 그 컬럼을 보고, 화면에 적히는 금액과 종류는 이 표로 고른다 —
+	 * 둘이 갈라지면 "이 금액으로 걸렀다"는 표시가 거짓이 된다.
+	 *
+	 * <p>순서의 근거는 마이그레이션 주석에 실측과 함께 적혀 있다. 요지는 추정가격에 가까운
+	 * 것부터라는 것이다: 추정가격(G2B) → 배정예산(사전규격·누리) → 기준금액(누리 투찰 상한)
+	 * → 기초예비가격(D2B).
+	 */
+	private static final List<String> AMOUNT_KEYS =
+			List.of("estimatedPrice", "assignedBudget", "referenceAmount", "basicExpectedPrice");
 
 	/** 관련도 정렬 키. 저장소가 전문검색 전용 경로를 탈지 판단하는 데도 쓴다. */
 	private static final String RELEVANCE = "relevance";
@@ -203,7 +218,7 @@ public class BidNoticeSearchService {
 				.createdBetween(request.createdFrom(), request.createdTo())
 				.closeBetween(request.closeFromValue(), request.closeToValue())
 				.activeOnly(request.activeOnlyEnabled())
-				.estimatedPriceBetween(request.minAmount(), request.maxAmount());
+				.amountBetween(request.minAmount(), request.maxAmount());
 	}
 
 	private BidNoticeQueryBuilder.Where buildWhere(NoticeSearchRequest request, boolean includeAttachments) {
@@ -338,7 +353,48 @@ public class BidNoticeSearchService {
 		// 화면이 매번 계산하지 않도록 서버에서 붙인다. 마감이 없으면(계획) null.
 		out.put("dday", dday(row.get("close_date"), now));
 		out.put("estimatedPrice", numberIn(out.get("priceDetail"), "estimatedPrice"));
+
+		// 금액 필터·정렬이 실제로 본 값과 그 종류. 값만 주면 화면이 배정예산을 추정가격으로
+		// 읽어 서로 다른 금액을 한 줄로 비교하게 된다 — 종류를 함께 준다.
+		Amount amount = amountOf(out.get("priceDetail"));
+		out.put("amount", amount.value());
+		out.put("amountKind", amount.kind());
 		return out;
+	}
+
+	/**
+	 * 금액 필터·정렬이 본 값과 그 종류.
+	 *
+	 * @param value 고른 금액. 어느 후보도 없으면 {@code null}
+	 * @param kind  {@code estimatedPrice} / {@code assignedBudget} / {@code referenceAmount}
+	 *              / {@code basicExpectedPrice}. 값이 없으면 {@code null}
+	 */
+	record Amount(Object value, String kind) {
+
+		static final Amount NONE = new Amount(null, null);
+	}
+
+	/**
+	 * {@code price_detail} 에서 대표 금액 하나를 고른다.
+	 *
+	 * <p><b>순서와 0 처리가 생성 컬럼 {@code filter_amount} 와 정확히 같아야 한다</b>
+	 * ({@code V20260814113541}). 어긋나면 화면이 "이 금액으로 걸렀다"며 필터가 실제로 본 것과
+	 * 다른 숫자를 보여주게 되고, 그 종류의 거짓말은 사용자가 검증할 방법이 없다.
+	 * DB 가 아니라 여기서 다시 고르는 이유는 <b>종류</b>까지 알아야 하기 때문이다 —
+	 * 값만 필요했다면 생성 컬럼을 SELECT 하면 그만이다.
+	 *
+	 * <p>0 을 값으로 인정하지 않는 것도 그쪽과 같다. 배정예산 0 은 '0원짜리 공고'가 아니라
+	 * '미공개'다(실측 1,486건, 대부분 누리장터 민간공고). 0 으로 내려보내면 화면에 '0원'이라
+	 * 적히고 {@code maxAmount} 검색이 금액을 모르는 공고를 데려온다.
+	 */
+	static Amount amountOf(Object priceDetail) {
+		for (String key : AMOUNT_KEYS) {
+			Object value = numberIn(priceDetail, key);
+			if (value instanceof Number number && number.doubleValue() != 0) {
+				return new Amount(value, key);
+			}
+		}
+		return Amount.NONE;
 	}
 
 	/**

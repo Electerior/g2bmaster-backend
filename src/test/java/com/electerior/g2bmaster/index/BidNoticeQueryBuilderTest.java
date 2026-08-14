@@ -226,7 +226,7 @@ class BidNoticeQueryBuilderTest {
 				.category(null)
 				.region("  ")
 				.institutionName(null)
-				.estimatedPriceBetween(null, null)
+				.amountBetween(null, null)
 				.build();
 
 		assertThat(where.sql()).isEmpty();
@@ -236,22 +236,44 @@ class BidNoticeQueryBuilderTest {
 	 * 금액 조건이 <b>생성 컬럼을 그대로</b> 참조하는지 고정한다.
 	 *
 	 * <p>V11 이전에는 {@code CAST(JSON_UNQUOTE(JSON_EXTRACT(...)))} 를 식으로 걸었고, 그래서
-	 * 금액 필터가 인덱스를 못 타 전수 스캔이었다. 컬럼을 다시 함수로 감싸는 순간 같은 상태로
-	 * 돌아가는데 증상이 '느려짐' 뿐이라 리뷰로는 잡히지 않는다 — 그래서 SQL 문자열을 직접 본다.
+	 * 금액 필터가 인덱스를 못 타 전수 스캔이었다. 컬럼을 다시 함수로 감싸거나 {@code COALESCE} 를
+	 * 여기에 펼치는 순간 같은 상태로 돌아가는데, 증상이 '느려짐' 뿐이라 리뷰로는 잡히지 않는다 —
+	 * 그래서 SQL 문자열을 직접 본다.
 	 */
 	@Test
-	@DisplayName("금액 구간은 생성 컬럼 estimated_price 를 함수 없이 참조한다")
+	@DisplayName("금액 구간은 생성 컬럼 filter_amount 를 함수 없이 참조한다")
 	void amountRangeUsesGeneratedColumn() {
 		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
-				.estimatedPriceBetween(1_000_000L, 5_000_000L)
+				.amountBetween(1_000_000L, 5_000_000L)
 				.build();
 
-		assertThat(where.sql()).contains("n.estimated_price >= :minAmount")
-				.contains("n.estimated_price <= :maxAmount");
+		assertThat(where.sql()).contains("n.filter_amount >= :minAmount")
+				.contains("n.filter_amount <= :maxAmount");
 		// 함수로 감싸면 인덱스를 못 쓴다 — 되돌아가는 것을 여기서 막는다.
-		assertThat(where.sql()).doesNotContain("JSON_EXTRACT").doesNotContain("CAST(");
+		assertThat(where.sql()).doesNotContain("JSON_EXTRACT").doesNotContain("CAST(")
+				.doesNotContain("COALESCE");
 		assertThat(where.params()).containsEntry("minAmount", 1_000_000L)
 				.containsEntry("maxAmount", 5_000_000L);
+	}
+
+	/**
+	 * 금액 필터가 <b>추정가격 컬럼으로 되돌아가지 않는지</b> 고정한다.
+	 *
+	 * <p>실측(2026-08-14, 51,478행)으로 확인한 회귀다. 이 조건이 {@code estimated_price} 를 보던
+	 * 동안에는 {@code ?minAmount=1} 한 줄에 사전규격 12,119건 전부와 누리·D2B 2,045건 전부가
+	 * 사라졌다 — 전체의 28%다. 그 키를 가진 행이 나라장터의 입찰·마감·계획뿐이기 때문인데,
+	 * 결과가 '조용히 좁아질' 뿐이라 화면에서는 필터가 아예 안 붙은 것처럼 보였다.
+	 *
+	 * <p>컬럼 이름 하나만 되돌려도 같은 상태가 되므로 이름을 직접 못박는다.
+	 */
+	@Test
+	@DisplayName("금액 구간은 추정가격 전용 컬럼을 보지 않는다 — 사전규격·누리·D2B 가 통째로 빠졌던 자리다")
+	void amountRangeDoesNotUseEstimatedPriceColumn() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.amountBetween(1L, null)
+				.build();
+
+		assertThat(where.sql()).doesNotContain("estimated_price");
 	}
 
 	// ── 첨부 본문 스코프 ────────────────────────────────────────────────────

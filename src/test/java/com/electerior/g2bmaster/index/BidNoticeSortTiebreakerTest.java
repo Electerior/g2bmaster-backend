@@ -26,7 +26,7 @@ import org.junit.jupiter.params.provider.CsvSource;
  * <p>이 표의 인덱스 선언 방향은 마이그레이션과 짝이다:
  * {@code V7} 의 {@code ix_bid_notice_category_created (category, created_date DESC)},
  * {@code V7} 의 {@code ix_bid_notice_updated (updated_at)} = ASC,
- * {@code V11} 의 {@code ix_bid_notice_category_amount (category, estimated_price DESC)},
+ * {@code V20260814113541} 의 {@code ix_bid_notice_category_filter_amount (category, filter_amount DESC)},
  * {@code V12} 의 {@code ix_bid_notice_created (created_date DESC)}.
  * 마이그레이션에서 방향을 바꾸면 이 테스트가 먼저 깨져야 한다.
  */

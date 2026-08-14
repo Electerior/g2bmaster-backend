@@ -76,6 +76,33 @@ class DocumentSeedSqlTest {
 	}
 
 	@Test
+	@DisplayName("파서를 고치면 영구 실패로 닫아 둔 파일도 다시 집는다")
+	void claimReopensSkippedWhenExtractorChanges() {
+		String sql = DocumentIndexRepository.buildClaimSql(false, false);
+
+		// 파싱 실패는 즉시 skip 으로 닫는다(재시도해도 같은 결과라서). 그런데 재추출을 부르는
+		// 가장 잦은 사유가 우리 파서의 변경이므로(실측 54%), skip 이 재추출 대상에서 빠지면
+		// 고친 파서가 정작 그 파일들에는 영영 닿지 못한다.
+		assertThat(sql).contains("d.status IN ('done', 'skip') AND d.extractor_version <> :extractorVersion");
+		// 아직 한 번도 못 뽑은 것이 먼저다 — 재추출은 그 뒤로 미룬다.
+		assertThat(sql).contains("ORDER BY d.status IN ('done', 'skip'), d.id");
+	}
+
+	@Test
+	@DisplayName("재시도 소진으로 닫힌 행에도 추출기 버전을 찍는다 — 안 찍으면 청구가 영원히 다시 집는다")
+	void failStampsTheVersionWhenItCloses() {
+		// 청구는 '낡은 버전의 skip' 을 재추출 대상으로 본다. 그래서 버전이 빈 채로 닫히면
+		// 그 행은 매 회차 다시 청구된다 — 실측으로 20개 행이 retry_count=109 까지 갔고,
+		// 회차가 9초마다 같은 파일을 다시 내려받으며 헛돌았다.
+		String claim = DocumentIndexRepository.buildClaimSql(false, false);
+
+		assertThat(claim).contains("d.status IN ('done', 'skip') AND d.extractor_version <> :extractorVersion");
+		// 닫는 쪽(fail)과 집는 쪽(claim)이 같은 칸을 보고 있어야 순환이 끝난다.
+		assertThat(DocumentIndexRepository.class.getDeclaredMethods())
+				.anyMatch(m -> m.getName().equals("fail"));
+	}
+
+	@Test
 	@DisplayName("상태 조건은 괄호로 묶여야 한다 — 안 그러면 범위가 뒤쪽 갈래에만 붙는다")
 	void claimKeepsStatusDisjunctionGrouped() {
 		String sql = DocumentIndexRepository.buildClaimSql(false, true);

@@ -83,11 +83,32 @@ public record G2bProperties(
 	 *
 	 * @param enabled      주기 적재 on/off. 기본은 꺼 둔다 — 여러 인스턴스가 같은 일을
 	 *                     동시에 하면 일일 쿼터만 배로 태운다. 운영 인스턴스 하나만 켠다
-	 * @param intervalMs   적재 주기. 나라장터 공고는 분 단위로 올라오므로 10분이면 충분하다
-	 * @param sweepMs      입찰 → 마감 전이 주기. 적재보다 훨씬 싼 UPDATE 하나라 자주 돌린다
-	 * @param backfillDays 워터마크가 없는 첫 회차에 거슬러 올라갈 기간(일)
+	 * @param intervalMs    조달청 계열(나라장터·누리장터·참가가능지역) 적재 주기. 업무시간 피크에
+	 *                      분당 4~5건이 올라오므로 5분이면 회차당 20건 남짓이다
+	 * @param d2bIntervalMs D2B 적재 주기. <b>조달청과 같은 값으로 두면 안 된다</b> — 개발계정
+	 *                      쿼터가 오퍼레이션당 하루 100건이라 5분(288회/일)은 3배 가까이 넘긴다.
+	 *                      운영계정으로 증량했다면 그때 내리면 된다
+	 * @param sweepMs       입찰 → 마감 전이 주기. 적재보다 훨씬 싼 UPDATE 하나라 자주 돌린다
+	 * @param backfillDays  워터마크가 없는 첫 회차에 거슬러 올라갈 기간(일)
+	 * @param night         심야에 주기를 늘리는 설정
 	 */
-	public record Index(boolean enabled, long intervalMs, long sweepMs, int backfillDays) {}
+	public record Index(boolean enabled, long intervalMs, long d2bIntervalMs, long sweepMs,
+			int backfillDays, Night night) {}
+
+	/**
+	 * 심야 게이팅.
+	 *
+	 * <p>공고는 업무시간에 몰린다 — 조달청 기준 07~23시가 하루 물량의 99.3%고, 23~07시는
+	 * 0.7%(일 14건)다. 그 시간대까지 5분마다 두드리는 것은 쿼터를 태워 아무것도 못 얻는 일이다.
+	 *
+	 * <p>D2B 는 아예 <b>날짜 단위</b>다(등록일시가 전부 00:00:00, 조회 창도 {@code yyyyMMdd}).
+	 * 같은 날짜를 몇 번 더 부른다고 더 얻을 것이 없으므로 같은 규칙을 적용한다.
+	 *
+	 * @param fromHour   심야 시작 시(포함). {@code toHour} 와 같으면 게이팅을 끈다
+	 * @param toHour     심야 끝 시(제외). {@code fromHour} 보다 작으면 자정을 넘는 구간이다
+	 * @param multiplier 심야에 주기에 곱할 배수. 1 이면 게이팅을 끄는 것과 같다
+	 */
+	public record Night(int fromHour, int toHour, int multiplier) {}
 
 	/**
 	 * 첨부 본문 추출 워커.

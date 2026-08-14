@@ -242,12 +242,12 @@ public class DocumentIndexRepository {
 						? "  JOIN bid_notice n ON n.id = d.notice_id AND n.source = d.source\n" : "")
 				+ """
 				 WHERE ((d.status IN ('pending', 'failed') AND d.retry_count < 3)
-				     OR (d.status = 'done' AND d.extractor_version <> :extractorVersion))
+				     OR (d.status IN ('done', 'skip') AND d.extractor_version <> :extractorVersion))
 				"""
 				+ (byClose ? "   AND n.close_date > NOW() AND n.close_date < :closeBefore\n" : "")
 				+ (byCreated ? "   AND n.created_date <= :createdBefore\n" : "")
 				// 재추출(추출기 버전 변경)은 아직 한 번도 못 뽑은 것 뒤로 미룬다.
-				+ " ORDER BY d.status = 'done', d.id\n"
+				+ " ORDER BY d.status IN ('done', 'skip'), d.id\n"
 				+ " LIMIT :limit";
 	}
 
@@ -294,16 +294,50 @@ public class DocumentIndexRepository {
 				""", params);
 	}
 
-	/** 추출 실패. 3회째면 {@code skip} 으로 닫아 큐가 같은 파일을 영원히 물고 있지 않게 한다. */
+	/**
+	 * <b>다시 해도 같은 결과</b>인 실패. 재시도 없이 바로 닫는다.
+	 *
+	 * <p>파싱 실패는 결정적이다 — 같은 바이트를 같은 파서에 넣으면 같은 자리에서 깨진다.
+	 * 그런데 재시도는 파일을 <b>다시 내려받는 것</b>부터 시작하므로, 3회까지 끌면 결과가 뻔한
+	 * 실패에 대역폭을 세 배로 쓴다(실측: 타임아웃 119건 · 파서 오류 186건이 이 경로였다).
+	 *
+	 * <p><b>그래서 추출기 버전을 함께 적는다.</b> 이 칸이 없으면 파서를 고쳐도 여기 닫힌 파일은
+	 * 영원히 다시 시도되지 않는다 — 재추출을 부르는 가장 잦은 사유가 문서 변경이 아니라 우리
+	 * 파서의 변경인데(실측 54%), 그 대상에서 통째로 빠지는 셈이다. {@link #buildClaimSql} 이
+	 * 낡은 버전의 {@code skip} 을 다시 집는다.
+	 */
+	public void skipPermanent(long id, String message) {
+		jdbc.update("""
+				UPDATE bid_notice_document
+				   SET status = 'skip',
+				       last_error = LEFT(:message, 500),
+				       extractor_version = :extractorVersion,
+				       verified_at = NOW(6)
+				 WHERE id = :id
+				""", new MapSqlParameterSource().addValue("id", id).addValue("message", message)
+						.addValue("extractorVersion", ExtractorVersion.CURRENT));
+	}
+
+	/**
+	 * 추출 실패. 3회째면 {@code skip} 으로 닫아 큐가 같은 파일을 영원히 물고 있지 않게 한다.
+	 *
+	 * <p><b>닫을 때 추출기 버전을 반드시 찍는다.</b> 청구가 "낡은 버전의 {@code skip}" 을 재추출
+	 * 대상으로 집기 때문에({@link #buildClaimSql}), 버전이 빈 채로 닫힌 행은 <b>매 회차 다시
+	 * 청구된다</b> — 실측으로 20개 행이 {@code retry_count=109} 까지 갔고, 회차가 9초마다
+	 * 같은 파일을 다시 내려받으며 헛돌았다. {@code skipPermanent} 는 처음부터 찍고 있었는데
+	 * 재시도 소진 경로만 빠져 있었다.
+	 */
 	public void fail(long id, String message) {
 		jdbc.update("""
 				UPDATE bid_notice_document
 				   SET status = IF(retry_count + 1 >= 3, 'skip', 'failed'),
+				       extractor_version = IF(retry_count + 1 >= 3, :extractorVersion, extractor_version),
 				       retry_count = retry_count + 1,
 				       last_error = LEFT(:message, 500),
 				       verified_at = NOW(6)
 				 WHERE id = :id
-				""", new MapSqlParameterSource().addValue("id", id).addValue("message", message));
+				""", new MapSqlParameterSource().addValue("id", id).addValue("message", message)
+						.addValue("extractorVersion", ExtractorVersion.CURRENT));
 	}
 
 	/**
