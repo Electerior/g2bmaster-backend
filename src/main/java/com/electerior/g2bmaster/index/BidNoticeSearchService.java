@@ -90,6 +90,9 @@ public class BidNoticeSearchService {
 	/** 관련도 정렬 키. 저장소가 전문검색 전용 경로를 탈지 판단하는 데도 쓴다. */
 	private static final String RELEVANCE = "relevance";
 
+	/** 단계 패싯의 이름. 이 축만 WHERE 가 다르다 — 이유는 {@link #facets} 주석. */
+	private static final String STAGE_FACET = "category";
+
 	/** 패싯을 뽑을 컬럼. 사용자 입력이 아니라 이 상수만 저장소로 넘어간다. */
 	private static final Map<String, String> FACET_COLUMNS = Map.of(
 			"category", "category",
@@ -129,14 +132,26 @@ public class BidNoticeSearchService {
 	 *
 	 * <p>화면의 필터 칩에 건수를 붙이려면 필요하다. "0건짜리 필터"를 눌러 보고 나서야 아는
 	 * 것과, 누르기 전에 아는 것의 차이가 크다.
+	 *
+	 * <p><b>단계(category) 패싯만 다른 WHERE 로 센다</b> — '마감 전만'의 단계 스코프를 뺀
+	 * 조건이다. 이유는 {@link BidNoticeQueryBuilder#withoutActiveStageScope()}. 나머지 축은
+	 * 목록과 완전히 같은 조건이다.
+	 *
+	 * <p>{@code total} 은 <b>이 응답의 조건 그대로</b>의 총건수다. 화면의 '전체' 칩이 쓴다:
+	 * 단계 버킷의 합을 쓰면 스코프를 뺀 수를 더하게 되어, 눌렀을 때 나오는 수보다 커진다.
 	 */
 	public Map<String, Object> facets(NoticeSearchRequest request) {
 		BidNoticeQueryBuilder.Where where = buildWhere(request);
+		BidNoticeQueryBuilder.Where stageWhere = buildBuilder(request)
+				.withoutActiveStageScope()
+				.build();
 		Map<String, Object> facets = new LinkedHashMap<>();
 		FACET_COLUMNS.forEach((name, column) ->
-				facets.put(name, repository.facet(where, column, FACET_LIMIT).stream()
+				facets.put(name, repository.facet(STAGE_FACET.equals(name) ? stageWhere : where, column, FACET_LIMIT)
+						.stream()
 						.filter(row -> row.get("value") != null && !String.valueOf(row.get("value")).isEmpty())
 						.toList()));
+		facets.put("total", repository.count(where));
 		return facets;
 	}
 

@@ -199,7 +199,7 @@ g2b:
 | 메서드 | 경로 | 인증 | 설명 |
 |---|---|---|---|
 | GET | `/api/search/notices` | — | 검색. `{items,totalCount,pageNo,numOfRows}` |
-| GET | `/api/search/notices/facets` | — | 같은 조건의 분류·업종·지역·상태별 건수 |
+| GET | `/api/search/notices/facets` | — | 같은 조건의 분류·업종·지역·상태별 건수 + `total` |
 | GET | `/api/search/notices/status` | — | 출처별 워터마크·결과, 분류별 색인 건수 |
 | GET | `/api/search/notices/{id}` | — | 상세(본문 전문 포함). 없으면 404 |
 | POST | `/api/search/notices/sync` | **앱 키** | 수동 적재. 진행 중이면 409 |
@@ -223,12 +223,27 @@ g2b:
 | `officerName` | 담당자명 |
 | `fromDate` / `toDate` | 공고일 구간(`YYYY-MM-DD`). 종료일은 그 날 끝까지 포함 |
 | `closeFrom` / `closeTo` | 마감일 구간 |
-| `activeOnly` | `true` 면 마감 전만 |
+| `activeOnly` | `true` 면 마감 전만. **단계 미지정이면 입찰 문서(`입찰`·`마감`)로도 좁힌다** — 아래 |
 | `minAmount` / `maxAmount` | 추정가격 구간 |
 | `sort` / `dir` | 아래 §4.2 |
 | `page` / `perPage` | `perPage` 는 1..500 로 클램프 |
 
 읽을 수 없는 날짜는 조용히 무시한다(필터 없음) — 400 을 던지면 화면이 통째로 멈춘다.
+
+**`activeOnly` 의 단계 스코프와 패싯.** `activeOnly=true` 인데 `category` 가 없으면 목록을
+`입찰`·`마감` 문서로 좁힌다. 계획은 마감일시가 아예 없어 마감일시 조건을 무조건 통과하고,
+사전규격의 마감일시는 입찰마감이 아니라 *의견등록*마감이라, 스코프가 없으면 "지금 참여할 수
+있는 공고"의 21.5% 가 참여 대상이 아닌 문서였다.
+
+그런데 **단계 패싯은 단계를 뺀 질의로 센다**(자기 축을 자기가 필터하면 고른 칩만 남는다).
+그래서 이 스코프가 켜져 `GROUP BY category` 가 입찰·마감 두 줄밖에 못 내고, 화면의
+계획·사전규격 칩이 0건으로 그려졌다 — 눌러 보면 각각 1,887건·1,859건이 나오는데도 그랬다.
+지금은 **단계 축에만** 스코프를 뺀 WHERE 를 쓴다(`withoutActiveStageScope`). 칩에 적힌 수가
+곧 "누르면 나오는 수"다.
+
+그 대가로 **단계 버킷의 합은 `total` 과 다르다** — 합은 스코프를 뺀 수를 더한 것이고,
+`total` 은 요청 조건 그대로(스코프 포함)의 총건수다. 화면의 '전체' 칩은 합이 아니라
+`total` 을 써야 한다.
 
 ### 4.2 정렬
 

@@ -82,7 +82,7 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
 | 라우트 | 비고 |
 |---|---|
 | `GET /api/search/notices` | 봉투는 §1.1 의 1번(`items`/`totalCount`/`pageNo`/`numOfRows`) |
-| `GET /api/search/notices/facets` | 같은 조건에서 `category`/`division`/`region`/`state` 별 건수 |
+| `GET /api/search/notices/facets` | 같은 조건에서 `category`/`division`/`region`/`state` 별 건수 + `total` |
 | `GET /api/search/notices/status` | 출처별 워터마크·마지막 결과 + 분류별 색인 건수 |
 | `GET /api/search/notices/{id}` | 상세. 목록의 `bodyPreview`(300자) 대신 `noticeBody` 전문 |
 | `POST /api/search/notices/sync` | 수동 적재. **앱 키 필요**(나라장터 쿼터를 태운다). 진행 중이면 409 |
