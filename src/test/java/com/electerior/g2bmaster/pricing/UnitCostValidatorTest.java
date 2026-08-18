@@ -334,11 +334,12 @@ class UnitCostValidatorTest {
 		Verdict v = UnitCostValidator.validate(envelope(true, true, List.of(
 				row("System", "ASUS ESC4000 베어본", 20_000_000, 20_000_000, 1, false),
 				row("GPU", "NVIDIA RTX PRO 6000 Blackwell", 0, 0, 1, false),
-				row("Memory", "128GB DDR5-6400", 3_000_000, 3_000_000, 1, true))),
+				row("RAM", "128GB DDR5-6400", 3_000_000, 3_000_000, 1, false),
+				row("SSD", "M.2 NVMe PCIe 4TB", 1_200_000, 1_200_000, 1, true))),
 				SPEC);
 		assertThat(v.rows().get(1).get("rejectReason")).isEqualTo(UnitCostValidator.WARN_ZERO_PRICED);
-		assertThat(v.rows().get(2).get("rejectReason")).isEqualTo(UnitCostValidator.WARN_INFERRED);
-		assertThat(v.confirmedMid()).isEqualByComparingTo(BigDecimal.valueOf(20_000_000));
+		assertThat(v.rows().get(3).get("rejectReason")).isEqualTo(UnitCostValidator.WARN_INFERRED);
+		assertThat(v.confirmedMid()).isEqualByComparingTo(BigDecimal.valueOf(23_000_000));
 	}
 
 	@Test
@@ -424,6 +425,48 @@ class UnitCostValidatorTest {
 		Verdict v = UnitCostValidator.validate(envelope(true, true, List.of(
 				row("System", "ASUS ESC4000 베어본", 20_000_000, 20_000_000, 1, false), row)), SPEC);
 		assertThat(v.warnings()).contains(UnitCostValidator.WARN_SEARCH_UNAVAILABLE);
+	}
+
+	@Test
+	@DisplayName("원가 합산에 받아들여진 행이 절반이 안 되면 확정하지 않는다 — 일부 부품 값은 '합계'가 아니다")
+	void majorityUnpricedIsUntrusted() {
+		Verdict v = UnitCostValidator.validate(envelope(false, false, List.of(
+				row("메인보드", "ASUS ESC4000 계열", 324_640, 2_000_270, 1, false),
+				row("CPU", "Intel Xeon 2.10GHz 8Core", null, null, 1, false),
+				row("RAM", "16GB PC4-2933Y-R", null, null, 1, false),
+				row("HDD", "1TB SATA 7.2K", null, null, 1, false),
+				row("파워", "500W Flex Slot", null, null, 1, false),
+				row("네트워크", "4Port 1GbE", null, null, 1, false))),
+				SPEC);
+		assertThat(v.confidence()).isEqualTo(Confidence.UNTRUSTED);
+		assertThat(v.warnings()).contains(UnitCostValidator.WARN_MAJORITY_UNPRICED);
+	}
+
+	@Test
+	@DisplayName("대체·추정으로 채운 행이 많아도 확정하지 않는다 — 가격은 있어도 요구 제품의 값이 아니다")
+	void majoritySubstitutedIsUntrusted() {
+		Verdict v = UnitCostValidator.validate(envelope(true, true, List.of(
+				row("System", "ASUS ESC4000 베어본", 20_000_000, 20_000_000, 1, false),
+				row("CPU", "Intel Xeon 2.10GHz 8Core", 800_000, 800_000, 1, true),
+				row("RAM", "16GB PC4-2933Y-R", 90_000, 90_000, 1, true),
+				row("HDD", "1TB SATA 7.2K", 75_000, 75_000, 1, true),
+				row("파워", "500W Flex Slot", 120_000, 120_000, 1, true),
+				row("네트워크", "4Port 1GbE", 45_000, 45_000, 1, true))),
+				SPEC);
+		assertThat(v.confidence()).isEqualTo(Confidence.UNTRUSTED);
+		assertThat(v.warnings()).contains(UnitCostValidator.WARN_MAJORITY_UNPRICED);
+	}
+
+	@Test
+	@DisplayName("절반은 가격을 알면 확정을 유지한다 — 과반 미가격만 막는다")
+	void halfPricedStaysTrusted() {
+		Verdict v = UnitCostValidator.validate(envelope(false, false, List.of(
+				row("RAM", "128GB DDR5", 4_000_000, 6_000_000, 1, false),
+				row("SSD", "NVMe 4TB", 6_000_000, 7_000_000, 1, false),
+				row("CPU", "Intel Xeon", null, null, 1, false),
+				row("케이스", "1U RACK", null, null, 1, false))),
+				SPEC);
+		assertThat(v.confidence()).isNotEqualTo(Confidence.UNTRUSTED);
 	}
 
 	@Test
