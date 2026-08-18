@@ -123,17 +123,13 @@ public record G2bProperties(
 	 * @param seedBatch   한 회차에 첨부 슬롯을 세울 공고 수. 상류 호출이 없어 batchSize 보다 크게 잡는다
 	 * @param concurrency 동시 다운로드 수. 원본 모놀리스는 2였지만 그것은 사용자 요청 중에 도는
 	 *                    전경 작업이라 보수적이었다. 야간 배경 작업이라 4로 둔다
-	 * @param closeBefore 백필 범위 제한. 값이 있으면 <b>지금부터 이 시각까지 마감되는 공고만</b>
-	 *                    색인한다(ISO {@code 2026-08-18T00:00}). 전량은 109,284파일이지만 실무에서
-	 *                    급한 것은 "지금 들어갈 수 있는 건"이라, 마감이 임박한 쪽부터 채우는 편이
-	 *                    체감 효용이 훨씬 크다. 비워 두면 전량이 대상이다
-	 * @param createdBefore 게시일 기준의 다른 축. 값이 있으면 <b>이 시각까지 게시된 공고만</b>
-	 *                    색인한다(ISO {@code 2026-08-03T23:59:59}). 마감 축과 달리 <b>이미 마감된
-	 *                    공고도 대상</b>이다 — "지난주까지의 공고를 분석해 달라" 같은 소급 분석은
-	 *                    마감 임박 순으로는 차례가 영영 오지 않는다. 비워 두면 제한하지 않는다
+	 *
+	 * <p><b>백필 범위 손잡이는 없다.</b> 예전에는 "이 시각까지 마감"·"이 시각까지 게시" 두 축으로
+	 * 대상을 좁혔는데, 그런 절대 시각은 한 번 지나가면 반드시 낡는다 — 창 밖에 쌓인 공고를 워커가
+	 * 영영 못 집고 매 회차 0건으로 헛돈다. 지금은 언제나 <b>최신 게시순</b>으로 큐에 넣는다.
 	 */
-	public record Documents(boolean enabled, long intervalMs, int batchSize, int seedBatch, int concurrency,
-			String closeBefore, String createdBefore) {}
+	public record Documents(boolean enabled, long intervalMs, int batchSize, int seedBatch,
+			int concurrency) {}
 
 	/**
 	 * 공고 검색 동작.

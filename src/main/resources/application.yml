@@ -206,12 +206,9 @@ g2b:
     batch-size: ${DOCUMENT_EXTRACT_BATCH:200}
     seed-batch: ${DOCUMENT_SEED_BATCH:500}
     concurrency: ${DOCUMENT_EXTRACT_CONCURRENCY:4}
-    # 백필 범위 제한. 값이 있으면 '지금부터 이 시각까지 마감되는 공고'만, 마감 임박 순으로 채운다.
-    # 비워 두면 전량(109,284파일)이 대상이다.
-    close-before: ${DOCUMENT_BACKFILL_CLOSE_BEFORE:}
-    # 게시일 축. 값이 있으면 '이 시각까지 게시된 공고'만 채운다 — 이미 마감된 것도 포함한다.
-    # 소급 분석("지난주까지의 공고")은 마감 임박 순으로는 차례가 오지 않아서 축이 따로 필요하다.
-    created-before: ${DOCUMENT_BACKFILL_CREATED_BEFORE:}
+    # 대상은 언제나 '최신 게시순 전량'이다. 범위를 자르는 손잡이를 두지 않는다 —
+    # DOCUMENT_BACKFILL_CLOSE_BEFORE / DOCUMENT_BACKFILL_CREATED_BEFORE 는 제거됐다.
+    # 절대 시각으로 창을 잡으면 그 창은 반드시 낡고, 창 밖에 쌓인 공고를 워커가 영영 못 집는다.
 
   # 분석 작업 큐. 큐 자체는 항상 살아 있고(등록·상태 조회는 언제나 동작한다),
   # 실제로 추론을 태우는 워커만 이 스위치로 켠다. 기본은 꺼둔다.
