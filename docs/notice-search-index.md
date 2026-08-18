@@ -58,7 +58,8 @@ ERD 의 `category` 가 `{계획, 사전규격, 입찰, 마감}` 인 것이 이 �
 | `product_list` | 물품목록 | `JSON [{seq,code,name}]` — 원본은 캐럿 문자열 |
 | `detail_product_code` | 세부품명번호 | 접두 검색 지원 |
 | `lowest_bid_rate` | 낙찰하한율 | `DECIMAL(5,3)`, **백분율 그대로**(88.000 = 88%) |
-| `price_detail` | 세부 가격 표 | `JSON {assignedBudget,estimatedPrice,unitPrice,quantity,unit,vat}` |
+| `price_detail` | 세부 가격 표 | `JSON {assignedBudget,estimatedPrice,referenceAmount,basicExpectedPrice,unitPrice,quantity,unit,vat}` — 담기는 칸이 소스마다 다르다 |
+| `filter_amount` | 검색용 대표 금액 | 생성 컬럼(VIRTUAL). 추정가격→배정예산→기준금액→기초예비가격 순 COALESCE, 0 은 부재로 취급. **금액 필터·정렬 전용**(V20260814113541) |
 | `created_date` | 생성일자 | 공고일시 / 접수일시 |
 | `close_date` | 마감일자 | 입찰마감 / 의견등록마감 |
 | `updated_at` | 업데이트된 시각 | **색인에 반영된 때**(원본 변경일시가 아니다) |
@@ -292,7 +293,13 @@ ERD 컬럼 + 추가분 + 서버 계산분이다.
   그중 한 곳이 빠지면 화면에 원시 JSON 이 뜬다.
 - `dday` — 남은 **일수**(시각이 아니라). 마감이 없는 계획 단계는 `null`.
   `D-1` 을 본 사용자가 기대하는 것은 '내일까지'이지 '24시간 남음'이 아니다.
-- `estimatedPrice` — `priceDetail.estimatedPrice` 를 꺼내 둔 것(정렬·표시용)
+- `estimatedPrice` — `priceDetail.estimatedPrice` 를 꺼내 둔 것. **G2B 입찰·마감·계획에만 있다**
+- `amount` / `amountKind` — 금액 필터·정렬이 실제로 본 금액과 그 종류
+  (`estimatedPrice`·`assignedBudget`·`referenceAmount`·`basicExpectedPrice` 중 하나).
+  생성 컬럼 `filter_amount`(V20260814113541)의 COALESCE 와 같은 순서로 고르고, 0 은 '미공개'로
+  보아 다음 후보로 넘긴다. **목록의 금액 칸은 `estimatedPrice` 가 아니라 이것을 그린다** —
+  추정가격만 그리면 사전규격·누리장터·D2B 가 금액을 아는데도 '—' 로 보이고, 금액 조건을 걸었을 때
+  왜 사라졌는지도 설명되지 않는다(그렇게 28%가 조용히 빠지던 것이 이 컬럼을 만든 이유다)
 - `matchedIn` — `["notice"]` / `["attachment"]` / 둘 다. 첨부에서만 걸린 공고는 제목·본문
   어디에도 그 낱말이 없어서, 표시하지 않으면 사용자가 무관한 공고가 섞였다고 읽는다.
   첨부 스코프를 타지 않은 질의(`/text`)에는 이 칸이 없다

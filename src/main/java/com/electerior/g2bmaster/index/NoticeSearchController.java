@@ -52,6 +52,7 @@ public class NoticeSearchController {
 	private final BidNoticeSyncScheduler scheduler;
 	private final BidNoticeIndexRepository repository;
 	private final BidNoticeIngestService ingestService;
+	private final NoticeMarginService marginService;
 
 	/**
 	 * 기본 검색이 첨부까지 볼 것인가. 기본 켜짐이고, 끄면 {@code /} 가 {@code /text} 와 같아진다.
@@ -61,11 +62,12 @@ public class NoticeSearchController {
 
 	public NoticeSearchController(BidNoticeSearchService searchService, BidNoticeSyncScheduler scheduler,
 			BidNoticeIndexRepository repository, BidNoticeIngestService ingestService,
-			G2bProperties properties) {
+			NoticeMarginService marginService, G2bProperties properties) {
 		this.searchService = searchService;
 		this.scheduler = scheduler;
 		this.repository = repository;
 		this.ingestService = ingestService;
+		this.marginService = marginService;
 		// 설정 블록이 없는 경로(일부 테스트)에서도 뜨도록 기본값을 둔다.
 		this.attachmentBody = properties.search() == null || properties.search().attachmentBody();
 	}
@@ -78,7 +80,11 @@ public class NoticeSearchController {
 					+ "관련도는 공고 텍스트 매치 점수이므로 첨부에서만 걸린 공고는 뒤로 간다. "
 					+ "행마다 matchedIn(notice/attachment)·attachmentIndexed 가, 응답에는 "
 					+ "meta.attachmentSearch(커버리지·건너뛴 낱말)가 붙는다. "
-					+ "첨부를 보지 않는 가벼운 검색은 GET /api/search/notices/text 를 쓴다.")
+					+ "첨부를 보지 않는 가벼운 검색은 GET /api/search/notices/text 를 쓴다.\n\n"
+					+ "정렬(sort): created·close·name·updated·amount·margin·relevance. "
+					+ "**margin** 은 마진율순이다 — (실추정가 − 원가)/실추정가, 실추정가 = 대표금액 × 1.1. "
+					+ "원가를 아는 공고(딜 분석을 돌렸거나 가격표를 저장한 건)만 값이 있고 나머지는 "
+					+ "marginRate=null 로 뒤에 붙는다. 결과 집합은 줄지 않는다.")
 	@GetMapping
 	public PagedResponse<Map<String, Object>> search(@ModelAttribute NoticeSearchRequest request) {
 		return searchService.search(request, attachmentBody);
@@ -164,6 +170,28 @@ public class NoticeSearchController {
 		body.put("totalIndexed", result.totalIndexed());
 		body.put("sweptToClosed", result.sweptToClosed());
 		body.put("sources", result.sources());
+		return body;
+	}
+
+	/**
+	 * 마진 축 백필.
+	 *
+	 * <p>평시에는 딜 분석과 공고 저장이 그때그때 채운다. 이 경로는 <b>이미 쌓여 있던</b> 원가를
+	 * 한 번에 끌어올리기 위한 것이다 — 마진 컬럼을 처음 붙였을 때, 그리고 색인을 다시 쌓아
+	 * 마진이 날아갔을 때.
+	 *
+	 * <p>쓰기라 앱 키를 요구한다. 나라장터를 두드리지 않으므로 {@code /sync} 와 달리 쿼터는 안 든다.
+	 */
+	@Operation(summary = "마진 축 백필",
+			description = "이미 저장된 원가(deal_analysis_result 의 추정 원가 · saved_notice 의 확정 가격표 합계)를 "
+					+ "검색 색인의 마진 컬럼으로 끌어올린다. 확정이 추정을 덮는다. 나라장터 호출은 없다. "
+					+ "이후 GET /api/search/notices?sort=margin 이 그 값으로 정렬한다.")
+	@PostMapping("/margins/backfill")
+	@RequireAppAuth
+	public Map<String, Object> backfillMargins() {
+		Map<String, Object> body = new LinkedHashMap<>();
+		body.put("ok", true);
+		body.putAll(marginService.backfill());
 		return body;
 	}
 }

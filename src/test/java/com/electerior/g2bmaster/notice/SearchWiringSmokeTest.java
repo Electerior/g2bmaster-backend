@@ -55,7 +55,7 @@ class SearchWiringSmokeTest {
 					new G2bProperties.Sync(false),
 					new G2bProperties.Index(false, 300_000, 1_800_000, 300_000, 7,
 							new G2bProperties.Night(23, 7, 6)),
-					new G2bProperties.Documents(false, 1_800_000, 200, 500, 4, null, null),
+					new G2bProperties.Documents(false, 1_800_000, 200, 500, 4),
 					new G2bProperties.Search(true));
 		}
 
@@ -70,6 +70,14 @@ class SearchWiringSmokeTest {
 		@Bean
 		org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate namedParameterJdbcTemplate() {
 			return org.mockito.Mockito.mock(org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.class);
+		}
+
+		// deal-analysis 와 공고 저장이 검색 색인의 마진 축을 갱신하면서 index 패키지에 의존하게
+		// 됐다. index 를 통째로 스캔하면 적재 스케줄러·문서 색인까지 딸려 와 이 스모크의 관심사
+		// (조회 계층 배선)를 벗어나므로, 그 한 빈만 mock 으로 채운다 — AiClient 와 같은 이유다.
+		@Bean
+		com.electerior.g2bmaster.index.NoticeMarginService noticeMarginService() {
+			return org.mockito.Mockito.mock(com.electerior.g2bmaster.index.NoticeMarginService.class);
 		}
 	}
 

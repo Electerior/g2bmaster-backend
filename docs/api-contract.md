@@ -88,6 +88,7 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
 | `GET /api/search/notices/status` | 출처별 워터마크·마지막 결과 + 분류별 색인 건수 |
 | `GET /api/search/notices/{id}` | 상세. 목록의 `bodyPreview`(300자) 대신 `noticeBody` 전문 |
 | `POST /api/search/notices/sync` | 수동 적재. **앱 키 필요**(나라장터 쿼터를 태운다). 진행 중이면 409 |
+| `POST /api/search/notices/margins/backfill` | 이미 쌓인 원가를 마진 축으로 끌어올린다. **앱 키 필요**. 나라장터 호출 없음 |
 
 **기본 검색은 첨부 본문(`bid_notice_document`)까지 본다.** 제외 낱말(`notTerms`)도 첨부까지
 적용한다 — 첨부에 그 낱말이 있으면 공고째로 뺀다. 관련도는 공고 텍스트 매치 점수라
@@ -105,8 +106,15 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
 `fromDate`/`toDate`(공고일), `closeFrom`/`closeTo`(마감일), `activeOnly`,
 `minAmount`/`maxAmount`(추정가격), `sort`, `dir`, `page`, `perPage`(≤500).
 
-정렬 키: `relevance`·`created`·`close`·`name`·`amount`·`updated`.
+정렬 키: `relevance`·`created`·`close`·`name`·`amount`·`updated`·`margin`.
 **기본값이 조건에 따라 다르다** — 검색어가 있으면 `relevance`, 없으면 `created`.
+
+`margin` 은 **마진율순**이다: `(실추정가 − 원가) / 실추정가`, 실추정가 `= amount × 1.1`
+(대표 금액은 부가세 별도, 원가는 부가세 포함이라는 전제 — `V20260814132535` 주석).
+원가는 딜 분석의 추정(`estimated`)이나 저장 공고의 확정 가격표(`confirmed`)에서 오고,
+**확정이 추정을 이긴다.** 원가를 모르는 공고는 `marginRate` 가 없고 정렬에서 뒤로 밀린다 —
+빠지지는 않는다(정렬을 바꿨다고 결과 집합이 줄어서는 안 된다). 이미 분석해 둔 건을 한 번에
+채우려면 `POST /api/search/notices/margins/backfill`.
 
 항목 필드는 ERD 22개 + `noticeName`(표시용) + 서버 계산분이다:
 
@@ -119,9 +127,21 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
   (V8 이전에는 이름을 `dm_institution` 조인으로 얻으려 했으나, 그 표는 비어 있고 채울 API
   `UsrInfoService/getDminsttInfo` 는 폐기됐다 — 자세한 사정은 V8 마이그레이션 주석 참고.)
 - JSON 으로 펴서 내려주는 것 — `productList[{seq,code,name}]`,
-  `priceDetail{assignedBudget,estimatedPrice,unitPrice,quantity,unit,vat}`,
+  `priceDetail{assignedBudget,estimatedPrice,referenceAmount,basicExpectedPrice,unitPrice,quantity,unit,vat}`,
   `attachmentUrls[{name,url}]` (문자열이 아니라 값이다)
-- 서버 계산 — `dday`(날짜 단위, 마감 없으면 `null`), `estimatedPrice`, `relevance`
+- 서버 계산 — `dday`(날짜 단위, 마감 없으면 `null`), `estimatedPrice`, `amount`/`amountKind`, `relevance`
+- 마진 — `marginRate`(%), `marginCost`(원가, 부가세 포함), `marginBase`(실추정가 = 분모),
+  `marginSource`(`confirmed`/`estimated`), `marginUpdatedAt`. **원가를 아는 공고에만 붙는다** —
+  칸이 없는 것은 '마진 0'이 아니라 '아직 원가를 모른다'는 뜻이다
+- **금액은 `amount` 를 쓴다. `estimatedPrice` 가 아니다.**
+  추정가격 키는 나라장터 입찰·마감·계획에만 있다 — 사전규격·누리장터·D2B 는 배정예산·기준금액·
+  기초예비가격으로 온다(적재기가 개념이 달라 일부러 나눠 담는다). `amount` 는 서버가
+  추정가격 → 배정예산 → 기준금액 → 기초예비가격 순으로 고른 값이고, `amountKind` 가 그중
+  무엇인지를 같은 이름의 문자열로 알려 준다. **금액 필터(`minAmount`/`maxAmount`)와 금액 정렬이
+  본 값이 정확히 이 값이다**(생성 컬럼 `filter_amount`, V20260814113541).
+  0 은 값이 아니라 '미공개'로 읽어 다음 후보로 넘긴다 — 배정예산 0 이 실측 1,486건이다.
+  어느 후보도 없으면 두 칸 모두 `null` 이고, 그 행은 금액 조건에서 빠진다(실측 2,180건 = 4.2%).
+  화면은 값과 종류를 **함께** 적어야 한다. 종류를 숨기면 성격이 다른 금액을 한 줄로 비교하게 된다.
 - `region` 의 **빈 문자열은 '전국'** 이다(지역 제한 없음). 지역으로 좁혀도 전국 공고는 함께 온다 —
   참여할 수 있기 때문이다. 화면은 이때 반드시 '전국'이라고 적어야 필터 오작동으로 오해받지 않는다.
 - `lowestBidRate` 는 **백분율 그대로**다(88.000 = 88%).

@@ -49,6 +49,7 @@ public class BidNoticeIndexRepository {
 			n.ai_summary, n.attachment_urls, n.source_url,
 			n.source_ext, n.g2b_pblanc_no, n.g2b_pblanc_odr,
 			n.documents_indexed_at,
+			n.margin_rate, n.margin_cost, n.margin_source, n.margin_updated_at,
 			LEFT(COALESCE(n.notice_body, ''), 300) AS body_preview
 			""";
 
@@ -279,6 +280,163 @@ public class BidNoticeIndexRepository {
 		}
 		return total;
 	}
+
+	// ── 마진 ────────────────────────────────────────────────────────────────
+
+	/**
+	 * 원가 한 건을 색인에 반영한다. 마진율은 생성 컬럼이라 여기서 계산하지 않는다
+	 * ({@code V20260814132535}).
+	 *
+	 * <p><b>확정({@code confirmed})은 추정({@code estimated})에 덮이지 않는다.</b> 그 규칙이
+	 * WHERE 절에 있다. 없으면 야간 일괄 딜 분석이 영업이 손으로 맞춰 둔 가격표를 조용히 밀어낸다 —
+	 * 화면에는 그냥 다른 숫자가 떠 있을 뿐이라 아무도 눈치채지 못한다.
+	 *
+	 * <p>{@code updated_at} 을 건드리지 않는 것도 의도다. 그 칸은 '공고가 색인에 반영된 때'이고
+	 * '최근 변경순' 정렬이 그것을 읽는다. 딜 분석을 돌렸다고 공고가 최근 것이 되지는 않는다 —
+	 * 마진이 언제 것인지는 {@code margin_updated_at} 이 따로 들고 있다.
+	 *
+	 * <p>색인에 없는 공고면 0행에 걸리고 버려진다({@link #updateRegions} 와 같다). 저장 공고에는
+	 * 있는데 색인에는 없는 경우가 실제로 있다 — 색인 보존 기간 밖의 옛 공고다.
+	 *
+	 * @param source 공고 출처. {@code null} 이면 번호만으로 맞춘다 — 딜 분석 요청의 공고 객체에
+	 *               출처가 없을 수 있다. 번호가 겹치는 다른 출처의 행까지 물들 수 있으므로
+	 *               아는 값이 있으면 반드시 넘긴다
+	 * @return 갱신된 행 수
+	 */
+	public int updateMargin(String noticeId, NoticeSource source, long costKrw, boolean confirmed) {
+		if (noticeId == null || noticeId.isBlank() || costKrw <= 0) {
+			return 0;
+		}
+		MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("id", noticeId.trim())
+				.addValue("cost", costKrw)
+				.addValue("marginSource", confirmed ? "confirmed" : "estimated");
+		String sourceCondition = "";
+		if (source != null) {
+			sourceCondition = " AND source = :source";
+			params.addValue("source", source.name());
+		}
+		// 추정은 확정을 못 이긴다. 확정은 무엇이든 덮는다(사람이 다시 확정한 값이 최신이다).
+		String precedence = confirmed ? "" : " AND (margin_source IS NULL OR margin_source = 'estimated')";
+		return jdbc.update("""
+				UPDATE bid_notice
+				   SET margin_cost = :cost, margin_source = :marginSource, margin_updated_at = NOW(6)
+				 WHERE id = :id%s%s
+				""".formatted(sourceCondition, precedence), params);
+	}
+
+	/**
+	 * 확정에 실패한 재분석(UNTRUSTED) 뒤에 낡은 추정 마진을 지운다.
+	 *
+	 * <p>사람이 확정한 원가({@code margin_source='confirmed'})는 절대 지우지 않는다 —
+	 * 추정은 확정을 이기지 못하는 것과 같은 방향이다.
+	 *
+	 * @return 갱신된 행 수
+	 */
+	public int clearEstimatedMargin(String noticeId, NoticeSource source) {
+		if (noticeId == null || noticeId.isBlank()) {
+			return 0;
+		}
+		MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", noticeId.trim());
+		String sourceCondition = "";
+		if (source != null) {
+			sourceCondition = " AND source = :source";
+			params.addValue("source", source.name());
+		}
+		// margin_rate 는 (filter_amount, margin_cost) 로 계산되는 **가상 생성 컬럼**이다 —
+		// 직접 갱신하면 SQL 오류가 난다. margin_cost 만 지우면 마진율은 자동으로 null 이 된다.
+		return jdbc.update("""
+				UPDATE bid_notice
+				   SET margin_cost = NULL, margin_updated_at = NOW(6)
+				 WHERE id = :id%s AND margin_source = 'estimated'
+				""".formatted(sourceCondition), params);
+	}
+
+	/**
+	 * 이미 쌓여 있는 원가를 색인으로 끌어올린다 — 마진 축의 최초 구축용.
+	 *
+	 * <p>쓰기 훅({@code NoticeMarginService})은 <b>앞으로</b> 분석·저장되는 것만 채운다. 이미
+	 * 분석해 둔 수백 건은 그대로 두면 영영 마진이 없는 공고로 남고, 마진순 정렬은 "분석을 안
+	 * 했다"가 아니라 "마진이 없다"로 보인다.
+	 *
+	 * <p>순서가 중요하다 — 추정을 먼저 깔고 확정으로 덮는다. 반대로 하면 확정 원가가 있는
+	 * 공고에도 추정이 얹힐 수 있다(추정 쿼리의 WHERE 가 막지만, 순서에 기대지 않는 편이 낫다).
+	 *
+	 * <p>딜 분석 캐시는 (입력 해시 → 결과)라 공고 하나에 행이 여럿이다. 그중 <b>가장 최근에
+	 * 갱신된</b> 것 하나만 쓴다. 저장 공고도 차수(ord)마다 행이 있어 같은 방식으로 하나로 접는다.
+	 *
+	 * @return {@code {estimated, confirmed}} 각 경로가 갱신한 행 수
+	 */
+	public Map<String, Integer> backfillMargins() {
+		Map<String, Integer> out = new LinkedHashMap<>();
+		out.put("estimated", jdbc.update(BACKFILL_ESTIMATED_SQL, new MapSqlParameterSource()));
+		out.put("confirmed", jdbc.update(BACKFILL_CONFIRMED_SQL, new MapSqlParameterSource()));
+		return out;
+	}
+
+	/**
+	 * deep 딜 분석의 추정 원가({@code $.deal.cost}) → 색인. <b>JSON 숫자일 때만 CAST 한다.</b>
+	 *
+	 * <p>타입 검사가 {@code WHERE} 가 아니라 {@code CASE} 안에 있어야 한다. WHERE 로만 거르면
+	 * MySQL 이 SELECT 식을 먼저 평가할 수 있고, 원가가 JSON null 인 행에서 {@code JSON_UNQUOTE}
+	 * 가 문자열 {@code 'null'} 을 내 CAST 가 터진다 — strict 모드에서
+	 * {@code 1366 Incorrect DECIMAL value} 로 <b>백필 전체가 500 이 된다</b>(실제로 밟았다).
+	 * CASE 는 분기 안쪽을 그 조건일 때만 평가하므로 안전하다. WHERE 의 같은 조건은 행을 줄이는
+	 * 용도로 남겨 둔다.
+	 *
+	 * <p>문자열로 담긴 원가는 일부러 보지 않는다 — 숫자가 아닌 문자열이 오면 같은 자리에서 또
+	 * 터지고, 캐시에 그런 행이 있다면 그것은 딜 분석의 계약이 깨진 것이라 여기서 덮을 일이 아니다.
+	 */
+	static final String BACKFILL_ESTIMATED_SQL = """
+				UPDATE bid_notice n
+				  JOIN (
+				         SELECT d.bid_ntce_no,
+				                CASE WHEN JSON_TYPE(JSON_EXTRACT(d.result_json, '$.deal.cost'))
+				                          IN ('INTEGER', 'UNSIGNED INTEGER', 'DOUBLE', 'DECIMAL')
+				                     THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(d.result_json, '$.deal.cost'))
+				                               AS DECIMAL(20,0))
+				                END AS cost
+				           FROM deal_analysis_result d
+				           JOIN (
+				                  SELECT bid_ntce_no, MAX(updated_at) AS latest
+				                    FROM deal_analysis_result
+				                   WHERE bid_ntce_no <> ''
+				                   GROUP BY bid_ntce_no
+				                ) pick
+				             ON pick.bid_ntce_no = d.bid_ntce_no AND pick.latest = d.updated_at
+				          WHERE JSON_TYPE(JSON_EXTRACT(d.result_json, '$.deal.cost'))
+				                IN ('INTEGER', 'UNSIGNED INTEGER', 'DOUBLE', 'DECIMAL')
+				       ) c ON c.bid_ntce_no = n.id
+				   SET n.margin_cost = c.cost,
+				       n.margin_source = 'estimated',
+				       n.margin_updated_at = NOW(6)
+				 WHERE c.cost > 0
+				   AND (n.margin_source IS NULL OR n.margin_source = 'estimated')
+			""";
+
+	/**
+	 * 사람이 확정한 가격표 합계({@code saved_notice.price_total}) → 색인. 추정을 덮는다.
+	 *
+	 * <p>그래서 이쪽에는 {@code margin_source} 가드가 <b>없다</b> — 있으면 확정이 확정을 못 덮어
+	 * 영업이 가격표를 고쳐도 색인이 옛 원가를 들고 있게 된다.
+	 */
+	static final String BACKFILL_CONFIRMED_SQL = """
+				UPDATE bid_notice n
+				  JOIN (
+				         SELECT s.bid_ntce_no, s.price_total
+				           FROM saved_notice s
+				           JOIN (
+				                  SELECT bid_ntce_no, MAX(updated_at) AS latest
+				                    FROM saved_notice
+				                   GROUP BY bid_ntce_no
+				                ) pick
+				             ON pick.bid_ntce_no = s.bid_ntce_no AND pick.latest = s.updated_at
+				       ) c ON c.bid_ntce_no = n.id
+				   SET n.margin_cost = c.price_total,
+				       n.margin_source = 'confirmed',
+				       n.margin_updated_at = NOW(6)
+				 WHERE c.price_total > 0
+			""";
 
 	// ── 검색 ────────────────────────────────────────────────────────────────
 

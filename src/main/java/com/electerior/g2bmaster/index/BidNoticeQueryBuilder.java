@@ -105,6 +105,8 @@ public final class BidNoticeQueryBuilder {
 	// buildBuilder() 의 줄 순서를 바꾸는 순간 소리 없이 깨지기 때문이다.
 	private boolean activeOnly;
 	private boolean categorySpecified;
+	/** 단계 미지정 + activeOnly 일 때 입찰 문서로 좁힐 것인가. 끄는 곳은 단계 패싯뿐이다. */
+	private boolean stageScope = true;
 
 	/**
 	 * 자유 검색어.
@@ -338,6 +340,25 @@ public final class BidNoticeQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * 위 2번 스코프({@code category IN ('입찰','마감')})를 걸지 않는다. <b>단계 패싯 전용이다.</b>
+	 *
+	 * <p>단계 칩의 건수는 <b>단계를 빼고</b> 세어야 한다 — 자기 축을 자기가 필터하면 고른 칩
+	 * 하나만 남는다. 그런데 단계를 빼는 순간 이 스코프가 켜지므로, {@code GROUP BY category} 가
+	 * 입찰·마감 두 줄밖에 못 내고 계획·사전규격 칩은 버킷이 없어 0건으로 그려졌다. 눌러 보면
+	 * 각각 1,887건·1,854건이 나오는데도 그랬다(2026-08-14 실측). 칩에 적힌 수는 <b>누르면
+	 * 나오는 수</b>여야 한다 — 스코프는 단계를 고르는 순간 어차피 풀리므로, 스코프를 뺀 집계가
+	 * 곧 클릭 결과와 같은 수다.
+	 *
+	 * <p><b>목록에는 쓰지 말 것.</b> 스코프가 막아 주던 21.5%(참여 대상이 아닌 문서)가 그대로
+	 * 돌아온다. 그래서 '전체' 칩의 수는 이 집계의 합이 아니라 패싯 응답의 {@code total} 이다
+	 * ({@link BidNoticeSearchService#facets}).
+	 */
+	public BidNoticeQueryBuilder withoutActiveStageScope() {
+		this.stageScope = false;
+		return this;
+	}
+
 	// ── 금액 ────────────────────────────────────────────────────────────────
 
 	/**
@@ -391,7 +412,7 @@ public final class BidNoticeQueryBuilder {
 
 	public Where build() {
 		if (activeOnly) {
-			if (!categorySpecified) {
+			if (!categorySpecified && stageScope) {
 				filters.add("n.category IN ('입찰', '마감')");
 			}
 			filters.add("(n.close_date IS NULL OR n.close_date >= NOW(6))");

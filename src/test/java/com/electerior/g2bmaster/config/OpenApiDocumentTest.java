@@ -67,6 +67,7 @@ class OpenApiDocumentTest {
 			"GET /api/search/notices/status",
 			"GET /api/search/notices/{id}",
 			"POST /api/search/notices/sync",
+			"POST /api/search/notices/margins/backfill",
 			// 트렌드
 			"GET /api/trends/{kind}",
 			"GET /api/trends/{kind}/keyword-groups",
