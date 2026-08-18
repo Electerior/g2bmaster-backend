@@ -82,7 +82,7 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
 | 라우트 | 비고 |
 |---|---|
 | `GET /api/search/notices` | **공고 텍스트 + 첨부 본문**. 봉투는 §1.1 의 1번 + `meta` 한 칸 |
-| `GET /api/search/notices/facets` | 검색과 **같은 후보 집합**에서 `category`/`division`/`region`/`state` 별 건수 |
+| `GET /api/search/notices/facets` | 검색과 **같은 후보 집합**에서 `category`/`division`/`region`/`state` 별 건수 + `total` |
 | `GET /api/search/notices/text` | **첨부를 보지 않는** 검색. 파라미터·봉투는 위와 같다 |
 | `GET /api/search/notices/text/facets` | `/text` 와 같은 후보 집합의 패싯 |
 | `GET /api/search/notices/status` | 출처별 워터마크·마지막 결과 + 분류별 색인 건수 |
