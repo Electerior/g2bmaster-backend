@@ -100,7 +100,9 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
 `meta` 는 다른 페이징 응답에는 없다 — 값이 없으면 칸 자체가 사라지므로 기존 계약은 그대로다.
 
 질의 파라미터: `q`(공백 구분, 모두 포함), `andTerms`/`orTerms`/`notTerms`,
-`category`(`계획|사전규격|입찰|마감`), `state`(`취소|재|다시|정정`),
+`category`(`계획|사전규격|입찰|마감`), `state`(`취소|재|다시|정정|긴급|연기`),
+`excludeState`(`state` 와 반대 방향 — 이 상태만 뺀 나머지를 본다. `state` 와 함께 오면
+`state` 가 이긴다. 프론트 기본 목록이 `취소`를 숨기는 데 쓴다),
 `division`(`물품|용역|공사|외자`), `region`, `insttNm`, `insttCd`, `dmndInsttCd`,
 `detailProductCode`(접두 일치), `beforeSpecRgstNo`, `officerName`,
 `fromDate`/`toDate`(공고일), `closeFrom`/`closeTo`(마감일), `activeOnly`,

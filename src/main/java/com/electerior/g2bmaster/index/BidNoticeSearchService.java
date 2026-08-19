@@ -240,6 +240,7 @@ public class BidNoticeSearchService {
 				.keywords(request.and(), request.or(), request.not())
 				.category(request.categoryValue())
 				.state(request.stateValue())
+				.excludeState(request.excludeStateValue())
 				.businessDivision(request.divisionValue())
 				.source(request.sourceValue())
 				.region(request.region())

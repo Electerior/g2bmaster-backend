@@ -42,7 +42,14 @@ public record NoticeSearchRequest(
 		String sort,
 		String dir,
 		Integer page,
-		Integer perPage) {
+		Integer perPage,
+		/**
+		 * 이 상태만 뺀 나머지를 본다 — {@code state} 와 반대 방향. 기본 목록이 '취소'를 숨기는 데
+		 * 쓴다({@code useSearchCriteria.ts:buildNoticeIndexQuery}). 끝에 붙인 이유는 이 record 를
+		 * 위치 인자로 만드는 기존 테스트 호출부를 건드리지 않기 위해서다.
+		 * {@code state} 와 함께 오면 {@code state} 가 이긴다(프론트는 둘을 동시에 보내지 않는다).
+		 */
+		String excludeState) {
 
 	private static final int DEFAULT_PER_PAGE = 20;
 
@@ -67,6 +74,11 @@ public record NoticeSearchRequest(
 
 	public NoticeState stateValue() {
 		return NoticeState.of(state);
+	}
+
+	/** {@code state} 가 이미 있으면 뺄 이유가 없다 — 그때는 무시한다. */
+	public NoticeState excludeStateValue() {
+		return state != null && !state.isBlank() ? null : NoticeState.of(excludeState);
 	}
 
 	public BusinessDivision divisionValue() {
