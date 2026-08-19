@@ -48,6 +48,8 @@ public class BidNoticeIndexRepository {
 			n.created_date, n.close_date, n.updated_at, n.officer_name, n.officer_contact,
 			n.ai_summary, n.attachment_urls, n.source_url,
 			n.source_ext, n.g2b_pblanc_no, n.g2b_pblanc_odr,
+			n.documents_indexed_at,
+			n.margin_rate, n.margin_cost, n.margin_source, n.margin_updated_at,
 			LEFT(COALESCE(n.notice_body, ''), 300) AS body_preview
 			""";
 
@@ -279,6 +281,163 @@ public class BidNoticeIndexRepository {
 		return total;
 	}
 
+	// ── 마진 ────────────────────────────────────────────────────────────────
+
+	/**
+	 * 원가 한 건을 색인에 반영한다. 마진율은 생성 컬럼이라 여기서 계산하지 않는다
+	 * ({@code V20260814132535}).
+	 *
+	 * <p><b>확정({@code confirmed})은 추정({@code estimated})에 덮이지 않는다.</b> 그 규칙이
+	 * WHERE 절에 있다. 없으면 야간 일괄 딜 분석이 영업이 손으로 맞춰 둔 가격표를 조용히 밀어낸다 —
+	 * 화면에는 그냥 다른 숫자가 떠 있을 뿐이라 아무도 눈치채지 못한다.
+	 *
+	 * <p>{@code updated_at} 을 건드리지 않는 것도 의도다. 그 칸은 '공고가 색인에 반영된 때'이고
+	 * '최근 변경순' 정렬이 그것을 읽는다. 딜 분석을 돌렸다고 공고가 최근 것이 되지는 않는다 —
+	 * 마진이 언제 것인지는 {@code margin_updated_at} 이 따로 들고 있다.
+	 *
+	 * <p>색인에 없는 공고면 0행에 걸리고 버려진다({@link #updateRegions} 와 같다). 저장 공고에는
+	 * 있는데 색인에는 없는 경우가 실제로 있다 — 색인 보존 기간 밖의 옛 공고다.
+	 *
+	 * @param source 공고 출처. {@code null} 이면 번호만으로 맞춘다 — 딜 분석 요청의 공고 객체에
+	 *               출처가 없을 수 있다. 번호가 겹치는 다른 출처의 행까지 물들 수 있으므로
+	 *               아는 값이 있으면 반드시 넘긴다
+	 * @return 갱신된 행 수
+	 */
+	public int updateMargin(String noticeId, NoticeSource source, long costKrw, boolean confirmed) {
+		if (noticeId == null || noticeId.isBlank() || costKrw <= 0) {
+			return 0;
+		}
+		MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("id", noticeId.trim())
+				.addValue("cost", costKrw)
+				.addValue("marginSource", confirmed ? "confirmed" : "estimated");
+		String sourceCondition = "";
+		if (source != null) {
+			sourceCondition = " AND source = :source";
+			params.addValue("source", source.name());
+		}
+		// 추정은 확정을 못 이긴다. 확정은 무엇이든 덮는다(사람이 다시 확정한 값이 최신이다).
+		String precedence = confirmed ? "" : " AND (margin_source IS NULL OR margin_source = 'estimated')";
+		return jdbc.update("""
+				UPDATE bid_notice
+				   SET margin_cost = :cost, margin_source = :marginSource, margin_updated_at = NOW(6)
+				 WHERE id = :id%s%s
+				""".formatted(sourceCondition, precedence), params);
+	}
+
+	/**
+	 * 확정에 실패한 재분석(UNTRUSTED) 뒤에 낡은 추정 마진을 지운다.
+	 *
+	 * <p>사람이 확정한 원가({@code margin_source='confirmed'})는 절대 지우지 않는다 —
+	 * 추정은 확정을 이기지 못하는 것과 같은 방향이다.
+	 *
+	 * @return 갱신된 행 수
+	 */
+	public int clearEstimatedMargin(String noticeId, NoticeSource source) {
+		if (noticeId == null || noticeId.isBlank()) {
+			return 0;
+		}
+		MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", noticeId.trim());
+		String sourceCondition = "";
+		if (source != null) {
+			sourceCondition = " AND source = :source";
+			params.addValue("source", source.name());
+		}
+		// margin_rate 는 (filter_amount, margin_cost) 로 계산되는 **가상 생성 컬럼**이다 —
+		// 직접 갱신하면 SQL 오류가 난다. margin_cost 만 지우면 마진율은 자동으로 null 이 된다.
+		return jdbc.update("""
+				UPDATE bid_notice
+				   SET margin_cost = NULL, margin_updated_at = NOW(6)
+				 WHERE id = :id%s AND margin_source = 'estimated'
+				""".formatted(sourceCondition), params);
+	}
+
+	/**
+	 * 이미 쌓여 있는 원가를 색인으로 끌어올린다 — 마진 축의 최초 구축용.
+	 *
+	 * <p>쓰기 훅({@code NoticeMarginService})은 <b>앞으로</b> 분석·저장되는 것만 채운다. 이미
+	 * 분석해 둔 수백 건은 그대로 두면 영영 마진이 없는 공고로 남고, 마진순 정렬은 "분석을 안
+	 * 했다"가 아니라 "마진이 없다"로 보인다.
+	 *
+	 * <p>순서가 중요하다 — 추정을 먼저 깔고 확정으로 덮는다. 반대로 하면 확정 원가가 있는
+	 * 공고에도 추정이 얹힐 수 있다(추정 쿼리의 WHERE 가 막지만, 순서에 기대지 않는 편이 낫다).
+	 *
+	 * <p>딜 분석 캐시는 (입력 해시 → 결과)라 공고 하나에 행이 여럿이다. 그중 <b>가장 최근에
+	 * 갱신된</b> 것 하나만 쓴다. 저장 공고도 차수(ord)마다 행이 있어 같은 방식으로 하나로 접는다.
+	 *
+	 * @return {@code {estimated, confirmed}} 각 경로가 갱신한 행 수
+	 */
+	public Map<String, Integer> backfillMargins() {
+		Map<String, Integer> out = new LinkedHashMap<>();
+		out.put("estimated", jdbc.update(BACKFILL_ESTIMATED_SQL, new MapSqlParameterSource()));
+		out.put("confirmed", jdbc.update(BACKFILL_CONFIRMED_SQL, new MapSqlParameterSource()));
+		return out;
+	}
+
+	/**
+	 * deep 딜 분석의 추정 원가({@code $.deal.cost}) → 색인. <b>JSON 숫자일 때만 CAST 한다.</b>
+	 *
+	 * <p>타입 검사가 {@code WHERE} 가 아니라 {@code CASE} 안에 있어야 한다. WHERE 로만 거르면
+	 * MySQL 이 SELECT 식을 먼저 평가할 수 있고, 원가가 JSON null 인 행에서 {@code JSON_UNQUOTE}
+	 * 가 문자열 {@code 'null'} 을 내 CAST 가 터진다 — strict 모드에서
+	 * {@code 1366 Incorrect DECIMAL value} 로 <b>백필 전체가 500 이 된다</b>(실제로 밟았다).
+	 * CASE 는 분기 안쪽을 그 조건일 때만 평가하므로 안전하다. WHERE 의 같은 조건은 행을 줄이는
+	 * 용도로 남겨 둔다.
+	 *
+	 * <p>문자열로 담긴 원가는 일부러 보지 않는다 — 숫자가 아닌 문자열이 오면 같은 자리에서 또
+	 * 터지고, 캐시에 그런 행이 있다면 그것은 딜 분석의 계약이 깨진 것이라 여기서 덮을 일이 아니다.
+	 */
+	static final String BACKFILL_ESTIMATED_SQL = """
+				UPDATE bid_notice n
+				  JOIN (
+				         SELECT d.bid_ntce_no,
+				                CASE WHEN JSON_TYPE(JSON_EXTRACT(d.result_json, '$.deal.cost'))
+				                          IN ('INTEGER', 'UNSIGNED INTEGER', 'DOUBLE', 'DECIMAL')
+				                     THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(d.result_json, '$.deal.cost'))
+				                               AS DECIMAL(20,0))
+				                END AS cost
+				           FROM deal_analysis_result d
+				           JOIN (
+				                  SELECT bid_ntce_no, MAX(updated_at) AS latest
+				                    FROM deal_analysis_result
+				                   WHERE bid_ntce_no <> ''
+				                   GROUP BY bid_ntce_no
+				                ) pick
+				             ON pick.bid_ntce_no = d.bid_ntce_no AND pick.latest = d.updated_at
+				          WHERE JSON_TYPE(JSON_EXTRACT(d.result_json, '$.deal.cost'))
+				                IN ('INTEGER', 'UNSIGNED INTEGER', 'DOUBLE', 'DECIMAL')
+				       ) c ON c.bid_ntce_no = n.id
+				   SET n.margin_cost = c.cost,
+				       n.margin_source = 'estimated',
+				       n.margin_updated_at = NOW(6)
+				 WHERE c.cost > 0
+				   AND (n.margin_source IS NULL OR n.margin_source = 'estimated')
+			""";
+
+	/**
+	 * 사람이 확정한 가격표 합계({@code saved_notice.price_total}) → 색인. 추정을 덮는다.
+	 *
+	 * <p>그래서 이쪽에는 {@code margin_source} 가드가 <b>없다</b> — 있으면 확정이 확정을 못 덮어
+	 * 영업이 가격표를 고쳐도 색인이 옛 원가를 들고 있게 된다.
+	 */
+	static final String BACKFILL_CONFIRMED_SQL = """
+				UPDATE bid_notice n
+				  JOIN (
+				         SELECT s.bid_ntce_no, s.price_total
+				           FROM saved_notice s
+				           JOIN (
+				                  SELECT bid_ntce_no, MAX(updated_at) AS latest
+				                    FROM saved_notice
+				                   GROUP BY bid_ntce_no
+				                ) pick
+				             ON pick.bid_ntce_no = s.bid_ntce_no AND pick.latest = s.updated_at
+				       ) c ON c.bid_ntce_no = n.id
+				   SET n.margin_cost = c.price_total,
+				       n.margin_source = 'confirmed',
+				       n.margin_updated_at = NOW(6)
+				 WHERE c.price_total > 0
+			""";
+
 	// ── 검색 ────────────────────────────────────────────────────────────────
 
 	/**
@@ -296,15 +455,114 @@ public class BidNoticeIndexRepository {
 				.addValue("offset", skip);
 
 		String sql;
-		if (relevanceSorted && where.fullText()) {
+		if (where.unionsAttachments()) {
+			// 관련도 정렬일 때만 안쪽을 잘라도 된다 — 다른 정렬은 매치 전체를 세워야 하므로
+			// 상한을 걸면 뒤쪽 공고가 페이지에서 사라진다.
+			String innerOrder = "";
+			if (relevanceSorted) {
+				params.addValue("innerLimit", skip + page);
+				innerOrder = "\n         ORDER BY relevance DESC\n         LIMIT :innerLimit";
+			}
+			sql = "SELECT " + LIST_COLUMNS
+					+ ", t.relevance AS relevance, t.notice_hit AS notice_hit, t.doc_hit AS doc_hit"
+					+ "\n  FROM (" + candidateSql(where) + innerOrder + ") t"
+					+ "\n  JOIN bid_notice n ON n.id = t.fid AND n.source = t.fsource"
+					+ "\n ORDER BY " + orderBy + "\n LIMIT :limit OFFSET :offset";
+		}
+		else if (relevanceSorted && where.fullText()) {
 			params.addValue("innerLimit", skip + page);
 			sql = fullTextSql(where, orderBy);
 		}
 		else {
-			sql = "SELECT " + LIST_COLUMNS + where.relevanceSelect() + LIST_FROM
-					+ where.sql() + "\n ORDER BY " + orderBy + "\n LIMIT :limit OFFSET :offset";
+			sql = "SELECT " + LIST_COLUMNS + where.relevanceSelect() + fromClause(where)
+					+ where.sql() + attachmentExcludeCondition(where)
+					+ "\n ORDER BY " + orderBy + "\n LIMIT :limit OFFSET :offset";
 		}
 		return jdbc.queryForList(sql, params);
+	}
+
+	// ── 첨부 본문까지 보는 검색 ─────────────────────────────────────────────
+
+	/**
+	 * 첨부 본문 브랜치를 뽑아내는 파생 테이블.
+	 *
+	 * <p><b>왜 {@code OR} 이 아니라 {@code UNION ALL} 인가.</b> 읽기에는
+	 * {@code MATCH(공고) OR EXISTS(MATCH(첨부))} 가 자연스럽지만, 그렇게 쓰면 두 FULLTEXT
+	 * 인덱스 중 <b>어느 쪽도 구동 경로가 되지 못한다</b> — 옵티마이저가 {@code bid_notice} 를
+	 * 전수 훑으며 행마다 상관 서브쿼리를 돌린다. 브랜치를 갈라 놓으면 각자 자기 인덱스를 탄다.
+	 *
+	 * <p>실측(2026-08-12, {@code bid_notice} 45,736행 · {@code bid_notice_document} done 3,704행,
+	 * 검색어 '서버' → 공고 571건 · 첨부 502행, 마감 전 + 입찰문서 필터, 관련도순 20건):
+	 * <pre>
+	 *   공고 텍스트만(현행 2단 질의)          5.3ms
+	 *   UNION ALL (공고 ∪ 첨부)              19.9ms   ← 이 경로
+	 *   UNION + 첨부 제외 반조인             21.5ms
+	 *   MATCH(공고) OR EXISTS(MATCH(첨부))  424.0ms   ← 80배. 쓰면 안 되는 형태
+	 * </pre>
+	 *
+	 * <p><b>관련도는 공고 텍스트 점수만 쓴다.</b> 첨부에서만 걸린 행은 0점이라 관련도순에서
+	 * 뒤로 간다 — 제목·본문 매치가 더 강한 신호라는 판단이고, 덕분에 두 점수를 합산하느라
+	 * GROUP BY 뒤에 다시 정렬하는 비용도 들지 않는다. 어느 쪽에서 걸렸는지는
+	 * {@code notice_hit}/{@code doc_hit} 로 그대로 내려보내 화면이 표시한다.
+	 *
+	 * <p><b>첨부의 AND 는 파일 단위다.</b> {@code +"서버" +"스토리지"} 는 <em>한 파일 안에</em>
+	 * 둘 다 있어야 걸린다. 규격서 하나가 곧 그 공고의 사양이라 실무 의미가 있고, 공고 단위로
+	 * 접으려면 낱말마다 서브쿼리를 따로 걸어야 해서 비용이 낱말 수에 비례한다.
+	 */
+	static String candidateSql(BidNoticeQueryBuilder.Where where) {
+		String filters = where.filterSql().isEmpty() ? "" : "\n             AND " + where.filterSql();
+		String noticeBranch = "SELECT n.id AS fid, n.source AS fsource" + where.relevanceSelect()
+				+ ", 1 AS notice_hit, 0 AS doc_hit"
+				+ "\n             FROM bid_notice n"
+				+ "\n            WHERE " + where.keywordSql() + filters;
+		String docBranch = "SELECT n.id AS fid, n.source AS fsource, 0 AS relevance"
+				+ ", 0 AS notice_hit, 1 AS doc_hit"
+				+ "\n             FROM bid_notice_document d"
+				+ "\n             JOIN bid_notice n ON n.id = d.notice_id AND n.source = d.source"
+				+ "\n            WHERE d.status = 'done'"
+				+ "\n              AND MATCH(d.body_text) AGAINST (:ftDocQuery IN BOOLEAN MODE)" + filters;
+
+		String union = "\n           " + noticeBranch + "\n           UNION ALL\n           " + docBranch;
+		String antiJoin = "";
+		String antiWhere = "";
+		if (where.excludesByAttachment()) {
+			antiJoin = "\n         LEFT JOIN (" + attachmentExcludeSetSql() + ") xd"
+					+ "\n                ON xd.notice_id = u.fid AND xd.source = u.fsource";
+			antiWhere = "\n          WHERE xd.notice_id IS NULL";
+		}
+		return "\n         SELECT u.fid, u.fsource, MAX(u.relevance) AS relevance,"
+				+ " MAX(u.notice_hit) AS notice_hit, MAX(u.doc_hit) AS doc_hit"
+				+ "\n           FROM (" + union + "\n           ) u" + antiJoin + antiWhere
+				+ "\n          GROUP BY u.fid, u.fsource";
+	}
+
+	/**
+	 * 제외 낱말이 첨부에 들어 있는 공고 집합.
+	 *
+	 * <p>상관 {@code NOT EXISTS} 로 브랜치마다 거는 것보다 <b>한 번 뽑아 반조인</b>하는 편이 싸다 —
+	 * 같은 조건의 count 로 실측 34.6ms → 24.2ms. 제외 낱말은 후보마다 달라지지 않으므로
+	 * 집합을 한 번만 만들면 되는데, 상관 서브쿼리는 그것을 행마다 되풀이한다.
+	 */
+	private static String attachmentExcludeSetSql() {
+		return "SELECT DISTINCT notice_id, source FROM bid_notice_document"
+				+ "\n                     WHERE status = 'done'"
+				+ "\n                       AND MATCH(body_text) AGAINST (:ftDocExclude IN BOOLEAN MODE)";
+	}
+
+	/** UNION 을 타지 않는 경로(키워드가 없거나 한 글자뿐)에도 첨부 제외는 걸어야 한다. */
+	private static String fromClause(BidNoticeQueryBuilder.Where where) {
+		if (!where.excludesByAttachment()) {
+			return LIST_FROM;
+		}
+		return LIST_FROM + "  LEFT JOIN (" + attachmentExcludeSetSql() + ") xd"
+				+ "\n         ON xd.notice_id = n.id AND xd.source = n.source\n";
+	}
+
+	private static String attachmentExcludeCondition(BidNoticeQueryBuilder.Where where) {
+		if (!where.excludesByAttachment()) {
+			return "";
+		}
+		return where.sql().isEmpty() ? "\n WHERE xd.notice_id IS NULL" : "\n   AND xd.notice_id IS NULL";
 	}
 
 	/**
@@ -350,10 +608,50 @@ public class BidNoticeIndexRepository {
 	}
 
 	public int count(BidNoticeQueryBuilder.Where where) {
-		Integer total = jdbc.queryForObject("SELECT COUNT(*)" + LIST_FROM + where.sql(),
-				new MapSqlParameterSource(where.params()), Integer.class);
+		// UNION 은 같은 공고를 두 브랜치에서 낼 수 있다. GROUP BY 로 접은 뒤에 세지 않으면
+		// 제목과 규격서 양쪽에 걸린 공고가 총건수에서 두 번 세어져, 화면의 '12건'과 실제
+		// 목록 길이가 어긋난다.
+		String sql = where.unionsAttachments()
+				? "SELECT COUNT(*) FROM (" + candidateSql(where) + "\n       ) c"
+				: "SELECT COUNT(*)" + fromClause(where) + where.sql() + attachmentExcludeCondition(where);
+		Integer total = jdbc.queryForObject(sql, new MapSqlParameterSource(where.params()), Integer.class);
 		return total == null ? 0 : total;
 	}
+
+	/**
+	 * 첨부 본문 색인 커버리지 — 검색 응답의 메타가 쓴다.
+	 *
+	 * <p><b>왜 이 숫자를 응답에 싣나.</b> 첨부까지 찾는다고 해 놓고 색인이 일부에만 있으면,
+	 * 사용자는 "이 공고엔 그 낱말이 없구나"와 "아직 안 읽은 공고구나"를 구분할 수 없다.
+	 * 커버리지를 같이 주면 화면이 그 경계를 말할 수 있다.
+	 *
+	 * <p>60초 캐시를 두는 이유는 값이 아니라 <b>비용</b> 때문이다 — 실측 6.3ms 로, 20ms 짜리
+	 * 검색에 매번 붙이면 30% 를 커버리지 세는 데 쓴다. 색인은 30분 주기로 늘어나므로
+	 * 1분 낡은 값이 화면에서 문제가 되지 않는다.
+	 */
+	public Map<String, Object> attachmentCoverage() {
+		CoverageSnapshot snapshot = coverage;
+		long now = System.currentTimeMillis();
+		if (snapshot != null && now - snapshot.takenAt() < COVERAGE_TTL_MS) {
+			return snapshot.value();
+		}
+		Map<String, Object> fresh = jdbc.queryForMap("""
+				SELECT COUNT(*) AS totalNotices,
+				       COUNT(documents_indexed_at) AS indexedNotices
+				  FROM bid_notice
+				""", new MapSqlParameterSource());
+		Map<String, Object> value = Map.copyOf(fresh);
+		coverage = new CoverageSnapshot(value, now);
+		return value;
+	}
+
+	/** 커버리지 캐시 수명. 첨부 추출 워커가 30분 주기라 1분이면 충분히 새 값이다. */
+	private static final long COVERAGE_TTL_MS = 60_000;
+
+	/** {@code volatile} 하나면 충분하다 — 경합해서 두 번 세어도 결과가 같다. */
+	private volatile CoverageSnapshot coverage;
+
+	private record CoverageSnapshot(Map<String, Object> value, long takenAt) {}
 
 	/**
 	 * 상세 한 건 — 본문 전문 포함.
@@ -387,9 +685,17 @@ public class BidNoticeIndexRepository {
 	 * 의 상수). 사용자 입력을 여기에 넘기면 SQL 주입이 되므로 절대 넓히지 말 것.
 	 */
 	public List<Map<String, Object>> facet(BidNoticeQueryBuilder.Where where, String column, int limit) {
-		return jdbc.queryForList("SELECT n." + column + " AS value, COUNT(*) AS count"
-				+ LIST_FROM + where.sql()
-				+ "\n GROUP BY n." + column + "\n ORDER BY count DESC\n LIMIT :facetLimit",
+		// 패싯은 검색과 반드시 같은 후보 집합을 세야 한다 — 칩에 붙는 건수가 목록과 어긋나면
+		// 그 화면은 거짓말을 하는 것이다. 그래서 검색과 똑같은 파생 테이블을 재사용한다.
+		String sql = where.unionsAttachments()
+				? "SELECT n." + column + " AS value, COUNT(*) AS count"
+						+ "\n  FROM (" + candidateSql(where) + "\n       ) t"
+						+ "\n  JOIN bid_notice n ON n.id = t.fid AND n.source = t.fsource"
+						+ "\n GROUP BY n." + column + "\n ORDER BY count DESC\n LIMIT :facetLimit"
+				: "SELECT n." + column + " AS value, COUNT(*) AS count"
+						+ fromClause(where) + where.sql() + attachmentExcludeCondition(where)
+						+ "\n GROUP BY n." + column + "\n ORDER BY count DESC\n LIMIT :facetLimit";
+		return jdbc.queryForList(sql,
 				new MapSqlParameterSource(where.params()).addValue("facetLimit", limit));
 	}
 

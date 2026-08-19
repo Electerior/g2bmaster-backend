@@ -69,8 +69,10 @@ public class MarketIntelController {
 	 * <p>{@code unit-axis}: 부품 단가가 기종(unit)별로 갈리고 {@code units[]}·{@code totalUnits}·
 	 * {@code confirmedTotal} 이 생긴 판(2026-08). {@code b}: 검증이 센 대수를
 	 * {@code confirmedUnits} 로 분리해 AI 가 낸 {@code totalUnits}(사실)를 덮지 않게 한 판.
+	 * {@code c}: AI 견적 심사 개편(묶음 거부·LLM 판정) — 값이 바뀌므로 저장분 전체 무효화.
+	 * {@code d}: ITMAYA 색인 경로 제거(웹 수집 단일 경로) — 값이 바뀌므로 저장분 전체 무효화.
 	 */
-	static final String ANALYSIS_SCHEMA_VERSION = "unit-axis-2026-08b";
+	static final String ANALYSIS_SCHEMA_VERSION = "unit-axis-2026-08d";
 
 	private final MarketIntelService service;
 	private final DealAnalysisService dealAnalysis;
@@ -80,6 +82,7 @@ public class MarketIntelController {
 	private final DealAnalysisRepository dealRepository;
 	private final SavedNoticeRepository savedRepository;
 	private final com.electerior.g2bmaster.notice.BidResultService bidResultService;
+	private final com.electerior.g2bmaster.index.NoticeMarginService margins;
 
 	// 입력 해시·결과 저장에 쓰는 정준 직렬화기. 키를 알파벳 순으로 고정해야 같은 입력이 같은
 	// 해시를 낸다(맵 순서가 흔들리면 캐시가 매번 빗나간다).
@@ -92,7 +95,8 @@ public class MarketIntelController {
 			DocumentTextExtractor textExtractor, AttachmentFetcher attachmentFetcher,
 			AiClient aiClient, DealAnalysisRepository dealRepository,
 			SavedNoticeRepository savedRepository,
-			com.electerior.g2bmaster.notice.BidResultService bidResultService) {
+			com.electerior.g2bmaster.notice.BidResultService bidResultService,
+			com.electerior.g2bmaster.index.NoticeMarginService margins) {
 		this.service = service;
 		this.dealAnalysis = dealAnalysis;
 		this.textExtractor = textExtractor;
@@ -101,6 +105,7 @@ public class MarketIntelController {
 		this.dealRepository = dealRepository;
 		this.savedRepository = savedRepository;
 		this.bidResultService = bidResultService;
+		this.margins = margins;
 	}
 
 	/**
@@ -161,6 +166,9 @@ public class MarketIntelController {
 		boolean wantSpec = deep && flag(include, "spec", true);
 		boolean wantParts = deep && flag(include, "parts", true);
 		boolean forceRefresh = Boolean.TRUE.equals(req.get("forceRefresh")) || "true".equals(req.get("forceRefresh"));
+		// 저장된 deep 결과만 꺼내 보는 모드 — 없으면 분석을 돌리지 않고 "없음"만 답한다.
+		// 화면이 열리자마자 "분석 전"인지 "저장분 있음"인지 물어볼 때 쓴다.
+		boolean cacheOnly = Boolean.TRUE.equals(req.get("cacheOnly")) || "true".equals(req.get("cacheOnly"));
 		// 사용자가 첨부 중 하나를 규격서로 지목했으면 자동 선택을 건너뛴다. 자동 선택은
 		// 휴리스틱이고 사람은 공고를 읽었다 — 사람이 고른 것이 이긴다.
 		String specFileUrl = String.valueOf(req.getOrDefault("specFileUrl", "")).trim();
@@ -179,11 +187,21 @@ public class MarketIntelController {
 			if (cached.isPresent()) {
 				Map<String, Object> stored = readStored(cached.get());
 				if (stored != null) {
+					// 캐시 히트에서도 마진을 올린다. 마진 축(V20260814132535)이 생기기 전에 분석된
+					// 공고가 수백 건 있고, 그것들은 다시 분석되지 않는 한 영영 마진이 없는 공고로
+					// 남는다 — 화면에서는 '마진 없음'과 '분석 안 함'이 구분되지 않는다.
+					recordMargin(item, stored);
 					stored.put("_fromCache", true);
 					stored.put("_analyzedAt", cached.get().createdAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 					return stored;
 				}
 			}
+		}
+		// 저장분이 없는데 cacheOnly 면 여기서 멈춘다 — 첨부 파싱·AI 를 건드리지 않는다.
+		if (cacheOnly) {
+			Map<String, Object> none = new LinkedHashMap<>();
+			none.put("_notCached", true);
+			return none;
 		}
 
 		// 시가 표본: 프론트가 유사 낙찰을 넘기면 그걸 쓰고, 안 넘기면(수주 데스크가 그렇다)
@@ -217,8 +235,53 @@ public class MarketIntelController {
 		if (inputHash != null) {
 			saveResult(inputHash, bidNtceNo, deep, result);
 		}
+		recordMargin(item, result);
 		result.put("_fromCache", false);
 		return result;
+	}
+
+	/**
+	 * 분석이 낸 원가를 검색 색인의 마진 축에 올린다({@code GET /api/search/notices?sort=margin}).
+	 *
+	 * <p>얕은 분석도 올린다 — 사용자가 {@code unitCost} 를 직접 넣은 경우가 그쪽이고, 그것은
+	 * 추정보다 오히려 확실한 원가다. 다만 출처는 {@code estimated} 로 둔다: '확정'은 사람이
+	 * 가격표를 저장했다는 뜻으로 예약돼 있고, 그래야 저장 공고의 값이 이것에 덮이지 않는다.
+	 *
+	 * <p>원가가 없으면(단가원이 하나도 없는 공고) 아무것도 하지 않는다. 0 을 올리면 마진율
+	 * 100% 가 되어 목록 맨 위에 앉는다 — 가장 나쁜 오류다.
+	 */
+	@SuppressWarnings("unchecked")
+	private void recordMargin(Map<String, Object> item, Map<String, Object> result) {
+		if (!(result.get("deal") instanceof Map<?, ?> deal)) {
+			return;
+		}
+		String bidNtceNo = String.valueOf(item.getOrDefault("bidNtceNo", ""));
+		Object cost = ((Map<String, Object>) deal).get("cost");
+		if (cost instanceof Number number && number.longValue() > 0) {
+			margins.recordEstimated(bidNtceNo, noticeSourceOf(item), cost);
+			return;
+		}
+		// 원가를 확정하지 못한 재분석(UNTRUSTED)은 낡은 추정 마진을 지운다 —
+		// 예전 로직이 "부품 일부만 가격이 잡힌 상태"를 확정으로 남긴 값을 화면이 계속 읽으면 안 된다.
+		// 확정(confirmed) 마진은 record 아래 저장소 규칙이 지키므로 여기서는 내려만 보낸다.
+		margins.clearEstimated(bidNtceNo, noticeSourceOf(item));
+	}
+
+	/**
+	 * 공고 객체에서 색인 출처(G2B/NURI/D2B)를 읽는다.
+	 *
+	 * <p>공고 객체는 프론트가 만든 것이라 출처가 담긴 칸이 하나로 정해져 있지 않다 — 색인에서
+	 * 온 공고는 {@code source}, 팬아웃 계약을 거친 공고는 {@code _source} 다. 어느 쪽도 없으면
+	 * {@code null} 이고, 그러면 저장소가 공고번호만으로 맞춘다.
+	 */
+	private static String noticeSourceOf(Map<String, Object> item) {
+		for (String key : new String[] {"source", "_source"}) {
+			Object value = item.get(key);
+			if (value != null && !String.valueOf(value).isBlank()) {
+				return String.valueOf(value);
+			}
+		}
+		return null;
 	}
 
 	/**

@@ -1,6 +1,8 @@
 package com.electerior.g2bmaster.attachment;
 
 import com.electerior.g2bmaster.common.ApiException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -24,7 +26,7 @@ public class AttachmentFetcher {
 	private static final Logger log = LoggerFactory.getLogger(AttachmentFetcher.class);
 
 	/** 파싱 대상 상한. 규격서가 이보다 크면 첨부를 잘못 고른 것에 가깝다. */
-	private static final int MAX_BYTES = 60 * 1024 * 1024;
+	static final int MAX_BYTES = 60 * 1024 * 1024;
 
 	private final AttachmentUrlValidator validator;
 	private final HttpClient httpClient;
@@ -43,36 +45,59 @@ public class AttachmentFetcher {
 	public byte[] fetchBytes(String url) {
 		URI target = validator.validate(url);
 		for (int hop = 0; hop <= AttachmentUrlValidator.MAX_REDIRECTS; hop++) {
-			HttpResponse<byte[]> response = send(target);
-			int status = response.statusCode();
-			if (status >= 300 && status < 400) {
-				String location = response.headers().firstValue("location").orElse(null);
-				if (location == null) {
-					throw ApiException.upstream("첨부파일을 가져오지 못했습니다.");
+			HttpResponse<InputStream> response = send(target);
+			try (InputStream body = response.body()) {
+				int status = response.statusCode();
+				if (status >= 300 && status < 400) {
+					String location = response.headers().firstValue("location").orElse(null);
+					if (location == null) {
+						throw ApiException.upstream("첨부파일을 가져오지 못했습니다.");
+					}
+					target = validator.validate(target.resolve(location).toString());   // 홉마다 재검증
+					continue;
 				}
-				target = validator.validate(target.resolve(location).toString());   // 홉마다 재검증
-				continue;
+				if (status != 200) {
+					throw ApiException.upstream("첨부파일을 가져오지 못했습니다. (상류 응답 " + status + ")");
+				}
+				// **선언된 크기를 먼저 본다.** 다 받은 뒤 재면 60MB 를 쓰고 버리는 셈이라,
+				// 수만 건을 도는 백필에서는 그것만으로 대역폭이 샌다(실측 5건).
+				long declared = response.headers().firstValueAsLong("content-length").orElse(-1);
+				if (declared > MAX_BYTES) {
+					throw ApiException.badRequest(
+							"첨부파일이 너무 큽니다. (" + declared / (1024 * 1024) + "MB)");
+				}
+				return readAtMost(body);
 			}
-			if (status != 200) {
-				throw ApiException.upstream("첨부파일을 가져오지 못했습니다. (상류 응답 " + status + ")");
+			catch (IOException e) {
+				throw ApiException.upstream("첨부파일을 가져오지 못했습니다.");
 			}
-			byte[] body = response.body();
-			if (body != null && body.length > MAX_BYTES) {
-				throw ApiException.badRequest("첨부파일이 너무 큽니다.");
-			}
-			return body == null ? new byte[0] : body;
 		}
 		throw ApiException.upstream("리다이렉트가 너무 많습니다.");
 	}
 
-	private HttpResponse<byte[]> send(URI target) {
+	/**
+	 * 상한까지만 읽는다.
+	 *
+	 * <p>Content-Length 를 안 주는 상류도 있고, 준 값이 거짓일 수도 있다. 그래서 읽으면서도
+	 * 상한을 본다 — 이 가드가 없으면 상한을 넘는 첨부가 <b>힙에 통째로</b> 올라온 뒤에야
+	 * 거부된다(동시 6개면 그만큼 곱해진다).
+	 */
+	static byte[] readAtMost(InputStream stream) throws IOException {
+		byte[] bytes = stream.readNBytes(MAX_BYTES + 1);
+		if (bytes.length > MAX_BYTES) {
+			throw ApiException.badRequest("첨부파일이 너무 큽니다.");
+		}
+		return bytes;
+	}
+
+	private HttpResponse<InputStream> send(URI target) {
 		try {
 			HttpRequest request = HttpRequest.newBuilder(target)
 					.timeout(Duration.ofSeconds(60))
 					.header("User-Agent", "g2bmaster-backend")
 					.GET()
 					.build();
-			return httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+			return httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
 		}
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();

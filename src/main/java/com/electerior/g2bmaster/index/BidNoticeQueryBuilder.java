@@ -19,6 +19,13 @@ import java.util.Map;
  *       MATCH 로는 <em>절대</em> 걸리지 않는다 — 0건이 아니라 '조용히 무시'라 더 나쁘다.
  *       그래서 한 글자 낱말만 따로 모아 {@code LIKE} 로 떨어뜨린다({@link #SHORT_TERM_LENGTH}).</li>
  * </ol>
+ *
+ * <h2>조건을 두 묶음으로 나눠 들고 있는 이유</h2>
+ * <p>{@link #attachmentScope(boolean)} 가 켜지면 저장소가 <b>공고 텍스트 브랜치와 첨부 본문
+ * 브랜치를 UNION</b> 한다. 두 브랜치는 키워드 조건만 다르고 <b>필터는 똑같이</b> 걸려야 한다 —
+ * '경기도 · 마감 전'으로 좁힌 검색이 첨부에서 걸렸다는 이유로 부산 공고를 데려오면 안 된다.
+ * 그래서 {@link #filters} 와 {@link #keywordConditions} 를 따로 쌓고, 저장소가 필요한 조합으로
+ * 다시 붙인다. 한 리스트에 섞어 두면 브랜치마다 무엇을 빼고 넣을지 문자열을 잘라내야 한다.
  */
 public final class BidNoticeQueryBuilder {
 
@@ -31,18 +38,67 @@ public final class BidNoticeQueryBuilder {
 	/**
 	 * 조립된 조건.
 	 *
-	 * @param sql             {@code " WHERE …"} (조건이 없으면 빈 문자열)
+	 * @param sql             {@code " WHERE …"} (조건이 없으면 빈 문자열). 공고 텍스트만 보는 경로가 쓴다
 	 * @param params          바인딩 파라미터
 	 * @param relevanceSelect SELECT 목록에 덧붙일 관련도 식. 전문검색이 없으면 {@code , 0 AS relevance}
 	 * @param fullText        MATCH 를 실제로 쓰는가 — 정렬 기본값을 관련도로 할지 판단한다
+	 * @param filterSql       키워드를 뺀 필터만의 결합({@code WHERE} 없음). UNION 의 <b>두 브랜치에 공통</b>으로 붙는다
+	 * @param keywordSql      공고 텍스트 키워드 조건만의 결합({@code WHERE} 없음)
+	 * @param attachment      첨부 본문 스코프. 켜지 않았으면 {@code null}
 	 */
-	public record Where(String sql, Map<String, Object> params, String relevanceSelect, boolean fullText) {}
+	public record Where(String sql, Map<String, Object> params, String relevanceSelect, boolean fullText,
+			String filterSql, String keywordSql, Attachment attachment) {
 
-	private final List<String> conditions = new ArrayList<>();
+		/**
+		 * 첨부 본문 브랜치가 쓸 불리언 질의.
+		 *
+		 * <p>{@code includeQuery} 는 <b>양(陽) 낱말만</b> 담는다. 제외 낱말을 여기 섞으면 그 파일
+		 * 하나가 후보에서 빠질 뿐 공고는 다른 첨부로 여전히 걸린다 — 제외는 공고 단위라야 하므로
+		 * {@code excludeQuery} 로 따로 뽑아 저장소가 반조인(anti-join)으로 건다.
+		 *
+		 * @param includeQuery 첨부에서 찾을 낱말. {@code +"서버" "스토리지"} 꼴
+		 * @param excludeQuery 이 낱말이 첨부에 있으면 공고째로 뺀다. {@code "임대" "렌탈"} 꼴(하나라도 걸리면 제외)
+		 * @param skippedTerms 첨부 범위에서 건너뛴 낱말 — 한 글자라 ngram 이 못 본다. 화면이 그 사실을 표시한다
+		 */
+		public record Attachment(String includeQuery, String excludeQuery, List<String> skippedTerms) {
+
+			public boolean hasInclude() {
+				return includeQuery != null && !includeQuery.isBlank();
+			}
+
+			public boolean hasExclude() {
+				return excludeQuery != null && !excludeQuery.isBlank();
+			}
+		}
+
+		/** 첨부 브랜치를 실제로 UNION 해야 하는가. 제외만 있으면 브랜치 없이 반조인만 건다. */
+		public boolean unionsAttachments() {
+			return attachment != null && attachment.hasInclude();
+		}
+
+		/** 첨부 반조인(제외)을 걸어야 하는가. */
+		public boolean excludesByAttachment() {
+			return attachment != null && attachment.hasExclude();
+		}
+	}
+
+	/** 키워드를 뺀 조건 — UNION 의 두 브랜치에 공통으로 붙는다. */
+	private final List<String> filters = new ArrayList<>();
+
+	/** 공고 텍스트(제목·본문) 키워드 조건. 첨부 브랜치에는 붙이지 않는다. */
+	private final List<String> keywordConditions = new ArrayList<>();
+
 	private final Map<String, Object> params = new LinkedHashMap<>();
 	private String relevanceSelect = ", 0 AS relevance";
 	private boolean fullText;
 	private int paramSeq;
+
+	/** 첨부 본문까지 볼 것인가. {@code BidNoticeSearchService} 가 엔드포인트에 따라 정한다. */
+	private boolean attachmentScope;
+
+	private String attachmentInclude = "";
+	private String attachmentExclude = "";
+	private final List<String> attachmentSkipped = new ArrayList<>();
 
 	// activeOnly 는 다른 필터와 달리 조건을 즉시 쌓지 않고 build() 에서 조립한다 —
 	// category 지정 여부에 따라 모양이 달라지는데, 체인 호출 순서에 의미를 실으면
@@ -65,6 +121,9 @@ public final class BidNoticeQueryBuilder {
 		List<String> not = capped(notTerms);
 
 		StringBuilder booleanQuery = new StringBuilder();
+		// 첨부 본문 브랜치용. 양 낱말과 제외 낱말을 따로 든다 — 이유는 Where.Attachment 주석 참고.
+		StringBuilder docInclude = new StringBuilder();
+		StringBuilder docExclude = new StringBuilder();
 		// 양(陽) 낱말 수를 세어 둔다 — MATCH 를 쓸 수 있는지가 여기에 달렸다(아래 참고).
 		// 조립된 문자열을 정규식으로 되읽어 판정하면 따옴표 안의 문자에 걸려 틀린다.
 		int positives = 0;
@@ -73,9 +132,11 @@ public final class BidNoticeQueryBuilder {
 		for (String term : and) {
 			if (isShort(term)) {
 				addLike(term, true);
+				attachmentSkipped.add(term);
 			}
 			else {
 				booleanQuery.append('+').append(quote(term)).append(' ');
+				docInclude.append('+').append(quote(term)).append(' ');
 				positives++;
 			}
 		}
@@ -83,19 +144,26 @@ public final class BidNoticeQueryBuilder {
 			if (isShort(term)) {
 				// OR 낱말이 한 글자면 LIKE 로 강제 조건을 걸 수 없다(하나만 만족해도 되므로).
 				// 아래에서 OR 묶음으로 따로 처리한다.
+				attachmentSkipped.add(term);
 				continue;
 			}
 			booleanQuery.append(quote(term)).append(' ');
+			docInclude.append(quote(term)).append(' ');
 			positives++;
 		}
 		for (String term : not) {
 			if (isShort(term)) {
 				addLike(term, false);
+				attachmentSkipped.add(term);
 			}
 			else {
 				booleanQuery.append('-').append(quote(term)).append(' ');
+				// 무기호 = 불리언 모드의 OR. "이 중 하나라도 들어 있으면 그 공고를 뺀다".
+				docExclude.append(quote(term)).append(' ');
 			}
 		}
+		attachmentInclude = positives > 0 ? docInclude.toString().trim() : "";
+		attachmentExclude = docExclude.toString().trim();
 
 		// 한 글자 OR 낱말들은 "이 중 하나라도" 라는 하나의 괄호 조건이 된다.
 		List<String> shortOr = or.stream().filter(BidNoticeQueryBuilder::isShort).toList();
@@ -107,7 +175,7 @@ public final class BidNoticeQueryBuilder {
 				parts.add("(n.notice_name LIKE :" + key + " ESCAPE '!' "
 						+ "OR n.notice_body LIKE :" + key + " ESCAPE '!')");
 			}
-			conditions.add("(" + String.join(" OR ", parts) + ")");
+			keywordConditions.add("(" + String.join(" OR ", parts) + ")");
 		}
 
 		/*
@@ -119,7 +187,7 @@ public final class BidNoticeQueryBuilder {
 		String query = booleanQuery.toString().trim();
 		if (positives > 0) {
 			params.put("ftQuery", query);
-			conditions.add("MATCH(n.notice_name, n.notice_body) AGAINST (:ftQuery IN BOOLEAN MODE)");
+			keywordConditions.add("MATCH(n.notice_name, n.notice_body) AGAINST (:ftQuery IN BOOLEAN MODE)");
 			relevanceSelect = ", MATCH(n.notice_name, n.notice_body) "
 					+ "AGAINST (:ftQuery IN BOOLEAN MODE) AS relevance";
 			fullText = true;
@@ -144,6 +212,23 @@ public final class BidNoticeQueryBuilder {
 
 	public BidNoticeQueryBuilder state(NoticeState state) {
 		return equalsIfPresent("n.state", state == null ? null : state.name(), "state");
+	}
+
+	/**
+	 * 이 상태만 뺀다. {@code state(NoticeState)} 와 반대 방향의 필터다 — 기본 목록이 '취소'를
+	 * 숨기는 데 쓴다({@code useSearchCriteria.ts:buildNoticeIndexQuery}). {@code n.state} 가
+	 * {@code NULL}(정상 공고)인 행은 항상 통과해야 하므로 부정 비교가 아니라
+	 * {@code IS NULL OR <>} 로 건다 — MySQL 은 {@code NULL <> '취소'} 를 UNKNOWN 으로 접어
+	 * 그 행을 조용히 떨어뜨린다.
+	 */
+	public BidNoticeQueryBuilder excludeState(NoticeState state) {
+		if (state == null) {
+			return this;
+		}
+		String key = nextKey("stateNot");
+		params.put(key, state.name());
+		filters.add("(n.state IS NULL OR n.state <> :" + key + ")");
+		return this;
 	}
 
 	public BidNoticeQueryBuilder businessDivision(BusinessDivision division) {
@@ -180,7 +265,7 @@ public final class BidNoticeQueryBuilder {
 		}
 		String key = nextKey("region");
 		params.put(key, "%" + escapeLike(value) + "%");
-		conditions.add("(n.region LIKE :" + key + " ESCAPE '!' OR n.region = '')");
+		filters.add("(n.region LIKE :" + key + " ESCAPE '!' OR n.region = '')");
 		return this;
 	}
 
@@ -192,7 +277,7 @@ public final class BidNoticeQueryBuilder {
 		}
 		String key = nextKey("prdct");
 		params.put(key, escapeLike(value) + "%");
-		conditions.add("n.detail_product_code LIKE :" + key + " ESCAPE '!'");
+		filters.add("n.detail_product_code LIKE :" + key + " ESCAPE '!'");
 		return this;
 	}
 
@@ -210,7 +295,7 @@ public final class BidNoticeQueryBuilder {
 		}
 		String key = nextKey("instt");
 		params.put(key, "%" + escapeLike(value) + "%");
-		conditions.add("(n.notice_institution_name LIKE :" + key + " ESCAPE '!'"
+		filters.add("(n.notice_institution_name LIKE :" + key + " ESCAPE '!'"
 				+ " OR n.demand_institution_name LIKE :" + key + " ESCAPE '!')");
 		return this;
 	}
@@ -222,7 +307,7 @@ public final class BidNoticeQueryBuilder {
 		}
 		String key = nextKey("ofcl");
 		params.put(key, "%" + escapeLike(value) + "%");
-		conditions.add("n.officer_name LIKE :" + key + " ESCAPE '!'");
+		filters.add("n.officer_name LIKE :" + key + " ESCAPE '!'");
 		return this;
 	}
 
@@ -232,11 +317,11 @@ public final class BidNoticeQueryBuilder {
 	public BidNoticeQueryBuilder createdBetween(java.time.LocalDateTime from, java.time.LocalDateTime to) {
 		if (from != null) {
 			params.put("createdFrom", from);
-			conditions.add("n.created_date >= :createdFrom");
+			filters.add("n.created_date >= :createdFrom");
 		}
 		if (to != null) {
 			params.put("createdTo", to);
-			conditions.add("n.created_date <= :createdTo");
+			filters.add("n.created_date <= :createdTo");
 		}
 		return this;
 	}
@@ -244,11 +329,11 @@ public final class BidNoticeQueryBuilder {
 	public BidNoticeQueryBuilder closeBetween(java.time.LocalDateTime from, java.time.LocalDateTime to) {
 		if (from != null) {
 			params.put("closeFrom", from);
-			conditions.add("n.close_date >= :closeFrom");
+			filters.add("n.close_date >= :closeFrom");
 		}
 		if (to != null) {
 			params.put("closeTo", to);
-			conditions.add("n.close_date <= :closeTo");
+			filters.add("n.close_date <= :closeTo");
 		}
 		return this;
 	}
@@ -294,27 +379,49 @@ public final class BidNoticeQueryBuilder {
 	// ── 금액 ────────────────────────────────────────────────────────────────
 
 	/**
-	 * 추정가격 구간.
+	 * 금액 구간.
 	 *
-	 * <p>{@code price_detail} JSON 안의 값을 {@code V11} 에서 생성 컬럼 {@code estimated_price} 로
-	 * 승격했으므로 <b>여기서는 컬럼을 그대로 참조한다.</b> JSON 함수를 식으로 걸던 때는
-	 * 금액만 지정한 검색이 전체 훑기(type=ALL, rows=17477)였다.
+	 * <p><b>추정가격이 아니라 {@code filter_amount} 를 본다.</b> 추정가격 키를 가진 행은
+	 * 나라장터의 입찰·마감·계획뿐이라, 이 조건이 {@code estimated_price} 를 보던 때는
+	 * {@code ?minAmount=1} 한 줄에 사전규격 12,119건과 누리·D2B 2,045건이 통째로 사라졌다
+	 * (전체의 28%). 사전규격은 배정예산을 가지고 있어 금액을 아는데도 빠졌다.
+	 * {@code filter_amount} 는 추정가격→배정예산→기준금액→기초예비가격 순으로 하나를 고른
+	 * 생성 컬럼이다 — 무엇이 골라졌는지는 응답의 {@code amountKind} 로 화면까지 내려간다
+	 * ({@code V20260814113541}, {@link BidNoticeSearchService#amountOf}).
 	 *
-	 * <p>식을 다시 인라인하지 말 것 — 함수를 씌우는 순간 {@code ix_bid_notice_amount} 를
-	 * 못 쓰게 되고, 증상이 '느려짐' 뿐이라 리뷰에서 잡히지 않는다.
+	 * <p>금액이 아예 없는 행(실측 2,180건)은 {@code NULL} 이라 이 조건에서 빠진다. 줄일 수 없는
+	 * 손실이라 화면이 그 사실을 문장으로 적는다 — 조용히 빼는 것만은 하지 않는다.
+	 *
+	 * <p>식을 다시 인라인하지 말 것 — 컬럼에 함수를 씌우거나 {@code COALESCE} 를 여기에 펼치는
+	 * 순간 {@code ix_bid_notice_filter_amount} 를 못 쓰게 되고, 증상이 '느려짐' 뿐이라
+	 * 리뷰에서 잡히지 않는다. 그래서 {@code BidNoticeQueryBuilderTest} 가 SQL 문자열을 직접 본다.
 	 */
-	public BidNoticeQueryBuilder estimatedPriceBetween(Long min, Long max) {
+	public BidNoticeQueryBuilder amountBetween(Long min, Long max) {
 		if (min == null && max == null) {
 			return this;
 		}
 		if (min != null) {
 			params.put("minAmount", min);
-			conditions.add("n.estimated_price >= :minAmount");
+			filters.add("n.filter_amount >= :minAmount");
 		}
 		if (max != null) {
 			params.put("maxAmount", max);
-			conditions.add("n.estimated_price <= :maxAmount");
+			filters.add("n.filter_amount <= :maxAmount");
 		}
+		return this;
+	}
+
+	// ── 첨부 스코프 ─────────────────────────────────────────────────────────
+
+	/**
+	 * 첨부 본문까지 검색 대상에 넣는다.
+	 *
+	 * <p>켜도 <b>조건 문자열은 달라지지 않는다</b> — 첨부는 별도 브랜치라 SQL 조립이 저장소
+	 * 몫이고, 여기서는 그 브랜치가 쓸 불리언 질의만 넘긴다. 조건이 아니라 재료를 넘기는
+	 * 형태라야 {@code sql()} 을 쓰는 기존 경로(공고 텍스트만 보는 {@code /text})가 그대로 산다.
+	 */
+	public BidNoticeQueryBuilder attachmentScope(boolean include) {
+		this.attachmentScope = include;
 		return this;
 	}
 
@@ -323,12 +430,28 @@ public final class BidNoticeQueryBuilder {
 	public Where build() {
 		if (activeOnly) {
 			if (!categorySpecified && stageScope) {
-				conditions.add("n.category IN ('입찰', '마감')");
+				filters.add("n.category IN ('입찰', '마감')");
 			}
-			conditions.add("(n.close_date IS NULL OR n.close_date >= NOW(6))");
+			filters.add("(n.close_date IS NULL OR n.close_date >= NOW(6))");
 		}
-		String sql = conditions.isEmpty() ? "" : "\n WHERE " + String.join("\n   AND ", conditions);
-		return new Where(sql, Map.copyOf(params), relevanceSelect, fullText);
+		// 키워드를 앞에 둔다 — 두 리스트로 갈리기 전과 같은 순서라야 실행계획이 그대로다.
+		List<String> all = new ArrayList<>(keywordConditions);
+		all.addAll(filters);
+		String sql = all.isEmpty() ? "" : "\n WHERE " + String.join("\n   AND ", all);
+
+		Where.Attachment attachment = null;
+		if (attachmentScope) {
+			if (!attachmentInclude.isEmpty()) {
+				params.put("ftDocQuery", attachmentInclude);
+			}
+			if (!attachmentExclude.isEmpty()) {
+				params.put("ftDocExclude", attachmentExclude);
+			}
+			attachment = new Where.Attachment(attachmentInclude, attachmentExclude,
+					List.copyOf(attachmentSkipped));
+		}
+		return new Where(sql, Map.copyOf(params), relevanceSelect, fullText,
+				String.join("\n   AND ", filters), String.join("\n   AND ", keywordConditions), attachment);
 	}
 
 	// ── 내부 ────────────────────────────────────────────────────────────────
@@ -339,17 +462,23 @@ public final class BidNoticeQueryBuilder {
 		}
 		String key = nextKey(name);
 		params.put(key, value);
-		conditions.add(column + " = :" + key);
+		filters.add(column + " = :" + key);
 		return this;
 	}
 
-	/** 제목·본문 어느 쪽이든 포함(또는 미포함)해야 한다. */
+	/**
+	 * 제목·본문 어느 쪽이든 포함(또는 미포함)해야 한다.
+	 *
+	 * <p>필터가 아니라 <b>키워드 조건</b>이다 — 첨부 브랜치에 붙으면 안 된다. 첨부 브랜치는
+	 * 자기 본문을 보는 것이 목적인데 여기에 공고 제목 LIKE 가 따라붙으면 교집합이 되어,
+	 * "제목엔 없고 규격서에만 있는 공고"라는 이 기능의 존재 이유가 사라진다.
+	 */
 	private void addLike(String term, boolean include) {
 		String key = nextKey("kw");
 		params.put(key, "%" + escapeLike(term) + "%");
 		String match = "(n.notice_name LIKE :" + key + " ESCAPE '!' "
 				+ "OR n.notice_body LIKE :" + key + " ESCAPE '!')";
-		conditions.add(include ? match : "NOT " + match);
+		keywordConditions.add(include ? match : "NOT " + match);
 	}
 
 	private static boolean isShort(String term) {

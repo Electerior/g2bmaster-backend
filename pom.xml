@@ -169,6 +169,23 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!--
+			진짜 MySQL 을 띄우는 통합 테스트용. h2 로는 대체가 안 된다 — ngram 파서가 없어서
+			검증하려는 동작 자체가 재현되지 않는다. 쓰는 곳은 NgramFullTextIndexTest 하나이고,
+			그 머리주석에 왜 DB 없이는 못 잡는 버그인지 적어 두었다.
+			버전은 spring-boot-dependencies 의 testcontainers BOM 이 정한다.
+		-->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-mysql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>

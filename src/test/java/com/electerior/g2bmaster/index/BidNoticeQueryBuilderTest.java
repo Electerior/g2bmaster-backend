@@ -238,13 +238,35 @@ class BidNoticeQueryBuilderTest {
 	}
 
 	@Test
+	@DisplayName("excludeState 는 그 상태가 아니거나 NULL 인 행만 남긴다")
+	void excludeStateAllowsNullState() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.excludeState(NoticeState.취소)
+				.build();
+
+		assertThat(where.sql()).contains("(n.state IS NULL OR n.state <> :");
+		assertThat(where.params()).containsValue("취소");
+	}
+
+	@Test
+	@DisplayName("excludeState(null) 은 조건을 만들지 않는다")
+	void excludeStateNullSkipped() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.excludeState(null)
+				.build();
+
+		assertThat(where.sql()).isEmpty();
+		assertThat(where.params()).isEmpty();
+	}
+
+	@Test
 	@DisplayName("null 필터는 조건을 만들지 않는다")
 	void nullFiltersSkipped() {
 		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
 				.category(null)
 				.region("  ")
 				.institutionName(null)
-				.estimatedPriceBetween(null, null)
+				.amountBetween(null, null)
 				.build();
 
 		assertThat(where.sql()).isEmpty();
@@ -254,22 +276,148 @@ class BidNoticeQueryBuilderTest {
 	 * 금액 조건이 <b>생성 컬럼을 그대로</b> 참조하는지 고정한다.
 	 *
 	 * <p>V11 이전에는 {@code CAST(JSON_UNQUOTE(JSON_EXTRACT(...)))} 를 식으로 걸었고, 그래서
-	 * 금액 필터가 인덱스를 못 타 전수 스캔이었다. 컬럼을 다시 함수로 감싸는 순간 같은 상태로
-	 * 돌아가는데 증상이 '느려짐' 뿐이라 리뷰로는 잡히지 않는다 — 그래서 SQL 문자열을 직접 본다.
+	 * 금액 필터가 인덱스를 못 타 전수 스캔이었다. 컬럼을 다시 함수로 감싸거나 {@code COALESCE} 를
+	 * 여기에 펼치는 순간 같은 상태로 돌아가는데, 증상이 '느려짐' 뿐이라 리뷰로는 잡히지 않는다 —
+	 * 그래서 SQL 문자열을 직접 본다.
 	 */
 	@Test
-	@DisplayName("금액 구간은 생성 컬럼 estimated_price 를 함수 없이 참조한다")
+	@DisplayName("금액 구간은 생성 컬럼 filter_amount 를 함수 없이 참조한다")
 	void amountRangeUsesGeneratedColumn() {
 		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
-				.estimatedPriceBetween(1_000_000L, 5_000_000L)
+				.amountBetween(1_000_000L, 5_000_000L)
 				.build();
 
-		assertThat(where.sql()).contains("n.estimated_price >= :minAmount")
-				.contains("n.estimated_price <= :maxAmount");
+		assertThat(where.sql()).contains("n.filter_amount >= :minAmount")
+				.contains("n.filter_amount <= :maxAmount");
 		// 함수로 감싸면 인덱스를 못 쓴다 — 되돌아가는 것을 여기서 막는다.
-		assertThat(where.sql()).doesNotContain("JSON_EXTRACT").doesNotContain("CAST(");
+		assertThat(where.sql()).doesNotContain("JSON_EXTRACT").doesNotContain("CAST(")
+				.doesNotContain("COALESCE");
 		assertThat(where.params()).containsEntry("minAmount", 1_000_000L)
 				.containsEntry("maxAmount", 5_000_000L);
+	}
+
+	/**
+	 * 금액 필터가 <b>추정가격 컬럼으로 되돌아가지 않는지</b> 고정한다.
+	 *
+	 * <p>실측(2026-08-14, 51,478행)으로 확인한 회귀다. 이 조건이 {@code estimated_price} 를 보던
+	 * 동안에는 {@code ?minAmount=1} 한 줄에 사전규격 12,119건 전부와 누리·D2B 2,045건 전부가
+	 * 사라졌다 — 전체의 28%다. 그 키를 가진 행이 나라장터의 입찰·마감·계획뿐이기 때문인데,
+	 * 결과가 '조용히 좁아질' 뿐이라 화면에서는 필터가 아예 안 붙은 것처럼 보였다.
+	 *
+	 * <p>컬럼 이름 하나만 되돌려도 같은 상태가 되므로 이름을 직접 못박는다.
+	 */
+	@Test
+	@DisplayName("금액 구간은 추정가격 전용 컬럼을 보지 않는다 — 사전규격·누리·D2B 가 통째로 빠졌던 자리다")
+	void amountRangeDoesNotUseEstimatedPriceColumn() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.amountBetween(1L, null)
+				.build();
+
+		assertThat(where.sql()).doesNotContain("estimated_price");
+	}
+
+	// ── 첨부 본문 스코프 ────────────────────────────────────────────────────
+
+	@Test
+	@DisplayName("스코프를 켜지 않으면 첨부 재료가 아예 없다 — /text 는 예전 그대로다")
+	void attachmentScopeOffLeavesNothing() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.keywords(List.of("서버"), List.of(), List.of())
+				.build();
+
+		assertThat(where.attachment()).isNull();
+		assertThat(where.unionsAttachments()).isFalse();
+		assertThat(where.excludesByAttachment()).isFalse();
+		assertThat(where.params()).doesNotContainKey("ftDocQuery");
+	}
+
+	/**
+	 * 첨부 브랜치는 <b>조건 문자열이 아니라 재료</b>로 넘어간다. 조립은 저장소가 한다 —
+	 * 여기서 조건을 만들어 버리면 {@code sql()} 을 쓰는 기존 경로가 첨부 조건을 끌고 간다.
+	 */
+	@Test
+	@DisplayName("스코프를 켜도 WHERE 절은 그대로고, 첨부 질의만 따로 실린다")
+	void attachmentScopeAddsQueryNotCondition() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.attachmentScope(true)
+				.keywords(List.of("서버"), List.of("스토리지"), List.of())
+				.build();
+
+		assertThat(where.sql()).doesNotContain("bid_notice_document");
+		assertThat(where.unionsAttachments()).isTrue();
+		assertThat(where.attachment().includeQuery()).isEqualTo("+\"서버\" \"스토리지\"");
+		assertThat(where.params()).containsEntry("ftDocQuery", "+\"서버\" \"스토리지\"");
+	}
+
+	/**
+	 * 제외 낱말을 첨부 질의에 섞으면 그 <b>파일</b>만 후보에서 빠질 뿐, 공고는 다른 첨부로
+	 * 여전히 걸린다. 제외는 공고 단위라야 하므로 집합을 따로 뽑아 반조인한다.
+	 */
+	@Test
+	@DisplayName("제외 낱말은 첨부 포함 질의에 섞이지 않고 따로 빠진다")
+	void attachmentExcludeIsSeparate() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.attachmentScope(true)
+				.keywords(List.of("서버"), List.of(), List.of("임대", "렌탈"))
+				.build();
+
+		assertThat(where.attachment().includeQuery()).isEqualTo("+\"서버\"");
+		// 무기호 = 불리언 모드의 OR. 하나라도 들어 있으면 그 공고를 뺀다.
+		assertThat(where.attachment().excludeQuery()).isEqualTo("\"임대\" \"렌탈\"");
+		assertThat(where.excludesByAttachment()).isTrue();
+	}
+
+	/** 제외만 지정한 검색도 첨부까지 걸러야 한다 — 공고 텍스트에만 걸면 범위가 갈린다. */
+	@Test
+	@DisplayName("검색어 없이 제외만 있어도 첨부 제외는 걸린다")
+	void attachmentExcludeAppliesWithoutPositiveTerms() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.attachmentScope(true)
+				.keywords(List.of(), List.of(), List.of("임대"))
+				.build();
+
+		assertThat(where.unionsAttachments()).isFalse();   // 뒤질 낱말이 없으니 브랜치는 안 만든다
+		assertThat(where.excludesByAttachment()).isTrue(); // 그래도 빼기는 한다
+	}
+
+	/**
+	 * ngram 토큰 크기가 2라 한 글자는 MATCH 가 버리고, 대안인 {@code body_text LIKE '%x%'} 는
+	 * 실측 669ms 다(done 3,704행 기준). 화면 질의에 붙일 수 없는 비용이라 건너뛰고,
+	 * <b>건너뛰었다는 사실을 응답에 싣는다</b> — 조용히 무시하면 사용자가 못 알아챈다.
+	 */
+	@Test
+	@DisplayName("한 글자 낱말은 첨부 범위에서 빠지고, 빠졌다는 사실이 남는다")
+	void singleCharacterTermsSkippedForAttachments() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.attachmentScope(true)
+				.keywords(List.of("차", "서버"), List.of(), List.of("컵"))
+				.build();
+
+		assertThat(where.attachment().includeQuery()).isEqualTo("+\"서버\"");
+		assertThat(where.attachment().skippedTerms()).containsExactlyInAnyOrder("차", "컵");
+		// 공고 텍스트 쪽에서는 지금처럼 LIKE 로 계속 걸린다.
+		assertThat(where.sql()).contains("n.notice_name LIKE");
+	}
+
+	/**
+	 * 필터가 두 브랜치에 공통으로 붙어야 한다. 갈라지면 '경기도'로 좁힌 검색이 첨부에서
+	 * 걸렸다는 이유로 부산 공고를 데려온다.
+	 */
+	@Test
+	@DisplayName("키워드와 필터가 따로 나오고, 합치면 예전 WHERE 와 같다")
+	void keywordAndFilterSplitRecombines() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.attachmentScope(true)
+				.keywords(List.of("서버"), List.of(), List.of())
+				.region("경기도")
+				.activeOnly(true)
+				.build();
+
+		assertThat(where.keywordSql()).contains("MATCH(n.notice_name, n.notice_body)");
+		assertThat(where.keywordSql()).doesNotContain("n.region");
+		assertThat(where.filterSql()).contains("n.region LIKE").contains("n.close_date");
+		assertThat(where.filterSql()).doesNotContain("MATCH");
+		assertThat(where.sql()).isEqualTo("\n WHERE " + where.keywordSql() + "\n   AND " + where.filterSql());
 	}
 
 	@Test

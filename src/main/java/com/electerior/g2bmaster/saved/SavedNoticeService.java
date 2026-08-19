@@ -1,6 +1,7 @@
 package com.electerior.g2bmaster.saved;
 
 import com.electerior.g2bmaster.common.ApiException;
+import com.electerior.g2bmaster.index.NoticeMarginService;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +28,11 @@ public class SavedNoticeService {
 	private static final ObjectMapper MAPPER = JsonMapper.builder().build();
 
 	private final SavedNoticeRepository repository;
+	private final NoticeMarginService margins;
 
-	public SavedNoticeService(SavedNoticeRepository repository) {
+	public SavedNoticeService(SavedNoticeRepository repository, NoticeMarginService margins) {
 		this.repository = repository;
+		this.margins = margins;
 	}
 
 	/**
@@ -47,6 +50,7 @@ public class SavedNoticeService {
 		JsonNode priceRows = in.path("priceRows").isArray()
 				? in.path("priceRows") : JsonNodeFactory.instance.arrayNode();
 		Long amount = parseAmount(in.path("amount"));
+		Long priceTotal = parseLong(in.path("priceTotal"));
 
 		String title = emptyToNull(text(in.path("title")));
 		String insttNm = emptyToNull(text(in.path("insttNm")));
@@ -64,10 +68,15 @@ public class SavedNoticeService {
 				amount == null ? null : Math.round(amount * VAT_MULTIPLIER),
 				summary,
 				priceRows.toString(),
-				parseLong(in.path("priceTotal")),
+				priceTotal,
 				in.path("raw").isObject() || in.path("raw").isArray() ? in.path("raw").toString() : "{}",
 				note,
 				SavedSearchText.build(title, insttNm, summary, note, priceRows)));
+
+		// 사람이 확정한 가격표 합계를 검색 색인의 마진 축으로 올린다 — 마진순 정렬이 읽는 값이다.
+		// 저장이 곧 '이 원가가 맞다'는 선언이므로 confirmed 로 올라가고, 딜 분석의 추정을 덮는다.
+		// 실패해도 저장 자체는 성공이다(NoticeMarginService 가 삼킨다) — 색인은 파생물이다.
+		margins.recordConfirmed(bidNtceNo, text(in.path("source")), priceTotal);
 		return bidNtceNo;
 	}
 

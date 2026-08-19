@@ -58,12 +58,16 @@ class OpenApiDocumentTest {
 			"GET /api/bid-result",
 			"GET /api/bid-plan",
 			"GET /api/pre-spec",
-			// 공고 통합 검색 — 로컬 색인(bid_notice) 단독 조회
+			// 공고 통합 검색 — 로컬 색인(bid_notice) 단독 조회.
+			// 기본 경로는 첨부 본문(bid_notice_document)까지 보고, /text 는 공고 텍스트만 본다.
 			"GET /api/search/notices",
 			"GET /api/search/notices/facets",
+			"GET /api/search/notices/text",
+			"GET /api/search/notices/text/facets",
 			"GET /api/search/notices/status",
 			"GET /api/search/notices/{id}",
 			"POST /api/search/notices/sync",
+			"POST /api/search/notices/margins/backfill",
 			// 트렌드
 			"GET /api/trends/{kind}",
 			"GET /api/trends/{kind}/keyword-groups",

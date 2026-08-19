@@ -34,6 +34,8 @@ final class DocumentSniffer {
 	 * (요약: 국내 첨부 zip 은 대개 CP949 이고, UTF-8 로 열면 파일이 통째로 실패한다).
 	 */
 	private static final Charset ZIP_NAME_CHARSET = DocumentTextExtractor.ZIP_NAME_CHARSET;
+	/** XML 루트 요소를 찾을 범위. 선언 뒤 주석이 길어도 헤더는 이 안에 있다. */
+	private static final int XML_SCAN_BYTES = 4096;
 
 	private DocumentSniffer() {
 	}
@@ -55,11 +57,14 @@ final class DocumentSniffer {
 	static String resolveName(String filename, byte[] bytes) {
 		String name = filename == null || filename.isBlank() ? "첨부" : filename.trim();
 		String lower = name.toLowerCase();
-		boolean known = lower.endsWith(".hwpx") || lower.endsWith(".hwp") || lower.endsWith(".pdf")
-				|| lower.endsWith(".xlsx") || lower.endsWith(".xls") || lower.endsWith(".zip");
+		// 매직 넘버가 없는 형식들. 이름 말고는 판정할 방법이 없으니 이름을 믿는다.
+		boolean plain = lower.endsWith(".txt") || lower.endsWith(".htm") || lower.endsWith(".html");
 		String ext = sniff(bytes);
 		if (ext == null) {
-			return known ? name : null;
+			// **컨테이너를 자처했는데 확인이 안 되면 닫는다.** 이름만 믿고 파서에 넣으면
+			// hwplib 이 NotOLE2FileException 으로 넘어지고(실측 9건), 사유가 파서 내부 예외라
+			// "이 파일은 애초에 HWP 가 아니었다" 는 사실이 로그에서 읽히지 않는다.
+			return plain ? name : null;
 		}
 		return lower.endsWith("." + ext) ? name : name + "." + ext;
 	}
@@ -68,6 +73,12 @@ final class DocumentSniffer {
 	static String sniff(byte[] bytes) {
 		if (bytes == null || bytes.length < 8) {
 			return null;
+		}
+		// **BOM 을 건너뛰고 본다.** 실측: 끝까지 "형식 미지원" 으로 남던 .hml 2건이 전부
+		// UTF-8 BOM(EF BB BF)으로 시작했다. 세 바이트 때문에 XML 판정이 통째로 어긋나고,
+		// 파일은 읽을 수 있는데도 색인에서 사라진다.
+		if (startsWith(bytes, new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF})) {
+			bytes = java.util.Arrays.copyOfRange(bytes, 3, bytes.length);
 		}
 		if (startsWith(bytes, new byte[] {'%', 'P', 'D', 'F'})) {
 			return "pdf";
@@ -86,6 +97,13 @@ final class DocumentSniffer {
 			// 증거 없이 xls 로 단정하면 .doc 같은 것이 POI 로 흘러가 "XLSX 파싱 실패" 라는
 			// 거짓 사유를 남긴다 — 형식 미지원으로 정직하게 닫는 편이 낫다.
 			return hasOleStream(bytes, "Workbook") || hasOleStream(bytes, "Book") ? "xls" : null;
+		}
+		// HML/HWPML — 한글의 XML 저장 형식. **이름은 .hwp 로 온다**(실측: 형식 미지원으로 닫힌
+		// .hwp 23건이 전부 이것이었다). 바이너리 HWP 파서에 넣으면 OLE 가 아니라 넘어지므로,
+		// 루트 요소를 보고 갈라야 한다. XML 선언 뒤 공백·주석이 올 수 있어 앞부분을 넓게 본다.
+		if (startsWith(bytes, new byte[] {'<', '?', 'x', 'm', 'l'})
+				&& indexOf(bytes, "<HWPML".getBytes(StandardCharsets.ISO_8859_1), XML_SCAN_BYTES) >= 0) {
+			return "hml";
 		}
 		// ZIP 컨테이너 — HWPX·XLSX·DOCX·일반 zip 이 전부 여기로 온다. 안을 봐야 갈린다.
 		if (startsWith(bytes, new byte[] {'P', 'K', 0x03, 0x04})) {
@@ -147,6 +165,11 @@ final class DocumentSniffer {
 	 * <p>{@code new String(bytes, ISO_8859_1).contains(...)} 로도 되지만 그것은 파일 크기만 한
 	 * 문자열을 한 번 더 만든다 — 여기 오는 첨부는 수 MB 짜리도 있고, 회차마다 300개를 돈다.
 	 */
+	private static int indexOf(byte[] haystack, byte[] needle, int limit) {
+		byte[] head = haystack.length <= limit ? haystack : java.util.Arrays.copyOf(haystack, limit);
+		return indexOf(head, needle);
+	}
+
 	private static int indexOf(byte[] haystack, byte[] needle) {
 		outer:
 		for (int i = 0; i <= haystack.length - needle.length; i++) {
