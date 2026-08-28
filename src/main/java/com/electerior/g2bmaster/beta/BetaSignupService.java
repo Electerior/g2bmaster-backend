@@ -75,7 +75,8 @@ public class BetaSignupService {
 	}
 
 	BetaStatus status(int accepted, OffsetDateTime now) {
-		int remaining = Math.max(0, properties.capacity() - accepted);
+		int totalAccepted = properties.acceptedBaseline() + accepted;
+		int remaining = Math.max(0, properties.capacity() - totalAccepted);
 		boolean open = remaining > 0 && now.isBefore(properties.deadline());
 		return new BetaStatus(properties.total(), remaining, properties.deadline(), open);
 	}

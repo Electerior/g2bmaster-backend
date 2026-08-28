@@ -24,7 +24,7 @@ class BetaSignupServiceTest {
 	private static final Clock CLOCK = Clock.fixed(
 			Instant.parse("2026-08-28T02:30:00Z"), ZoneId.of("Asia/Seoul"));
 	private static final BetaProperties PROPERTIES = new BetaProperties(
-			20, 12, OffsetDateTime.parse("2026-08-31T23:59:59+09:00"));
+			20, 20, 6, OffsetDateTime.parse("2026-08-31T23:59:59+09:00"));
 
 	private BetaSignupRepository repository;
 	private BetaSignupService service;
@@ -36,13 +36,13 @@ class BetaSignupServiceTest {
 	}
 
 	@Test
-	void 현황은_실제_접수_정원에서_저장된_건수를_뺀다() {
+	void 현황은_전체_정원에서_기존_시트와_DB_접수_건수를_뺀다() {
 		when(repository.count()).thenReturn(3);
 
 		BetaSignupService.BetaStatus status = service.status();
 
 		assertThat(status.total()).isEqualTo(20);
-		assertThat(status.remaining()).isEqualTo(9);
+		assertThat(status.remaining()).isEqualTo(11);
 		assertThat(status.open()).isTrue();
 	}
 
@@ -88,7 +88,7 @@ class BetaSignupServiceTest {
 	void 정원이_차면_DB_잠금_안에서_409로_막는다() {
 		when(repository.existsByRequestId("request-1")).thenReturn(false);
 		when(repository.existsByEmail("hello@example.com")).thenReturn(false);
-		when(repository.count()).thenReturn(12);
+		when(repository.count()).thenReturn(14);
 
 		assertThatThrownBy(() -> service.signup(request("hello@example.com")))
 				.isInstanceOfSatisfying(ApiException.class,

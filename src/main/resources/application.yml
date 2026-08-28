@@ -94,10 +94,11 @@ logging:
 
 # ── 애플리케이션 고유 설정 ────────────────────────────────────────────────
 g2b:
-  # 공개 베타 모집. total은 화면에 내거는 전체 규모, capacity는 이번 회차 실제 접수 정원이다.
+  # 공개 베타 모집. accepted-baseline은 구글 시트에 먼저 접수된 건수이며 DB 신규 접수와 합산한다.
   beta:
     total: ${BETA_TOTAL:20}
-    capacity: ${BETA_CAPACITY:12}
+    capacity: ${BETA_CAPACITY:20}
+    accepted-baseline: ${BETA_ACCEPTED_BASELINE:6}
     deadline: ${BETA_DEADLINE:2026-08-31T23:59:59+09:00}
 
   # 나라장터 OpenAPI
