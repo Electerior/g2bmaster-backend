@@ -5,6 +5,7 @@ import com.electerior.g2bmaster.common.G2bDates.DateWindow;
 import com.electerior.g2bmaster.config.G2bProperties;
 import com.electerior.g2bmaster.integration.g2b.G2bApiClient;
 import com.electerior.g2bmaster.notice.BidEnrichment;
+import com.electerior.g2bmaster.notice.BidResultLookup;
 import com.electerior.g2bmaster.notice.BidResultRepository;
 import com.electerior.g2bmaster.notice.G2bEndpoints;
 import java.time.LocalDateTime;
@@ -63,6 +64,21 @@ public class BidResultIngestService {
 	 * 들어온 건이 영영 색인되지 않는다. 겹쳐 읽은 건은 upsert 가 흡수한다.
 	 */
 	static final int OVERLAP_MINUTES = 30;
+
+	/**
+	 * 매 회차 <b>무조건</b> 다시 읽는 기간(일).
+	 *
+	 * <p>{@link #OVERLAP_MINUTES}(30분)만으로는 모자랐다. 실측 2026-08-27 하루가 상류 105건 /
+	 * 색인 0건이었고, 08-20 은 450건 중 62건만 들어와 있었다 — 적재는 그동안 정상으로 돌고
+	 * 있었다. 상류가 낙찰 건을 등록일시보다 <b>한참 뒤에</b> 목록에 올리기 때문이다(지금
+	 * 조회하면 그 날짜의 건이 다 보인다). 30분짜리 겹침으로는 이미 지나간 워터마크 뒤로
+	 * 올라오는 건을 영원히 못 잡는다.
+	 *
+	 * <p>비용은 거의 없다. 이 기간은 오퍼레이션의 31일 상한 안이라 창이 하나로 나가고,
+	 * 한 창은 페이지 한두 번이면 끝난다 — 회차당 업종별 1~2콜로, 10분짜리 창을 물을 때와
+	 * 자릿수가 같다. 겹쳐 읽은 건은 upsert 가 흡수한다.
+	 */
+	static final int RESCAN_DAYS = 7;
 
 	/** 워터마크가 없는 첫 회차에 거슬러 올라갈 기간(일). 설정이 없으면 공고 쪽과 같은 7일. */
 	static final int DEFAULT_BACKFILL_DAYS = 7;
@@ -236,28 +252,15 @@ public class BidResultIngestService {
 	 *
 	 * @return 공고번호나 등록일시가 없으면 {@code null} — 저장할 자리가 없다
 	 */
+	/**
+	 * 상류 응답 한 줄 → 저장 행.
+	 *
+	 * <p>구현은 {@link BidResultLookup#toRow} 에 있다. 공고번호 단건 조회도 같은 테이블에
+	 * 같은 모양으로 넣어야 하기 때문이다 — 둘이 갈라지면 같은 공고가 들어온 경로에 따라
+	 * 다른 모양으로 저장되고, 화면에서는 "가끔 필드가 비는" 형태로만 보인다.
+	 */
 	private static BidResultRepository.Row toRow(String bidType, Map<String, Object> item) {
-		String bidNtceNo = str(item.get("bidNtceNo"));
-		if (bidNtceNo.isEmpty()) {
-			return null;
-		}
-		LocalDateTime rgstDt = G2bDates.parseG2bDt(item.get("rgstDt"));
-		if (rgstDt == null) {
-			return null;
-		}
-		// 라이브 경로(NoticeFetchSupport.fetchEnriched)와 같은 순서다 — 사본을 뜨고, _type 을
-		// 먼저 얹고, 그 위에 보강을 돌린다. 순서가 바뀌면 _type 을 보고 값을 정하는 보강 항목이
-		// 달라진다. 업종 키(물품/용역/공사)는 G2bEndpoints.typeOfUrl 이 그 URL 에서 뽑던 값과 같다.
-		Map<String, Object> enriched = new LinkedHashMap<>(item);
-		enriched.put("_type", bidType);
-		BidEnrichment.enrichBidNotice(enriched);
-		try {
-			return new BidResultRepository.Row(bidNtceNo, bidType, JSON.writeValueAsString(enriched), rgstDt);
-		}
-		catch (JacksonException ex) {
-			log.debug("낙찰정보 행을 JSON 으로 쓰지 못했습니다 ({}): {}", bidNtceNo, ex.getMessage());
-			return null;
-		}
+		return BidResultLookup.toRow(bidType, item);
 	}
 
 	/**
@@ -279,22 +282,27 @@ public class BidResultIngestService {
 	/**
 	 * 이번 회차가 읽어 올 구간의 시작 시각.
 	 *
-	 * <p>{@code forcedBackfillDays} 가 0 이면 평시 증분(워터마크 − 겹침)이다. 0보다 크면 운영자가
+	 * <p>{@code forcedBackfillDays} 가 0 이면 평시 증분이다 — 워터마크에서 물러난 지점과
+	 * {@link #RESCAN_DAYS} 일 전 중 <b>이른 쪽</b>이 시작이다. 0보다 크면 운영자가
 	 * "그만큼 거슬러 올라가 다시 읽어라"고 지시한 것이고, 그때도 <b>구간을 넓히는 쪽으로만</b>
 	 * 작동한다(둘 중 이른 시각).
 	 */
-	private LocalDateTime startOf(String stateKey, LocalDateTime now, int forcedBackfillDays) {
+	LocalDateTime startOf(String stateKey, LocalDateTime now, int forcedBackfillDays) {
 		LocalDateTime watermark = stateRepository.readWatermark(stateKey);
 		LocalDateTime incremental = watermark == null ? null : watermark.minusMinutes(OVERLAP_MINUTES);
+		// 워터마크가 얼마나 앞서 있든 최근 RESCAN_DAYS 일은 늘 다시 읽는다 — 상류가 늦게 올린
+		// 건은 워터마크가 이미 지나가 버려, 이 바닥이 없으면 영영 색인되지 않는다.
+		LocalDateTime rescan = now.minusDays(RESCAN_DAYS);
 		LocalDateTime forced = forcedBackfillDays > 0 ? now.minusDays(forcedBackfillDays) : null;
 
-		if (incremental == null) {
-			return forced != null ? forced : now.minusDays(firstRunBackfillDays);
-		}
-		if (forced == null) {
-			return incremental;
-		}
-		return forced.isBefore(incremental) ? forced : incremental;
+		LocalDateTime start = incremental == null
+				? now.minusDays(firstRunBackfillDays)
+				: earlier(incremental, rescan);
+		return forced == null ? start : earlier(forced, start);
+	}
+
+	private static LocalDateTime earlier(LocalDateTime a, LocalDateTime b) {
+		return a.isBefore(b) ? a : b;
 	}
 
 	/**

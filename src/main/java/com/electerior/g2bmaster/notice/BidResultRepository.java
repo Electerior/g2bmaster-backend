@@ -135,6 +135,41 @@ public class BidResultRepository {
 	 *
 	 * @param bidTypes 물품/용역/공사 중 볼 것들. 비면 빈 결과다(호출부가 채워 넘긴다)
 	 */
+	/**
+	 * 공고번호 하나의 낙찰정보. <b>등록일시 창을 보지 않는다.</b>
+	 *
+	 * <p>공고번호를 알고 묻는 조회에 날짜창은 방해만 된다 — 창의 축은 낙찰 등록일시인데
+	 * 사용자가 들고 온 것은 공고이고, 둘은 몇 주씩 떨어져 있다. 실제로 공고 검색에서
+	 * "낙찰결과 →" 로 넘어오면 공고일 기준 창이 그대로 실려 와, 색인에 행이 있어도 빗나갔다.
+	 *
+	 * <p>PK 가 {@code (공고번호, 업종)} 이라 한 공고가 두 업종으로 들어와 있을 수 있다.
+	 * 그대로 다 준다 — 접는 것은 호출부의 일이다.
+	 */
+	public List<Map<String, Object>> findByBidNtceNo(String bidNtceNo) {
+		if (bidNtceNo == null || bidNtceNo.isBlank()) {
+			return List.of();
+		}
+		List<Map<String, Object>> rows = jdbc.query("""
+				SELECT `row`
+				  FROM bid_result
+				 WHERE bid_ntce_no = :no
+				 ORDER BY rgst_dt DESC
+				""", new MapSqlParameterSource().addValue("no", bidNtceNo.trim()),
+				(rs, n) -> parseRow(rs.getString("row")));
+
+		List<Map<String, Object>> items = new ArrayList<>(rows.size());
+		for (Map<String, Object> row : rows) {
+			if (row != null) {
+				items.add(row);
+			}
+		}
+		if (items.size() < rows.size()) {
+			log.warn("낙찰정보 색인에서 읽지 못한 행이 있습니다 — 공고 {} ({}건 중 {}건만 냅니다).",
+					bidNtceNo, rows.size(), items.size());
+		}
+		return items;
+	}
+
 	public List<Map<String, Object>> findWindow(LocalDateTime fromInclusive, LocalDateTime toExclusive,
 			Collection<String> bidTypes, int limit) {
 		if (bidTypes == null || bidTypes.isEmpty()) {

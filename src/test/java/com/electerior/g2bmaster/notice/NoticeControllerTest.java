@@ -34,6 +34,7 @@ class NoticeControllerTest {
 
 	private BidAnnounceService bidAnnounceService;
 	private BidResultService bidResultService;
+	private BidResultLookup bidResultLookup;
 	private BidPlanService bidPlanService;
 	private PreSpecService preSpecService;
 	private MockMvc mockMvc;
@@ -42,10 +43,11 @@ class NoticeControllerTest {
 	void setUp() {
 		bidAnnounceService = mock(BidAnnounceService.class);
 		bidResultService = mock(BidResultService.class);
+		bidResultLookup = mock(BidResultLookup.class);
 		bidPlanService = mock(BidPlanService.class);
 		preSpecService = mock(PreSpecService.class);
 		mockMvc = MockMvcBuilders.standaloneSetup(new NoticeController(
-				bidAnnounceService, bidResultService, bidPlanService, preSpecService)).build();
+				bidAnnounceService, bidResultService, bidResultLookup, bidPlanService, preSpecService)).build();
 	}
 
 	private static Map<String, Object> notice(String no, String name, String source, int score) {

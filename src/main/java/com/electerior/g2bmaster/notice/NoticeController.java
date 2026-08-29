@@ -41,13 +41,15 @@ public class NoticeController {
 
 	private final BidAnnounceService bidAnnounceService;
 	private final BidResultService bidResultService;
+	private final BidResultLookup bidResultLookup;
 	private final BidPlanService bidPlanService;
 	private final PreSpecService preSpecService;
 
 	public NoticeController(BidAnnounceService bidAnnounceService, BidResultService bidResultService,
-			BidPlanService bidPlanService, PreSpecService preSpecService) {
+			BidResultLookup bidResultLookup, BidPlanService bidPlanService, PreSpecService preSpecService) {
 		this.bidAnnounceService = bidAnnounceService;
 		this.bidResultService = bidResultService;
+		this.bidResultLookup = bidResultLookup;
 		this.bidPlanService = bidPlanService;
 		this.preSpecService = preSpecService;
 	}
@@ -97,12 +99,31 @@ public class NoticeController {
 
 	// ── 입찰결과 ────────────────────────────────────────────────────────────
 
-	/** 낙찰정보 검색. {@code corpNm} 으로 낙찰업체를 좁힐 수 있다. */
+	/**
+	 * 낙찰정보 검색. {@code corpNm} 으로 낙찰업체를 좁힐 수 있다.
+	 *
+	 * <p>{@code bidNtceNo} 가 오면 <b>검색이 아니라 단건 조회</b>다 — 날짜창·검색어·정렬을 전부
+	 * 건너뛴다. 공고번호를 이미 아는 질문("이 공고, 결과 나왔나")에 창 검색을 태우면 두 번
+	 * 빗나간다: 창의 축은 낙찰 등록일시인데 사용자가 들고 온 것은 공고이고, 색인이 그 구간을
+	 * 덮지 못했으면 있는 결과도 못 찾는다. 단건 조회는 색인을 먼저 보고 없으면 상류에 한 번
+	 * 묻는다({@link BidResultLookup}).
+	 */
 	@Operation(summary = "개찰결과 검색",
-			description = "이미 끝난 입찰이라 수주기회 점수가 없다 — 정렬 지정이 없으면 BM25 를 쓴다.")
+			description = "이미 끝난 입찰이라 수주기회 점수가 없다 — 정렬 지정이 없으면 BM25 를 쓴다. "
+					+ "bidNtceNo 를 주면 그 공고 단건 조회다(날짜창을 보지 않고, 색인에 없으면 "
+					+ "나라장터에 한 번 물어 색인에 채운다). bidType 을 함께 주면 상류 호출이 1회로 끝난다.")
 	@GetMapping("/bid-result")
 	public Map<String, Object> bidResult(@ModelAttribute SearchCriteria criteria,
-			@RequestParam(value = "corpNm", required = false) String corpNm) {
+			@RequestParam(value = "corpNm", required = false) String corpNm,
+			@RequestParam(value = "bidNtceNo", required = false) String bidNtceNo) {
+
+		if (bidNtceNo != null && !bidNtceNo.isBlank()) {
+			List<Map<String, Object>> found = bidResultLookup.byNoticeNo(bidNtceNo, criteria.type());
+			Map<String, Object> single = page(
+					PagedResponse.of(found, criteria.page(), criteria.perPageValue()));
+			single.put("_cached", false);
+			return single;
+		}
 
 		SearchResultCache.Cached<List<Map<String, Object>>> cached = bidResultService.search(criteria, corpNm);
 
