@@ -100,6 +100,12 @@ g2b:
     capacity: ${BETA_CAPACITY:20}
     accepted-baseline: ${BETA_ACCEPTED_BASELINE:6}
     deadline: ${BETA_DEADLINE:2026-08-31T23:59:59+09:00}
+    # 접수를 구글 시트(Apps Script 웹앱)에도 남긴다. 운영자가 실제로 보는 목록이 그 시트다.
+    # url 기본값을 비워 두는 이유는 BetaSheetProperties 주석 참고 — 이 저장소는 공개이고,
+    # 값이 있으면 CI·개발 기동만으로도 운영 시트에 행이 들어간다. 비면 연동은 조용히 꺼진다.
+    sheet:
+      url: ${BETA_SHEET_URL:}
+      timeout: ${BETA_SHEET_TIMEOUT:15s}
 
   # 나라장터 OpenAPI
   openapi:

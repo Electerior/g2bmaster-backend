@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class BetaSignupService {
@@ -23,16 +25,19 @@ public class BetaSignupService {
 
 	private final BetaSignupRepository repository;
 	private final BetaProperties properties;
+	private final BetaSheetClient sheet;
 	private final Clock clock;
 
 	@Autowired
-	public BetaSignupService(BetaSignupRepository repository, BetaProperties properties) {
-		this(repository, properties, Clock.system(KST));
+	public BetaSignupService(BetaSignupRepository repository, BetaProperties properties, BetaSheetClient sheet) {
+		this(repository, properties, sheet, Clock.system(KST));
 	}
 
-	BetaSignupService(BetaSignupRepository repository, BetaProperties properties, Clock clock) {
+	BetaSignupService(
+			BetaSignupRepository repository, BetaProperties properties, BetaSheetClient sheet, Clock clock) {
 		this.repository = repository;
 		this.properties = properties;
+		this.sheet = sheet;
 		this.clock = clock;
 	}
 
@@ -71,6 +76,12 @@ public class BetaSignupService {
 		repository.insert(new BetaSignup(
 				signup.requestId(), signup.name(), signup.phone(), signup.organization(),
 				signup.industry(), signup.email(), LocalDateTime.ofInstant(receivedAt.toInstant(), clock.getZone())));
+
+		// 운영자가 보는 접수 목록은 구글 시트다. 여기서 놓치면 신청은 저장돼도 아무도 모른다.
+		// 저장이 실제로 일어난 이 자리에서만 부른다 — 허니팟·재시도·중복은 위에서 이미 돌아갔다.
+		afterCommit(() -> sheet.append(new BetaSheetClient.Signup(
+				signup.requestId(), signup.name(), signup.organization(),
+				signup.industry(), signup.email(), signup.phone())));
 		return new BetaSignupResponse(true, receivedAt);
 	}
 
@@ -116,6 +127,29 @@ public class BetaSignupService {
 			throw ApiException.badRequest("입력값이 너무 깁니다. 다시 확인해 주세요.");
 		}
 		return normalized;
+	}
+
+	/**
+	 * 커밋된 뒤에 실행한다.
+	 *
+	 * <p>트랜잭션 안에서 외부 HTTP 를 기다리면 정원 잠금({@code beta_signup_guard} 의
+	 * {@code FOR UPDATE})을 쥔 채로 기다리게 되어, 시트가 느린 동안 모든 신청이 한 줄로 선다.
+	 * 마지막 한 자리를 다투는 순간에 정확히 그 일이 일어난다.
+	 *
+	 * <p>동기화가 없는 호출(단위 테스트, 트랜잭션 밖 호출)에서는 그 자리에서 실행한다 —
+	 * 조용히 건너뛰면 테스트가 통과하는데 운영에서만 시트가 비는 반대 상황이 된다.
+	 */
+	private static void afterCommit(Runnable action) {
+		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+			action.run();
+			return;
+		}
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				action.run();
+			}
+		});
 	}
 
 	private static String trim(String value) {

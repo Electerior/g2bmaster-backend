@@ -62,6 +62,10 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
 | `GET /api/beta/status` | — | `{total, remaining, deadline, open}` |
 | `POST /api/beta/signups` | `{name, organization, industry, email, phone, privacyAgreed, website?, requestId?}` | `{ok:true, receivedAt}` |
 
+접수는 DB 에 저장한 뒤 **구글 시트에도 같은 행을 남긴다**(`g2b.beta.sheet.url` 이 있을 때만).
+운영자가 보는 목록이 그 시트라서다. 시트가 실패해도 접수는 성공으로 응답한다 — 원본은 DB 이고,
+커밋 뒤에 부르므로 되돌릴 수도 없다. 실패는 `requestId` 와 함께 로그에 남는다.
+
 이메일과 요청 ID는 각각 중복을 막는다. 정원 확인과 저장은 DB 잠금 한 구간에서 처리해 마지막
 자리에 동시 신청이 들어와도 정원을 넘기지 않는다. 중복 이메일은 409
 `DUPLICATE_EMAIL`, 정원·마감 종료는 409 `BETA_CLOSED`다. 신청자 IP는 저장하지 않는다.

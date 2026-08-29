@@ -27,12 +27,14 @@ class BetaSignupServiceTest {
 			20, 20, 6, OffsetDateTime.parse("2026-08-31T23:59:59+09:00"));
 
 	private BetaSignupRepository repository;
+	private BetaSheetClient sheet;
 	private BetaSignupService service;
 
 	@BeforeEach
 	void setUp() {
 		repository = mock(BetaSignupRepository.class);
-		service = new BetaSignupService(repository, PROPERTIES, CLOCK);
+		sheet = mock(BetaSheetClient.class);
+		service = new BetaSignupService(repository, PROPERTIES, sheet, CLOCK);
 	}
 
 	@Test
@@ -109,5 +111,39 @@ class BetaSignupServiceTest {
 		return new BetaSignupRequest(
 				" 홍길동 ", " 테스트회사 ", " IT장비 납품 ", email,
 				" 010-0000-0000 ", true, "", "request-1");
+	}
+
+	@Test
+	void 저장된_접수는_구글_시트에도_넘긴다() {
+		when(repository.existsByEmail("hello@example.com")).thenReturn(false);
+
+		service.signup(request(" HELLO@Example.com "));
+
+		ArgumentCaptor<BetaSheetClient.Signup> forwarded =
+				ArgumentCaptor.forClass(BetaSheetClient.Signup.class);
+		verify(sheet).append(forwarded.capture());
+		// 시트로 가는 값은 DB 에 넣은 것과 같아야 한다 — 정규화 전 원문이 아니다.
+		assertThat(forwarded.getValue().email()).isEqualTo("hello@example.com");
+		assertThat(forwarded.getValue().requestId()).isNotBlank();
+	}
+
+	@Test
+	void 저장하지_않은_요청은_시트에도_넘기지_않는다() {
+		// 허니팟: 저장도 전달도 없다. 봇 트래픽으로 시트를 두드리지 않기 위해서다.
+		service.signup(new BetaSignupRequest(
+				"이름", "소속", "업종", "hello@example.com", "010-0000-0000", true, "봇", null));
+		verifyNoInteractions(sheet);
+
+		// 같은 requestId 재시도: 이미 넣은 행이라 시트도 다시 부르지 않는다.
+		when(repository.existsByRequestId("req-1")).thenReturn(true);
+		service.signup(new BetaSignupRequest(
+				"이름", "소속", "업종", "hello@example.com", "010-0000-0000", true, null, "req-1"));
+		verifyNoInteractions(sheet);
+
+		// 중복 이메일: 저장이 없으니 전달도 없다.
+		when(repository.existsByEmail("hello@example.com")).thenReturn(true);
+		assertThatThrownBy(() -> service.signup(request("hello@example.com")))
+				.isInstanceOf(ApiException.class);
+		verifyNoInteractions(sheet);
 	}
 }
