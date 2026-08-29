@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -26,6 +29,8 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class BidNoticeIndexRepository {
+
+	private static final Logger log = LoggerFactory.getLogger(BidNoticeIndexRepository.class);
 
 	/**
 	 * 검색 한 페이지의 상한. {@code SearchCriteria.MAX_PER_PAGE} 와 같은 값이며 이유도 같다 —
@@ -95,22 +100,68 @@ public class BidNoticeIndexRepository {
 	/**
 	 * 배치 upsert. 이미 있는 공고번호는 <b>차수가 같거나 높을 때만</b> 덮어쓴다.
 	 *
+	 * <p><b>한 행이 거부되면 반으로 갈라 다시 넣는다.</b> {@code rewriteBatchedStatements=true} 라
+	 * 이 배치는 서버에서 <b>다중행 INSERT 한 문장</b>이 되고, 그래서 한 행이 거부되면 문장 전체가
+	 * 롤백된다 — 20,000행 중 한 행이 이상해서 나머지 19,999행이 통째로 안 들어간다. 평시 증분에서는
+	 * 한 회차 20~30행이라 눈에 안 띄지만, <b>5년치를 훑으면 반드시 밟는다</b>: 실측으로
+	 * {@code backfill:bid-announce:물품} 이 2021-12 구간에서 "Out of range value" 하나에 걸려
+	 * 다섯 회차 연속 0건이었고, 워터마크가 안 움직이니 <b>영원히</b> 같은 구간을 다시 시도했다.
+	 * 그 구간에 물린 참가가능지역 줄기까지 같이 멈췄다.
+	 *
+	 * <p>그래서 실패하면 반으로 갈라 재시도하고, 한 행까지 좁혀지면 <b>그 행만 버리고 로그에
+	 * 남긴다</b>. 데이터를 조용히 버리는 것은 이 저장소가 싫어하는 일이지만, 여기서는 선택지가
+	 * "한 행을 버리고 나머지 2만 행을 넣는다"와 "한 행 때문에 그 출처를 영원히 멈춘다" 둘뿐이다.
+	 * 버린 행은 공고번호와 원인이 로그에 남으므로 사람이 쫓아갈 수 있다 — 조용하지 않다.
+	 *
+	 * <p>가르는 횟수는 log2(20000) ≈ 15 회가 상한이고, 정상 회차에서는 <b>한 번도 안 갈린다</b>
+	 * (첫 시도가 성공하면 그대로 끝난다).
+	 *
 	 * @return 영향받은 행 수 합계(MySQL 은 INSERT 를 1, UPDATE 를 2로 세므로 건수와 다르다)
 	 */
 	public int upsertAll(List<BidNoticeRow> rows) {
 		if (rows == null || rows.isEmpty()) {
 			return 0;
 		}
-		SqlParameterSource[] batch = rows.stream().map(BidNoticeIndexRepository::bind)
-				.toArray(SqlParameterSource[]::new);
-		int[] affected = jdbc.batchUpdate(buildUpsertSql(), batch);
-		int total = 0;
-		for (int count : affected) {
-			// executeBatch 는 건별 결과를 모를 때 SUCCESS_NO_INFO(-2)를 준다. 음수를 그대로
-			// 더하면 "-2건 색인" 같은 로그가 나오므로 0으로 접는다.
-			total += Math.max(count, 0);
+		return upsertChunk(rows);
+	}
+
+	/** 한 묶음을 통째로 시도하고, 거부되면 반으로 갈라 다시 시도한다. */
+	private int upsertChunk(List<BidNoticeRow> rows) {
+		try {
+			SqlParameterSource[] batch = rows.stream().map(BidNoticeIndexRepository::bind)
+					.toArray(SqlParameterSource[]::new);
+			int[] affected = jdbc.batchUpdate(buildUpsertSql(), batch);
+			int total = 0;
+			for (int count : affected) {
+				// executeBatch 는 건별 결과를 모를 때 SUCCESS_NO_INFO(-2)를 준다. 음수를 그대로
+				// 더하면 "-2건 색인" 같은 로그가 나오므로 0으로 접는다.
+				total += Math.max(count, 0);
+			}
+			return total;
 		}
-		return total;
+		catch (DataAccessException ex) {
+			if (rows.size() == 1) {
+				BidNoticeRow bad = rows.get(0);
+				// 무엇이 걸렸는지 알려면 값이 필요하다. price_detail 은 생성 컬럼
+				// (estimated_price·filter_amount, DECIMAL(20,4))의 재료라 범위 오류의 단골이다.
+				log.warn("색인 upsert 거부 — 이 공고 한 건만 버립니다: {} / {} (차수 {}, 게시 {}) "
+						+ "lowestBidRate={} priceDetail={} — {}",
+						bad.id(), bad.sourceName(), bad.noticeOrder(), bad.createdDate(),
+						bad.lowestBidRate(), bad.priceDetail(), rootMessage(ex));
+				return 0;
+			}
+			int mid = rows.size() / 2;
+			return upsertChunk(rows.subList(0, mid)) + upsertChunk(rows.subList(mid, rows.size()));
+		}
+	}
+
+	/** 예외 사슬의 맨 끝 메시지 — 스프링 래퍼의 SQL 본문이 아니라 DB 가 한 말이 필요하다. */
+	private static String rootMessage(Throwable ex) {
+		Throwable last = ex;
+		while (last.getCause() != null && last.getCause() != last) {
+			last = last.getCause();
+		}
+		return last.getMessage() == null ? last.toString() : last.getMessage();
 	}
 
 	/**
@@ -776,10 +827,112 @@ public class BidNoticeIndexRepository {
 						.addValue("reason", reason));
 	}
 
+	// ── 백필 줄기 ───────────────────────────────────────────────────────────
+
+	/**
+	 * 백필 줄기 하나의 진행 상황.
+	 *
+	 * @param source    상태 행의 키({@code backfill:*})
+	 * @param watermark 지금까지 훑은 끝. 여기서부터 이어 훑는다
+	 * @param targetTo  훑을 상한. {@code watermark} 가 여기에 닿으면 완료다
+	 */
+	public record BackfillState(String source, LocalDateTime watermark, LocalDateTime targetTo) {
+
+		/** 상한에 닿았는가. 닿았으면 이 줄기는 더 돌 필요가 없다. */
+		public boolean done() {
+			return watermark != null && targetTo != null && !watermark.isBefore(targetTo);
+		}
+	}
+
+	/**
+	 * 백필 줄기를 연다(이미 있으면 <b>넓히는 쪽으로만</b> 고친다).
+	 *
+	 * <p>같은 지시를 두 번 내려도 진행이 되감기지 않아야 한다 — 5년 백필을 걸어 두고 세 시간
+	 * 뒤에 실수로 한 번 더 누르면, 되감기는 구현에서는 그때까지의 세 시간이 통째로 날아간다.
+	 * 그래서 워터마크는 <b>더 이른 값일 때만</b> 내리고, 상한은 <b>더 늦은 값일 때만</b> 올린다.
+	 * 둘 다 "덮을 구간이 커지는 방향"이다.
+	 *
+	 * <p>{@code last_result} 는 지시 자체를 적는다. 아직 한 회차도 안 돈 줄기가 화면에서
+	 * 성공/실패 어느 쪽으로도 보이지 않게 하려는 것이다.
+	 */
+	public void openBackfill(String source, LocalDateTime from, LocalDateTime to, String note) {
+		jdbc.update("""
+				INSERT INTO bid_notice_sync_state
+				  (source, watermark, target_to, last_result, consecutive_failures)
+				VALUES (:source, :from, :to, :note, 0)
+				AS new
+				ON DUPLICATE KEY UPDATE
+				  -- MySQL 의 LEAST/GREATEST 는 인자에 NULL 이 하나만 있어도 NULL 이다. 실패가
+				  -- 먼저 기록돼 워터마크가 비어 있는 행이 있을 수 있으므로 COALESCE 로 막는다.
+				  watermark = LEAST(COALESCE(bid_notice_sync_state.watermark, new.watermark),
+				                    new.watermark),
+				  target_to = GREATEST(COALESCE(bid_notice_sync_state.target_to, new.target_to),
+				                       new.target_to),
+				  last_result = new.last_result
+				""", new MapSqlParameterSource()
+						.addValue("source", source)
+						.addValue("from", from)
+						.addValue("to", to)
+						.addValue("note", note));
+	}
+
+	/**
+	 * 아직 안 끝난 백필 줄기들. 오래된 커서부터 준다.
+	 *
+	 * <p>{@code target_to IS NOT NULL} 이 백필 줄기의 정의다 — 평시 줄기는 상한이 없다.
+	 * 완료 판정을 SQL 에서 하는 이유는 끝난 줄기를 매 회차 자바로 끌어와 거르는 것이
+	 * 스물몇 행이라도 의미 없는 왕복이기 때문이다.
+	 */
+	public List<BackfillState> pendingBackfills() {
+		return jdbc.query("""
+				SELECT source, watermark, target_to
+				  FROM bid_notice_sync_state
+				 WHERE target_to IS NOT NULL
+				   AND watermark IS NOT NULL
+				   AND watermark < target_to
+				 ORDER BY watermark, source
+				""", new MapSqlParameterSource(), (rs, n) -> new BackfillState(
+						rs.getString("source"),
+						rs.getObject("watermark", LocalDateTime.class),
+						rs.getObject("target_to", LocalDateTime.class)));
+	}
+
+	/**
+	 * 운영 화면·응답이 읽는 백필 진행 상황.
+	 *
+	 * <p>남은 <b>일수</b>로 낸다. 남은 '건수'가 더 알고 싶은 값이지만 그것은 상류에 물어야만
+	 * 알 수 있고(창마다 totalCount 를 세야 한다) 그 자체가 쿼터를 태운다. 커서와 상한은
+	 * 이미 갖고 있으므로 일수는 공짜다.
+	 *
+	 * <p>끝난 줄기도 함께 낸다({@code done=true}) — "안 보인다"와 "끝났다"는 화면에서 구별돼야 한다.
+	 */
+	public List<Map<String, Object>> backfillProgress() {
+		return jdbc.queryForList("""
+				SELECT source, watermark, target_to,
+				       (watermark IS NOT NULL AND watermark >= target_to) AS done,
+				       GREATEST(TIMESTAMPDIFF(DAY, watermark, target_to), 0) AS remaining_days,
+				       last_result, last_row_count, consecutive_failures
+				  FROM bid_notice_sync_state
+				 WHERE target_to IS NOT NULL
+				 ORDER BY done, remaining_days DESC, source
+				""", new MapSqlParameterSource());
+	}
+
+	/** 열려 있는 백필 줄기를 전부 닫는다(운영자가 중단시킬 때). @return 닫힌 줄기 수 */
+	public int cancelBackfills() {
+		return jdbc.update("""
+				UPDATE bid_notice_sync_state
+				   SET target_to = watermark, last_result = CONCAT('중단됨 — ', COALESCE(last_result, ''))
+				 WHERE target_to IS NOT NULL
+				   AND watermark IS NOT NULL
+				   AND watermark < target_to
+				""", new MapSqlParameterSource());
+	}
+
 	/** 운영 화면이 읽는 적재 현황 전체. */
 	public List<Map<String, Object>> syncStates() {
 		return jdbc.queryForList("""
-				SELECT source, watermark, last_run_at, last_success_at, last_result,
+				SELECT source, watermark, target_to, last_run_at, last_success_at, last_result,
 				       last_row_count, consecutive_failures
 				  FROM bid_notice_sync_state
 				 ORDER BY source

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -130,6 +131,8 @@ public class NoticeSearchController {
 		body.put("sources", repository.syncStates());
 		body.put("summary", repository.indexSummary());
 		body.put("knownSources", ingestService.sourceKeys());
+		// 열려 있는 백필 줄기와 남은 구간. "언제 끝나나"가 운영자의 첫 질문이라 따로 낸다.
+		body.put("backfill", repository.backfillProgress());
 		return body;
 	}
 
@@ -170,6 +173,73 @@ public class NoticeSearchController {
 		body.put("totalIndexed", result.totalIndexed());
 		body.put("sweptToClosed", result.sweptToClosed());
 		body.put("sources", result.sources());
+		return body;
+	}
+
+	/**
+	 * 과거 공고 백필 — 열기.
+	 *
+	 * <p>지시만 남기고 즉시 돌아온다. 실제 훑기는 백필 주기가 회차마다 조금씩 하고, 진행은
+	 * 상태 행에 남으므로 앱이 죽어도 이어서 한다 — 5년치는 회차 수십 번짜리 작업이라 요청
+	 * 하나로 끝낼 수 있는 종류가 아니다. 진행 상황은 {@code GET /status} 의 {@code backfill} 에 있다.
+	 *
+	 * <p>나라장터 쿼터를 태우는 경로라 앱 키를 요구한다.
+	 */
+	@Operation(summary = "과거 공고 백필 열기",
+			description = "지정한 기간만큼 거슬러 올라가 공고를 색인에 채운다. 기본 1826일(5년). "
+					+ "출처마다 backfill:* 상태 줄기를 세우고 즉시 돌아온다 — 실제 적재는 백필 주기가 "
+					+ "회차마다 나눠 하고 진행은 DB 에 남아 재개된다. 같은 지시를 다시 내려도 진행이 "
+					+ "되감기지 않는다(구간을 넓히는 쪽으로만 고친다).\n\n"
+					+ "**D2B(국방전자조달)는 대상이 아니다** — 상류가 과거 공고를 주지 않는다"
+					+ "(공고일 기준 두어 달 지나면 totalCount=0). 국방 공고의 과거는 주기 적재로 "
+					+ "지금부터 쌓이는 것뿐이다.")
+	@PostMapping("/backfill")
+	@RequireAppAuth
+	public Map<String, Object> openBackfill(
+			@RequestParam(name = "days", required = false, defaultValue = "0") int days) {
+		int opened = ingestService.openBackfill(days);
+		Map<String, Object> body = new LinkedHashMap<>();
+		body.put("ok", true);
+		body.put("opened", opened);
+		body.put("backfill", repository.backfillProgress());
+		return body;
+	}
+
+	/** 과거 공고 백필 — 중단. 이미 채운 것은 그대로 두고 남은 구간만 포기한다. */
+	@Operation(summary = "과거 공고 백필 중단",
+			description = "열려 있는 backfill:* 줄기를 전부 닫는다. 이미 색인한 공고는 지우지 않는다 — "
+					+ "다시 열면 멈춘 자리부터가 아니라 지시한 구간 전체를 다시 훑는다(upsert 라 중복은 안 생긴다).")
+	@DeleteMapping("/backfill")
+	@RequireAppAuth
+	public Map<String, Object> cancelBackfill() {
+		Map<String, Object> body = new LinkedHashMap<>();
+		body.put("ok", true);
+		body.put("closed", ingestService.cancelBackfill());
+		return body;
+	}
+
+	/**
+	 * 과거 공고 백필 — 한 회차 즉시 실행.
+	 *
+	 * <p>{@code INDEX_SYNC_ENABLED} 가 꺼진 인스턴스에서도 돈다. 스위치는 "저절로 돌 것인가"를
+	 * 정하는 것이지 "운영자가 시켜도 안 돈다"는 뜻이 아니다({@code /sync} 와 같은 규칙).
+	 */
+	@Operation(summary = "과거 공고 백필 한 회차 실행",
+			description = "열려 있는 줄기를 한 회차만큼 전진시킨다(줄기당 최대 20,000행). "
+					+ "이미 회차가 돌고 있으면 409. 열린 줄기가 없으면 아무것도 하지 않는다.")
+	@PostMapping("/backfill/run")
+	@RequireAppAuth
+	public Map<String, Object> runBackfill() {
+		BidNoticeIngestService.IngestResult result = scheduler.runBackfill();
+		if (result == null) {
+			throw new ApiException(org.springframework.http.HttpStatus.CONFLICT,
+					"이미 백필 회차가 진행 중입니다. 잠시 후 다시 시도하세요.");
+		}
+		Map<String, Object> body = new LinkedHashMap<>();
+		body.put("ok", true);
+		body.put("totalIndexed", result.totalIndexed());
+		body.put("sources", result.sources());
+		body.put("backfill", repository.backfillProgress());
 		return body;
 	}
 

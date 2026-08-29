@@ -115,6 +115,8 @@ final class DocumentSniffer {
 	private static String sniffZip(byte[] bytes) {
 		boolean sawHwpx = false;
 		boolean sawXlsx = false;
+		boolean sawDocx = false;
+		boolean sawPptx = false;
 		try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes), ZIP_NAME_CHARSET)) {
 			ZipEntry entry;
 			int seen = 0;
@@ -128,6 +130,12 @@ final class DocumentSniffer {
 				if (entryName.startsWith("xl/")) {
 					sawXlsx = true;
 				}
+				if (entryName.startsWith("word/")) {
+					sawDocx = true;
+				}
+				if (entryName.startsWith("ppt/")) {
+					sawPptx = true;
+				}
 			}
 		} catch (IOException e) {
 			return "zip";   // 못 열면 일반 zip 으로 넘겨 expandArchive 가 다시 시도하게 둔다
@@ -138,7 +146,13 @@ final class DocumentSniffer {
 		if (sawXlsx) {
 			return "xlsx";
 		}
-		// docx 를 포함해 그 밖의 zip 은 컨테이너로 본다 — 안에 규격서가 들어 있을 수 있다.
+		if (sawDocx) {
+			return "docx";
+		}
+		if (sawPptx) {
+			return "pptx";
+		}
+		// 그 밖의 zip 은 컨테이너로 본다 — 안에 규격서가 들어 있을 수 있다.
 		return "zip";
 	}
 

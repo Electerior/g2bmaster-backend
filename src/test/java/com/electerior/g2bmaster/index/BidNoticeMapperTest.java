@@ -99,6 +99,33 @@ class BidNoticeMapperTest {
 	}
 
 	@Test
+	@DisplayName("DECIMAL(20,4) 범위를 넘는 금액은 버린다 — 2021 백필 실측 10^20 대 이상값이 배치 INSERT 를 통째로 죽인다")
+	void outOfRangePriceDropped() {
+		// 추정가격 10^20 (20자리) — DECIMAL(20,4) 정수 16자리를 넘는다.
+		Map<String, Object> item = announceFixture();
+		item.put("presmptPrce", "100000000000000000000");
+		item.put("asignBdgtAmt", "100000000000000000000");
+
+		String priceDetail = BidNoticeMapper.fromBidAnnounce(item, BusinessDivision.물품, NOW).priceDetail();
+
+		// 이상값은 버려지고, 나머지는 살아 있다.
+		assertThat(priceDetail).doesNotContain("100000000000000000000");
+		assertThat(priceDetail).contains("\"unit\":\"식\"");
+	}
+
+	@Test
+	@DisplayName("천조(10^15) 미만 금액은 정당한 값 — 살린다")
+	void largeButValidPriceKept() {
+		// 99조 9999억 (10^14) — DECIMAL(20,4) 안에 들어온다.
+		Map<String, Object> item = announceFixture();
+		item.put("presmptPrce", "99999900000000");
+
+		String priceDetail = BidNoticeMapper.fromBidAnnounce(item, BusinessDivision.물품, NOW).priceDetail();
+
+		assertThat(priceDetail).contains("\"estimatedPrice\":99999900000000");
+	}
+
+	@Test
 	@DisplayName("세부 가격 표는 JSON 으로 접힌다")
 	void priceDetailJson() {
 		BidNoticeRow row = BidNoticeMapper.fromBidAnnounce(announceFixture(), BusinessDivision.물품, NOW);
@@ -150,6 +177,57 @@ class BidNoticeMapperTest {
 		BidNoticeRow row = BidNoticeMapper.fromBidAnnounce(item, BusinessDivision.물품, NOW);
 		assertThat(row.closeDate()).isNull();
 		assertThat(row.category()).isEqualTo(NoticeCategory.입찰);
+	}
+
+	// ── 마감일시 상식 필터 ────────────────────────────────────────────────
+
+	/**
+	 * 나라장터 원본에 실제로 섞여 들어오는 값이다(실측: 2026-08-21 등록, 2037-12-26 마감).
+	 * 그대로 두면 '마감 임박' 정렬이 10년 뒤 공고를 상단에 올린다.
+	 */
+	@Test
+	@DisplayName("등록일보다 3년 이상 먼 마감일시는 믿지 않는다 — 실측 2037년 값")
+	void implausibleFutureCloseDateDropped() {
+		Map<String, Object> item = announceFixture();
+		item.put("bidNtceDt", "2026-08-21 10:00:00");
+		item.put("bidClseDt", "2037-12-26 18:00:00");
+
+		BidNoticeRow row = BidNoticeMapper.fromBidAnnounce(item, BusinessDivision.물품, NOW);
+		assertThat(row.closeDate()).isNull();
+		// 공고는 그대로 색인된다 — 지워진 것은 마감일시 하나뿐.
+		assertThat(row.id()).isEqualTo("R26BK01610168");
+		assertThat(row.category()).isEqualTo(NoticeCategory.입찰);
+	}
+
+	/**
+	 * 3년 미만 장기 계약(공사·다년 납품)은 정당한 값이다 — 색인 실측에서 190~747일
+	 * 차이가 16건(2027 교복 납품·공사) 있어 그쪽을 지워선 안 된다.
+	 */
+	@Test
+	@DisplayName("2년 뒤 마감은 정당한 장기 계약 — 살린다")
+	void longTermCloseDateKept() {
+		Map<String, Object> item = announceFixture();
+		item.put("bidNtceDt", "2026-07-01 07:25:26");
+		item.put("bidClseDt", "2028-06-15 18:00:00"); // 약 23개월 뒤
+
+		BidNoticeRow row = BidNoticeMapper.fromBidAnnounce(item, BusinessDivision.물품, NOW);
+		assertThat(row.closeDate()).isEqualTo(LocalDateTime.of(2028, 6, 15, 18, 0));
+	}
+
+	@Test
+	@DisplayName("등록일시가 없으면 판정 불가 — 마감일시 원값을 살린다")
+	void noCreatedDateKeepsCloseDate() {
+		assertThat(BidNoticeMapper.plausibleCloseDate(LocalDateTime.of(2037, 12, 26, 18, 0), null))
+				.isEqualTo(LocalDateTime.of(2037, 12, 26, 18, 0));
+	}
+
+	@Test
+	@DisplayName("마감일시가 없거나 과거면 그대로 — 필터는 미래 이상치만 건드린다")
+	void nullOrPastCloseDateUntouched() {
+		LocalDateTime created = LocalDateTime.of(2026, 7, 1, 7, 25, 26);
+		assertThat(BidNoticeMapper.plausibleCloseDate(null, created)).isNull();
+		assertThat(BidNoticeMapper.plausibleCloseDate(LocalDateTime.of(2026, 6, 30, 10, 0), created))
+				.isEqualTo(LocalDateTime.of(2026, 6, 30, 10, 0));
 	}
 
 	// ── 상태 ────────────────────────────────────────────────────────────────

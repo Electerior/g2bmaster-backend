@@ -68,6 +68,13 @@ class OpenApiDocumentTest {
 			"GET /api/search/notices/{id}",
 			"POST /api/search/notices/sync",
 			"POST /api/search/notices/margins/backfill",
+			// 과거 공고 백필 — 열기/중단/한 회차 실행. 셋 다 나라장터 쿼터를 태우므로 앱 키가 붙는다.
+			"POST /api/search/notices/backfill",
+			"DELETE /api/search/notices/backfill",
+			"POST /api/search/notices/backfill/run",
+			// 낙찰정보 색인 적재 — 조회(GET /api/bid-result)는 로컬 DB 만 보는 무료 경로라
+			// '입찰 검색' 태그에 그대로 있고, 쿼터를 태우는 적재만 여기로 갈라 나왔다.
+			"POST /api/bid-result/sync",
 			// 트렌드
 			"GET /api/trends/{kind}",
 			"GET /api/trends/{kind}/keyword-groups",
@@ -160,6 +167,9 @@ class OpenApiDocumentTest {
 		// 색인 적재는 나라장터 쿼터를 태우는 경로라 앱 키를 요구한다.
 		assertThat(schemes(paths, "/api/search/notices/sync", "post"))
 				.containsExactlyInAnyOrder(OpenApiConfig.APP_KEY_SCHEME, OpenApiConfig.APP_KEY_BEARER_SCHEME);
+		assertThat(schemes(paths, "/api/search/notices/backfill", "post")).isNotEmpty();
+		assertThat(schemes(paths, "/api/search/notices/backfill", "delete")).isNotEmpty();
+		assertThat(schemes(paths, "/api/search/notices/backfill/run", "post")).isNotEmpty();
 
 		// 가격 DB — 쓰기(등록/수정/삭제/적재)는 잠그고, 읽기(검색·이력)는 연다.
 		assertThat(schemes(paths, "/api/price-catalog", "post"))

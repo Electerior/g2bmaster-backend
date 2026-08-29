@@ -53,6 +53,20 @@ public class BidNoticeSyncScheduler {
 
 	private final Cycle d2b;
 
+	/**
+	 * 과거 백필 줄기.
+	 *
+	 * <p><b>왜 세 번째 묶음인가.</b> 백필은 머리 적재와 목적도 급함도 다르다 — 5년치를 갉는 데
+	 * 회차 수십 번이 걸리는데, 그것을 조달청 묶음에 얹으면 백필이 끝날 때까지 오늘 공고가
+	 * 회차마다 그만큼 늦는다. 잠금을 따로 두면 둘이 서로를 기다리지 않는다(쓰는 상태 행이
+	 * 다르고, {@code bid_notice} 는 upsert 라 겹쳐 써도 안전하다).
+	 *
+	 * <p>심야 게이팅을 <b>안 받는다</b>. 심야에 주기를 늘리는 이유는 "그 시간엔 새 공고가
+	 * 없어서"인데, 백필이 훑는 것은 5년 전 공고라 지금이 몇 시인지와 무관하다. 오히려 심야가
+	 * 상류 쿼터를 마음껏 쓸 수 있는 시간이다.
+	 */
+	private final Cycle backfill;
+
 	public BidNoticeSyncScheduler(BidNoticeIngestService ingestService,
 			BidNoticeIndexRepository repository, G2bProperties properties) {
 		this.ingestService = ingestService;
@@ -60,6 +74,8 @@ public class BidNoticeSyncScheduler {
 		this.config = properties.index();
 		this.procurement = new Cycle("조달청 주기", config.intervalMs(), ingestService::ingestProcurement);
 		this.d2b = new Cycle("D2B 주기", config.d2bIntervalMs(), ingestService::ingestD2b);
+		this.backfill = new Cycle("과거 백필", config.backfillIntervalMs(),
+				unused -> ingestService.backfillOnce());
 	}
 
 	/**
@@ -209,6 +225,57 @@ public class BidNoticeSyncScheduler {
 		}
 		finally {
 			cycle.running.set(false);
+		}
+	}
+
+	/**
+	 * 과거 백필 주기.
+	 *
+	 * <p>열려 있는 줄기가 없으면 {@link BidNoticeIngestService#backfillOnce()} 가 즉시 빈 결과로
+	 * 돌아온다. 그래서 평시에는 이 주기가 사실상 없는 것과 같고, 운영자가 백필을 지시한
+	 * 동안에만 일한다.
+	 *
+	 * <p>{@code initialDelay} 를 가장 뒤로 미룬 것은 기동 직후 세 묶음이 한꺼번에 상류를
+	 * 두드리지 않게 하려는 것이다.
+	 */
+	@Scheduled(fixedDelayString = "${g2b.index.backfill-interval-ms:300000}", initialDelay = 150_000)
+	public void ingestBackfill() {
+		if (!config.enabled()) {
+			return;
+		}
+		runBackfill();
+	}
+
+	/**
+	 * 백필 한 회차 — 주기와 수동 실행이 같이 쓴다.
+	 *
+	 * <p>심야 판정을 타지 않으므로 {@link #runIngest} 와 갈라 둔다.
+	 *
+	 * @return 이미 돌고 있어 물러났으면 {@code null}
+	 */
+	public BidNoticeIngestService.IngestResult runBackfill() {
+		if (!backfill.running.compareAndSet(false, true)) {
+			log.info("과거 백필을 건너뜁니다 — 이전 회차가 아직 돌고 있습니다.");
+			return null;
+		}
+		backfill.lastStartedAt.set(System.currentTimeMillis());
+		long startedAt = System.nanoTime();
+		try {
+			BidNoticeIngestService.IngestResult result = backfill.body.apply(0);
+			if (!result.sources().isEmpty()) {
+				long failed = result.sources().stream().filter(source -> !source.ok()).count();
+				log.info("과거 백필 회차 완료 — {}개 줄기, {}건 색인, 실패 {}개, {}ms",
+						result.sources().size(), result.totalIndexed(), failed,
+						(System.nanoTime() - startedAt) / 1_000_000);
+			}
+			return result;
+		}
+		catch (RuntimeException ex) {
+			log.error("과거 백필이 통째로 실패했습니다: {}", ex.getMessage(), ex);
+			return null;
+		}
+		finally {
+			backfill.running.set(false);
 		}
 	}
 

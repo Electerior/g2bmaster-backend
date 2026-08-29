@@ -188,6 +188,20 @@ g2b:
     d2b-interval-ms: ${INDEX_D2B_INTERVAL_MS:1800000}
     sweep-ms: ${INDEX_SWEEP_INTERVAL_MS:300000}
     backfill-days: ${INDEX_BACKFILL_DAYS:7}
+    # 과거 백필 — POST /api/search/notices/backfill 이 여는 backfill:* 줄기가 쓰는 값들.
+    # history-days 는 그 요청에 기간이 없을 때의 기본 범위이고, 1826 = 5년(윤년 하루 포함)이다.
+    # 상류가 그만큼의 과거를 실제로 준다는 것은 실측으로 확인했다(2026-08-26).
+    # backfill-interval-ms 를 조달청 주기와 따로 두는 것이 요점이다 — 한 주기에 묶으면
+    # 5년치를 갉는 동안(회차 수십 번) 오늘 공고가 회차마다 그만큼 늦는다. 쿼터는 나눠 쓰므로
+    # 조달청 주기(5분)보다 촘촘하게 잡지 않는다.
+    history-days: ${INDEX_HISTORY_DAYS:1826}
+    backfill-interval-ms: ${INDEX_BACKFILL_INTERVAL_MS:300000}
+    # 낙찰정보(bid_result) 적재 주기. 공고보다 드물게 도는 이유는 급함이 다르기 때문이다 —
+    # 이미 끝난 입찰이라 몇 분 늦어도 잃는 것이 없다. enabled 스위치는 위 것을 함께 쓴다.
+    # 이 키는 G2bProperties.Index 의 필드가 아니라 @Scheduled 가 직접 읽는 자리다
+    # (BidResultIngestService.ingestScheduled) — 레코드에 필드를 늘리면 그것을 위치 인자로
+    # 만드는 테스트들이 함께 밀린다.
+    bid-result-interval-ms: ${INDEX_BID_RESULT_INTERVAL_MS:600000}
     # 심야에는 주기를 배수만큼 늘린다. 23~07시가 조달청 하루 물량의 0.7%(일 14건)뿐이라
     # 그 시간대의 촘촘한 폴링은 쿼터만 태운다. 5분→30분 / D2B 30분→3시간이 되고,
     # 오퍼레이션당 호출이 288→208회/일(조달청), 48→35회/일(D2B)로 줄어든다.
