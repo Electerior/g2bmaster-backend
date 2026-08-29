@@ -53,6 +53,9 @@ class OpenApiDocumentTest {
 	 * <b>조용히 늘거나 줄어드는 것</b>을 잡기 위해서다.
 	 */
 	private static final Set<String> EXPECTED = Set.of(
+			// 공개 베타 모집
+			"GET /api/beta/status",
+			"POST /api/beta/signups",
 			// 입찰 검색
 			"GET /api/bid-announce",
 			"GET /api/bid-result",
@@ -132,7 +135,7 @@ class OpenApiDocumentTest {
 			tags.add(tag.path("name").asString());
 		}
 		assertThat(tags).containsExactly(
-				OpenApiConfig.TAG_SEARCH, OpenApiConfig.TAG_INDEX_SEARCH, OpenApiConfig.TAG_TREND,
+				OpenApiConfig.TAG_BETA, OpenApiConfig.TAG_SEARCH, OpenApiConfig.TAG_INDEX_SEARCH, OpenApiConfig.TAG_TREND,
 				OpenApiConfig.TAG_MARKET, OpenApiConfig.TAG_ANALYSIS, OpenApiConfig.TAG_ATTACHMENT,
 				OpenApiConfig.TAG_SAVED, OpenApiConfig.TAG_PRICE, OpenApiConfig.TAG_SYSTEM);
 	}
@@ -167,6 +170,8 @@ class OpenApiDocumentTest {
 		assertThat(schemes(paths, "/api/price-catalog/history", "get")).isEmpty();
 
 		assertThat(schemes(paths, "/api/bid-announce", "get")).isEmpty();
+		assertThat(schemes(paths, "/api/beta/status", "get")).isEmpty();
+		assertThat(schemes(paths, "/api/beta/signups", "post")).isEmpty();
 		// 조회는 로컬 DB만 보므로 비용이 없다 — 잠그지 않는다.
 		assertThat(schemes(paths, "/api/search/notices", "get")).isEmpty();
 		assertThat(schemes(paths, "/api/system/status", "get")).isEmpty();

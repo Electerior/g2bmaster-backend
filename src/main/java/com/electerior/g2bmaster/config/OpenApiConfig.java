@@ -32,6 +32,7 @@ public class OpenApiConfig {
 	public static final String APP_KEY_BEARER_SCHEME = "appKeyBearer";
 
 	public static final String TAG_SEARCH = "입찰 검색";
+	public static final String TAG_BETA = "베타 모집";
 	public static final String TAG_INDEX_SEARCH = "공고 통합 검색";
 	public static final String TAG_TREND = "트렌드";
 	public static final String TAG_MARKET = "시장 정보";
@@ -59,6 +60,7 @@ public class OpenApiConfig {
 								응답에 통일된 봉투는 없다 — 원본 모놀리스의 계약을 그대로 지키기 위한 \
 								의도된 선택이다(`api-contract.md` §1.1). 오류만 `{code, message}` 로 통일돼 있다."""))
 				.tags(List.of(
+						new Tag().name(TAG_BETA).description("공개 랜딩의 모집 현황 조회와 신청 접수"),
 						new Tag().name(TAG_SEARCH).description("발주계획·사전규격·입찰공고·개찰결과 팬아웃 검색"),
 						new Tag().name(TAG_INDEX_SEARCH).description(
 								"로컬 색인(bid_notice) 단독 조회. 계획·사전규격·입찰·마감을 한 테이블에서 검색한다 "
