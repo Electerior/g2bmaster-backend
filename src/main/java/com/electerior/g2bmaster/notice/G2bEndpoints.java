@@ -26,7 +26,23 @@ public class G2bEndpoints {
 
 	private static final String BID_ANNOUNCE = "/ad/BidPublicInfoService/getBidPblancListInfo";
 	private static final String BID_RESULT = "/as/ScsbidInfoService/getScsbidListSttus";
-	private static final String OPENG_RESULT = "/ao/OpengResultInfoService/getOpengResultList";
+
+	/**
+	 * 개찰결과 <b>목록</b>(공고 단위). 낙찰정보서비스 소속이다.
+	 *
+	 * <p>{@code ao/OpengResultInfoService} 가 아니다 — 그 서비스는 폐기됐고
+	 * ({@code NO_OPENAPI_SERVICE_ERROR}, 사유코드 12) 같은 키로 다른 서비스는 정상이라
+	 * 인증 문제로 보이지도 않는다. 개찰결과만 조용히 늘 비어 있던 원인이 이것이었다.
+	 */
+	private static final String OPENG_RESULT = "/as/ScsbidInfoService/getOpengResultListInfo";
+
+	/**
+	 * 개찰결과 개찰완료 — <b>참여업체 전수</b>(개찰순위·투찰금액·투찰률).
+	 *
+	 * <p>물품/용역/공사가 <b>한 오퍼레이션</b>이라 이 조회만 3중 팬아웃이 없다. 대신
+	 * 날짜범위 조회가 안 되고 공고번호가 필수다 — 그래서 {@link #OPENG_RESULT} 와 둘 다 필요하다.
+	 */
+	private static final String OPENG_COMPETE = "/as/ScsbidInfoService/getOpengResultListInfoOpengCompt";
 	private static final String BID_PLAN = "/ao/PrcrmntReqInfoService/getPrcrmntReqInfoList";
 	private static final String PRE_SPEC = "/ao/HrcspSsstndrdInfoService/getPublicPrcureThngInfo";
 	private static final String PRIVATE_NOTICE = "/ao/PrvtBidNtceService/getPrvtBidPblancListInfo";
@@ -37,6 +53,7 @@ public class G2bEndpoints {
 	private final Map<String, String> bidAnnounce;
 	private final Map<String, String> bidResult;
 	private final Map<String, String> opengResult;
+	private final String opengCompete;
 	private final Map<String, String> privateNotice;
 	private final List<Map.Entry<String, String>> bidPlan;
 	private final List<Map.Entry<String, String>> preSpec;
@@ -61,6 +78,7 @@ public class G2bEndpoints {
 				"물품", base + OPENG_RESULT + "Thng",
 				"용역", base + OPENG_RESULT + "Servc",
 				"공사", base + OPENG_RESULT + "Cnstwk"));
+		this.opengCompete = base + OPENG_COMPETE;
 		// 누리장터는 '기타' 구분이 하나 더 있다 — 민간 공고에는 3분류에 안 들어가는 것이 섞인다.
 		Map<String, String> privateMap = ordered(
 				"물품", base + PRIVATE_NOTICE + "ThngPPSSrch",
@@ -91,7 +109,12 @@ public class G2bEndpoints {
 		return bidResult;
 	}
 
-	/** 사업 구분 → 개찰결과 URL. */
+	/**
+	 * 사업 구분 → 개찰결과 목록 URL.
+	 *
+	 * <p>여기서 오는 항목은 <b>공고 한 건이 한 줄</b>이고 참여업체는 낙찰자 하나가
+	 * {@code opengCorpInfo} 문자열로 접혀 있다. 참여업체 전수는 {@link #opengCompete()} 다.
+	 */
 	public Map<String, String> opengResult() {
 		return opengResult;
 	}
@@ -100,6 +123,11 @@ public class G2bEndpoints {
 	public String opengResultOf(String type) {
 		String url = opengResult.get(type);
 		return url != null ? url : opengResult.get("물품");
+	}
+
+	/** 개찰완료 참여업체 전수 URL. 구분을 받지 않는다 — 물품·용역·공사가 한 오퍼레이션이다. */
+	public String opengCompete() {
+		return opengCompete;
 	}
 
 	/** 발주계획(조달요청) 오퍼레이션 — 구분명이 입찰공고와 다르다. */
