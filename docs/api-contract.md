@@ -52,6 +52,20 @@ Java 에서는 `@RequireAppAuth` 애너테이션 + `AppAuthInterceptor`,
 
 ## 2. 컨텍스트별 라우트
 
+### A-0. 베타 모집 (2) — 공개
+
+로그인 전 랜딩이 호출하므로 둘 다 `@RequireAppAuth` 없이 공개한다. 전체 모집 정원은 20개사다.
+구글 시트에 먼저 접수된 6건은 `accepted-baseline`으로 잡고 DB 신규 접수 건수와 합산한다.
+
+| 라우트 | 요청 | 응답 |
+|---|---|---|
+| `GET /api/beta/status` | — | `{total, remaining, deadline, open}` |
+| `POST /api/beta/signups` | `{name, organization, industry, email, phone, privacyAgreed, website?, requestId?}` | `{ok:true, receivedAt}` |
+
+이메일과 요청 ID는 각각 중복을 막는다. 정원 확인과 저장은 DB 잠금 한 구간에서 처리해 마지막
+자리에 동시 신청이 들어와도 정원을 넘기지 않는다. 중복 이메일은 409
+`DUPLICATE_EMAIL`, 정원·마감 종료는 409 `BETA_CLOSED`다. 신청자 IP는 저장하지 않는다.
+
 ### A. 입찰 검색 (4)
 
 | 라우트 | 비고 |
