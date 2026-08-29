@@ -10,6 +10,7 @@ import com.electerior.g2bmaster.notice.BidResultRepository;
 import com.electerior.g2bmaster.notice.G2bEndpoints;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -364,7 +365,10 @@ public class BidResultIngestService {
 			pending.subList(i, i + 1).clear();
 			pending.addAll(i, halves);
 		}
-		boolean capped = coveredTo.isBefore(to);
+		// 창 경계는 분 단위다({@link #G2B_DT}). 초까지 든 to 와 그대로 견주면 끝까지 다 훑은
+		// 회차도 늘 '덜 훑었다'가 되어, 상한 근처에도 못 간 회차가 매번 '부분'으로 기록되고
+		// WARN 이 틀린 이유를 댄다 — 정작 진짜로 상한에 걸렸을 때 그 신호를 알아볼 수 없게 된다.
+		boolean capped = coveredTo.isBefore(to.truncatedTo(ChronoUnit.MINUTES));
 		if (capped) {
 			log.warn("낙찰정보 적재 상한 {}건에 도달해 이번 회차는 {}까지만 훑었습니다 — 다음 회차가 이어서: {}",
 					MAX_ROWS_PER_RUN, coveredTo.format(G2B_DT), url);
