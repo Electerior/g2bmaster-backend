@@ -238,6 +238,28 @@ class BidNoticeQueryBuilderTest {
 	}
 
 	@Test
+	@DisplayName("excludeState 는 그 상태가 아니거나 NULL 인 행만 남긴다")
+	void excludeStateAllowsNullState() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.excludeState(NoticeState.취소)
+				.build();
+
+		assertThat(where.sql()).contains("(n.state IS NULL OR n.state <> :");
+		assertThat(where.params()).containsValue("취소");
+	}
+
+	@Test
+	@DisplayName("excludeState(null) 은 조건을 만들지 않는다")
+	void excludeStateNullSkipped() {
+		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()
+				.excludeState(null)
+				.build();
+
+		assertThat(where.sql()).isEmpty();
+		assertThat(where.params()).isEmpty();
+	}
+
+	@Test
 	@DisplayName("null 필터는 조건을 만들지 않는다")
 	void nullFiltersSkipped() {
 		BidNoticeQueryBuilder.Where where = new BidNoticeQueryBuilder()

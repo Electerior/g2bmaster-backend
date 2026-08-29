@@ -214,6 +214,23 @@ public final class BidNoticeQueryBuilder {
 		return equalsIfPresent("n.state", state == null ? null : state.name(), "state");
 	}
 
+	/**
+	 * 이 상태만 뺀다. {@code state(NoticeState)} 와 반대 방향의 필터다 — 기본 목록이 '취소'를
+	 * 숨기는 데 쓴다({@code useSearchCriteria.ts:buildNoticeIndexQuery}). {@code n.state} 가
+	 * {@code NULL}(정상 공고)인 행은 항상 통과해야 하므로 부정 비교가 아니라
+	 * {@code IS NULL OR <>} 로 건다 — MySQL 은 {@code NULL <> '취소'} 를 UNKNOWN 으로 접어
+	 * 그 행을 조용히 떨어뜨린다.
+	 */
+	public BidNoticeQueryBuilder excludeState(NoticeState state) {
+		if (state == null) {
+			return this;
+		}
+		String key = nextKey("stateNot");
+		params.put(key, state.name());
+		filters.add("(n.state IS NULL OR n.state <> :" + key + ")");
+		return this;
+	}
+
 	public BidNoticeQueryBuilder businessDivision(BusinessDivision division) {
 		return equalsIfPresent("n.business_division", division == null ? null : division.name(), "division");
 	}

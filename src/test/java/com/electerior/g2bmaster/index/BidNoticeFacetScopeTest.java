@@ -42,7 +42,8 @@ class BidNoticeFacetScopeTest {
 	/** '마감 전 공고만 보기' + 단계 미지정 — 화면의 기본 상태이자 문제가 났던 조합이다. */
 	private static NoticeSearchRequest activeOnlyWithoutCategory() {
 		return new NoticeSearchRequest(null, null, null, null, null, null, null, null, null, null,
-				null, null, null, null, null, null, null, null, null, "true", null, null, null, null, null, null);
+				null, null, null, null, null, null, null, null, null, "true", null, null, null, null, null, null,
+				null);
 	}
 
 	@Test
