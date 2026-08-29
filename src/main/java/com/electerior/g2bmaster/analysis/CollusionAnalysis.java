@@ -85,9 +85,55 @@ public final class CollusionAnalysis {
 	 * 개찰결과가 붙은 공고 목록에서 매트릭스를 만든다.
 	 *
 	 * <p>각 항목은 {@code participants} 키에 참여업체 목록을 갖고 있어야 한다.
-	 * 참여업체가 없거나 1위 업체명이 비면 그 공고는 통째로 건너뛴다 — 이름 없는 참여자를
+	 * 참여업체가 없거나 낙찰 업체명이 비면 그 공고는 통째로 건너뛴다 — 이름 없는 참여자를
 	 * 짝으로 묶으면 서로 다른 업체가 한 덩어리가 된다.
+	 *
+	 * <p><b>낙찰자는 개찰 1순위가 아니라 {@code sucsfbidYn} 이 정한다.</b> 예전에는
+	 * {@code participants.get(0)} 을 승자로 봤는데, 실측 220건 중 7건(3.2%)에서 1순위가
+	 * 낙찰자가 아니었다 — 더 낮게 쓴 1순위가 적격심사에서 떨어지거나 포기한 경우다
+	 * (낙찰자가 2순위 5건·3순위 1건·6순위 1건). 그대로 두면 "누가 이겼나" 통계와 들러리 페어가
+	 * 엉뚱한 업체를 승자로 세는데, 화면 배지와 달리 이쪽은 눈에 띄지도 않는다.
+	 *
+	 * <p>플래그가 붙은 업체가 없으면 그 공고는 건너뛴다. 낙찰정보가 아직 없다는 뜻이고
+	 * (개찰은 끝났지만 낙찰자 확정 전), 확정되지 않은 승패를 통계에 넣을 이유가 없다.
+	 * 2위는 종전대로 개찰 순위로 본다 — 낙찰자 바로 다음 순위가 곧 경쟁 상대다.
 	 */
+	/**
+	 * 낙찰 업체.
+	 *
+	 * <p>정규화를 거친 줄은 {@code sucsfbidYn} 을 <b>반드시</b> 갖는다("Y" 또는 "N").
+	 * 그러니 키가 하나라도 있으면 판정은 끝난 것이고, 아무도 "Y" 가 아니면 <b>낙찰이 아직
+	 * 확정되지 않았다</b>는 뜻이라 그 공고는 통계에서 뺀다 — 개찰은 끝났는데 낙찰자 확정 전인
+	 * 구간이 며칠씩 있고, 그때 1순위를 승자로 세면 아직 일어나지 않은 일이 통계에 들어간다.
+	 *
+	 * <p>키가 <b>아예 없으면</b> 정규화를 거치지 않고 흘러든 원본 줄이다. 그때는 개찰 순위로
+	 * 물러선다 — 여기서 빈손으로 돌아가면 "짝 0건"이 되는데, 그것은 아무도 이상하다고 느끼지
+	 * 않는 실패다(같은 이유로 존재하는 시험이 있다).
+	 */
+	private static Map<String, Object> awardedOf(List<Map<String, Object>> participants) {
+		boolean normalized = false;
+		for (Map<String, Object> p : participants) {
+			if (p.containsKey("sucsfbidYn")) {
+				normalized = true;
+				if ("Y".equalsIgnoreCase(String.valueOf(p.get("sucsfbidYn")))) {
+					return p;
+				}
+			}
+		}
+		return normalized ? null : participants.get(0);
+	}
+
+	/** 낙찰자를 뺀 개찰 순위 첫 업체. 낙찰자가 2순위면 1순위가 여기 온다. */
+	private static Map<String, Object> runnerUpOf(List<Map<String, Object>> participants,
+			Map<String, Object> winner) {
+		for (Map<String, Object> p : participants) {
+			if (p != winner) {
+				return p;
+			}
+		}
+		return null;
+	}
+
 	public static CollusionMatrix buildCollusionMatrix(List<Map<String, Object>> bids) {
 		Map<String, PairRecord> pairs = new LinkedHashMap<>();
 		Map<String, CompanyRecord> companies = new LinkedHashMap<>();
@@ -97,13 +143,13 @@ public final class CollusionAnalysis {
 			if (participants.isEmpty()) {
 				continue;
 			}
-			Map<String, Object> winner = participants.get(0);
-			if (name(winner).isEmpty()) {
+			Map<String, Object> winner = awardedOf(participants);
+			if (winner == null || name(winner).isEmpty()) {
 				continue;
 			}
 			recordCompany(companies, name(winner), "낙찰", bid, winner);
 
-			Map<String, Object> runnerUp = participants.size() > 1 ? participants.get(1) : null;
+			Map<String, Object> runnerUp = runnerUpOf(participants, winner);
 			if (runnerUp == null || name(runnerUp).isEmpty()) {
 				continue;
 			}

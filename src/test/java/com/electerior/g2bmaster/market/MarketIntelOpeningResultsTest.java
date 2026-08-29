@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import com.electerior.g2bmaster.integration.g2b.G2bException;
 import com.electerior.g2bmaster.integration.g2b.G2bFetchService;
+import com.electerior.g2bmaster.notice.BidResultRepository;
 import com.electerior.g2bmaster.notice.G2bEndpoints;
 import com.electerior.g2bmaster.notice.NoticeFetchSupport;
 import java.util.LinkedHashMap;
@@ -32,19 +33,34 @@ class MarketIntelOpeningResultsTest {
 
 	private G2bFetchService fetchService;
 	private BidOpeningResultRepository openingRepository;
+	private BidResultRepository bidResultRepository;
 	private MarketIntelService service;
 
 	@BeforeEach
 	void setUp() {
 		fetchService = mock(G2bFetchService.class);
 		openingRepository = mock(BidOpeningResultRepository.class);
+		bidResultRepository = mock(BidResultRepository.class);
 		// 기본은 "저장분 없음" — 기존 시험들은 전부 상류 경로를 보는 것이다.
 		when(openingRepository.find(anyString())).thenReturn(Optional.empty());
+		/*
+		 * 기본 낙찰정보: 1순위 업체가 낙찰자다. 기존 시험들이 그 전제로 쓰여 있고, 그것이
+		 * 96.8% 의 현실이기도 하다. 1순위가 아닌 경우는 아래 전용 시험이 따로 본다.
+		 */
+		when(bidResultRepository.findByBidNtceNo(anyString())).thenReturn(List.of(
+				Map.of("bidwinnrBizno", biznoOf("에프에스아일랜드학생복"),
+						"bidwinnrNm", "에프에스아일랜드학생복")));
 		service = new MarketIntelService(
 				new G2bEndpoints("https://apis.data.go.kr/1230000"),
 				fetchService,
 				mock(NoticeFetchSupport.class),
-				openingRepository);
+				openingRepository,
+				bidResultRepository);
+	}
+
+	/** 업체마다 다른 사업자번호 — 낙찰자 판정이 번호로 이뤄지므로 겹치면 안 된다. */
+	private static String biznoOf(String name) {
+		return String.valueOf(6238803773L + Math.abs(name.hashCode() % 1000));
 	}
 
 	private static Map<String, Object> row(String ord, String rank, String name, String amt, String rate) {
@@ -53,7 +69,8 @@ class MarketIntelOpeningResultsTest {
 		map.put("bidNtceOrd", ord);
 		map.put("opengRank", rank);
 		map.put("prcbdrNm", name);
-		map.put("prcbdrBizno", "6238803773");
+		// 낙찰자 판정이 사업자번호로 이뤄지므로 업체마다 달라야 한다.
+		map.put("prcbdrBizno", biznoOf(name));
 		map.put("bidprcAmt", amt);
 		map.put("bidprcrt", rate);
 		map.put("rmrk", rank.isEmpty() ? "규격서평가부적격" : "정상");
@@ -68,7 +85,7 @@ class MarketIntelOpeningResultsTest {
 		Map<String, Object> p = service.fetchOpeningResults("R26BK01629628", "000", "물품").get(0);
 
 		assertThat(p.get("bdrNm")).isEqualTo("에프에스아일랜드학생복");
-		assertThat(p.get("bdrBrn")).isEqualTo("6238803773");
+		assertThat(p.get("bdrBrn")).isEqualTo(biznoOf("에프에스아일랜드학생복"));
 		assertThat(p.get("rank")).isEqualTo("1");
 		assertThat(p.get("bidAmt")).isEqualTo("298000");
 		assertThat(p.get("bidprcRt")).isEqualTo("95.609");
@@ -78,9 +95,9 @@ class MarketIntelOpeningResultsTest {
 	}
 
 	@Test
-	void 개찰순위_1위를_낙찰로_본다() {
+	void 낙찰정보의_낙찰업체에만_배지를_단다() {
 		when(fetchService.fetchPaged(anyString(), any(), anyInt(), anyInt())).thenReturn(List.of(
-				row("000", "1", "가나", "298000", "95.609"),
+				row("000", "1", "에프에스아일랜드학생복", "298000", "95.609"),
 				row("000", "2", "다라", "303000", "97.214")));
 
 		List<Map<String, Object>> ps = service.fetchOpeningResults("R26BK01629628", null, "물품");
@@ -89,6 +106,78 @@ class MarketIntelOpeningResultsTest {
 		assertThat(ps.get(0).get("_won")).isEqualTo(true);
 		assertThat(ps.get(1).get("sucsfbidYn")).isEqualTo("N");
 		assertThat(ps.get(1).get("_won")).isEqualTo(false);
+	}
+
+	/*
+	 * ── 1순위가 낙찰자가 아닌 경우 (2026-08-30) ──────────────────────────────────
+	 *
+	 * 실측 220건 중 7건(3.2%). 일곱 건 모두 실제 낙찰자의 투찰률이 1순위보다 높다 —
+	 * 더 낮게 쓴 1순위가 적격심사에서 떨어지거나 포기했다. opengRank 는 투찰가 순위이지
+	 * 낙찰 순위가 아니다.
+	 */
+
+	@Test
+	void 적격심사에서_1순위가_떨어지면_배지는_실제_낙찰자에게_간다() {
+		when(bidResultRepository.findByBidNtceNo(anyString())).thenReturn(List.of(
+				Map.of("bidwinnrBizno", biznoOf("주식회사 두영건설"), "bidwinnrNm", "주식회사 두영건설")));
+		when(fetchService.fetchPaged(anyString(), any(), anyInt(), anyInt())).thenReturn(List.of(
+				row("000", "1", "이건건설 주식회사", "198000", "90.335"),
+				row("000", "2", "주식회사 두영건설", "198001", "90.338")));
+
+		List<Map<String, Object>> ps = service.fetchOpeningResults("R26BK01682199", null, "공사");
+
+		assertThat(ps.get(0).get("sucsfbidYn")).isEqualTo("N");
+		assertThat(ps.get(1).get("sucsfbidYn")).isEqualTo("Y");
+	}
+
+	@Test
+	void 상호가_같은_별개_법인에는_배지를_달지_않는다() {
+		/*
+		 * 실측 R26BK01665876: "금오건설 주식회사"·"금오건설주식회사"·"금오건설 주식회사" 셋이
+		 * 참여했는데 사업자번호가 전부 다른 별개 법인이었다(둘은 실격). 공백만 지워 이름을
+		 * 맞추면 배지가 셋에 붙는다 — 사업자번호가 양쪽에 있으면 그것만 본다.
+		 */
+		when(bidResultRepository.findByBidNtceNo(anyString())).thenReturn(List.of(
+				Map.of("bidwinnrBizno", biznoOf("금오건설 주식회사"), "bidwinnrNm", "금오건설 주식회사")));
+		when(fetchService.fetchPaged(anyString(), any(), anyInt(), anyInt())).thenReturn(List.of(
+				row("000", "1", "금오건설 주식회사", "1000", "90"),
+				row("000", "", "금오건설주식회사", "", ""),
+				row("000", "", "금오건설  주식회사", "", "")));
+
+		List<Map<String, Object>> ps = service.fetchOpeningResults("R26BK01665876", null, "공사");
+
+		assertThat(ps.stream().filter(p -> "Y".equals(p.get("sucsfbidYn")))).hasSize(1);
+		assertThat(ps.get(0).get("sucsfbidYn")).isEqualTo("Y");
+	}
+
+	@Test
+	void 사업자번호가_없는_행은_상호로_찾는다() {
+		// 상호는 공백을 지워 맞춘다 — "낙찰 사" 對 "낙찰사".
+		when(bidResultRepository.findByBidNtceNo(anyString())).thenReturn(List.of(
+				Map.of("bidwinnrBizno", "", "bidwinnrNm", "낙찰 사")));
+		Map<String, Object> a = new LinkedHashMap<>(row("000", "1", "탈락사", "1000", "90"));
+		Map<String, Object> b = new LinkedHashMap<>(row("000", "2", "낙찰사", "1001", "91"));
+		a.remove("prcbdrBizno");
+		b.remove("prcbdrBizno");
+		when(fetchService.fetchPaged(anyString(), any(), anyInt(), anyInt())).thenReturn(List.of(a, b));
+
+		List<Map<String, Object>> ps = service.fetchOpeningResults("R26BK01682199", null, "공사");
+
+		assertThat(ps.get(1).get("sucsfbidYn")).isEqualTo("Y");
+	}
+
+	@Test
+	void 낙찰정보가_없으면_아무에게도_배지를_달지_않는다() {
+		// 개찰은 끝났는데 낙찰자 확정 전인 구간이 며칠씩 있다. 그때 1순위를 낙찰이라 부르면
+		// 화면이 아직 일어나지 않은 일을 사실로 말하는 셈이다.
+		when(bidResultRepository.findByBidNtceNo(anyString())).thenReturn(List.of());
+		when(fetchService.fetchPaged(anyString(), any(), anyInt(), anyInt())).thenReturn(List.of(
+				row("000", "1", "가나", "1000", "90"),
+				row("000", "2", "다라", "1001", "91")));
+
+		List<Map<String, Object>> ps = service.fetchOpeningResults("R26BK01629628", null, "물품");
+
+		assertThat(ps).extracting(p -> p.get("sucsfbidYn")).containsOnly("N");
 	}
 
 	@Test

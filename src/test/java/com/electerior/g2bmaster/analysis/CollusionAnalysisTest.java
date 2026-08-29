@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -30,12 +31,22 @@ class CollusionAnalysisTest {
 		return map;
 	}
 
+	/**
+	 * 참여업체 한 줄. <b>낙찰 여부는 순위가 아니라 {@code sucsfbidYn} 이 정한다</b> —
+	 * 실측 220건 중 7건에서 개찰 1순위가 낙찰자가 아니었다(적격심사 탈락·포기).
+	 * 편의상 순위 1을 낙찰로 두되, 그렇지 않은 경우는 {@link #participant(String, String, String, boolean)} 로 쓴다.
+	 */
 	private static Map<String, Object> participant(String name, String rank, String rate) {
+		return participant(name, rank, rate, "1".equals(rank));
+	}
+
+	private static Map<String, Object> participant(String name, String rank, String rate, boolean won) {
 		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("bdrNm", name);
 		map.put("rank", rank);
 		map.put("bidprcRt", rate);
 		map.put("bidAmt", "1000");
+		map.put("sucsfbidYn", won ? "Y" : "N");
 		return map;
 	}
 
@@ -168,5 +179,64 @@ class CollusionAnalysisTest {
 
 		assertThat(matrix.pairs().get(0).a()).isEqualTo("C사");   // 2건 교대가 위로
 		assertThat(matrix.pairs().get(0).total()).isEqualTo(2);
+	}
+
+	/*
+	 * ── 낙찰자는 1순위가 아닐 수 있다 (2026-08-30) ──────────────────────────────
+	 *
+	 * 예전에는 participants.get(0) 을 승자로 봤다. 실측 220건 중 7건(3.2%)에서 그것이
+	 * 틀렸다 — 더 낮게 쓴 1순위가 적격심사에서 떨어지거나 포기하고 다음 순위가 낙찰됐다
+	 * (낙찰자가 2순위 5건 · 3순위 1건 · 6순위 1건). 화면 배지와 달리 이 통계는 틀려도
+	 * 눈에 띄지 않으므로 여기서 못박는다.
+	 */
+
+	@Test
+	@DisplayName("낙찰은 개찰 1순위가 아니라 sucsfbidYn 이 정한다")
+	void awardFollowsFlagNotRank() {
+		var matrix = CollusionAnalysis.buildCollusionMatrix(List.of(
+				bid("N1", "적격심사 탈락 건",
+						participant("탈락사", "1", "90", false),
+						participant("낙찰사", "2", "91", true))));
+
+		var winner = matrix.companies().stream().filter(c -> c.name().equals("낙찰사")).findFirst();
+		assertThat(winner).isPresent();
+		assertThat(winner.get().wins()).isEqualTo(1);
+
+		var dropped = matrix.companies().stream().filter(c -> c.name().equals("탈락사")).findFirst();
+		assertThat(dropped).isPresent();
+		// 1순위였지만 낙찰이 아니다. 2위(경쟁 상대)로 기록된다.
+		assertThat(dropped.get().wins()).isZero();
+		assertThat(dropped.get().runnerUp()).isEqualTo(1);
+	}
+
+	@Test
+	@DisplayName("낙찰자가 6순위여도 그 업체가 승자다")
+	void awardCanBeFarDownTheRanking() {
+		var matrix = CollusionAnalysis.buildCollusionMatrix(List.of(
+				bid("N1", "여섯 번째가 낙찰",
+						participant("1순위", "1", "90", false),
+						participant("2순위", "2", "91", false),
+						participant("6순위", "6", "95", true))));
+
+		var winner = matrix.companies().stream().filter(c -> c.name().equals("6순위")).findFirst();
+		assertThat(winner).isPresent();
+		assertThat(winner.get().wins()).isEqualTo(1);
+	}
+
+	@Test
+	@DisplayName("낙찰이 확정되지 않은 공고는 통계에서 뺀다 — 1순위를 승자로 추정하지 않는다")
+	void skipsBidsWithoutConfirmedAward() {
+		/*
+		 * 개찰은 끝났는데 낙찰자 확정 전인 구간이 며칠씩 있다. 그때 1순위를 낙찰로 세면
+		 * 아직 일어나지 않은 일이 승패 통계에 들어간다. 실제 경로에서는 낙찰정보가 있는
+		 * 행만 담합 분석에 들어가므로 이 분기는 방어선이다.
+		 */
+		var matrix = CollusionAnalysis.buildCollusionMatrix(List.of(
+				bid("N1", "낙찰 미확정",
+						participant("A사", "1", "90", false),
+						participant("B사", "2", "91", false))));
+
+		assertThat(matrix.companies()).isEmpty();
+		assertThat(matrix.pairs()).isEmpty();
 	}
 }

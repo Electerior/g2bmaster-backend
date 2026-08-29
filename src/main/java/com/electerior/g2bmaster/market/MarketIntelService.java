@@ -8,6 +8,7 @@ import com.electerior.g2bmaster.common.Numbers;
 import com.electerior.g2bmaster.integration.g2b.G2bFetchService;
 import com.electerior.g2bmaster.market.MarketIntelRequests.CompanyHistoryRequest;
 import com.electerior.g2bmaster.market.MarketIntelRequests.OfficerSearchRequest;
+import com.electerior.g2bmaster.notice.BidResultRepository;
 import com.electerior.g2bmaster.notice.G2bEndpoints;
 import com.electerior.g2bmaster.notice.NoticeFetchSupport;
 import java.math.BigDecimal;
@@ -50,7 +51,19 @@ public class MarketIntelService {
 	private static final int OPENING_ROWS = 999;
 
 	/** 한 공고에서 받아 올 참여업체 상한. 999를 넘는 공고는 드물지만 잘라 내지는 않는다. */
-	private static final int MAX_OPENING_PARTICIPANTS = 3000;
+	/*
+	 * 참여업체 수집 상한.
+	 *
+	 * <p>3000 이었다. 페이지가 999 라 실제로는 999×4 = 3,996 행에서 끊겼는데, 실측
+	 * 5,527개사짜리 공고(R26BK01686185)가 나오면서 1,531개사가 소리 없이 잘렸다. 화면은
+	 * 메타에 '참여업체수 5,527개사'라고 적고 표 아래에는 '총 3,996개사 참여'라고 적어
+	 * 스스로 모순됐다.
+	 *
+	 * <p>6000 으로 올린다. 이제 공고당 한 번만 받아 {@code bid_opening_result} 에 저장하므로
+	 * (PR #17) 페이지 4→6 은 사실상 공짜다. 그래도 넘치는 날이 오면 화면이 "총 N개사 중
+	 * M개사 확인"으로 잘렸다고 말한다 — 상한은 언젠가 또 넘는다.
+	 */
+	private static final int MAX_OPENING_PARTICIPANTS = 6000;
 
 	/** 업체 이력·담당자 조회 기본 구간(일). 검색 탭(7일)보다 넓다 — 이력은 추세가 목적이다. */
 	private static final int DEFAULT_HISTORY_DAYS = 90;
@@ -76,13 +89,16 @@ public class MarketIntelService {
 	private final G2bFetchService fetchService;
 	private final NoticeFetchSupport support;
 	private final BidOpeningResultRepository openingRepository;
+	private final BidResultRepository bidResultRepository;
 
 	public MarketIntelService(G2bEndpoints endpoints, G2bFetchService fetchService,
-			NoticeFetchSupport support, BidOpeningResultRepository openingRepository) {
+			NoticeFetchSupport support, BidOpeningResultRepository openingRepository,
+			BidResultRepository bidResultRepository) {
 		this.endpoints = endpoints;
 		this.fetchService = fetchService;
 		this.support = support;
 		this.openingRepository = openingRepository;
+		this.bidResultRepository = bidResultRepository;
 	}
 
 	// ── 개찰결과 ────────────────────────────────────────────────────────────
@@ -107,9 +123,10 @@ public class MarketIntelService {
 		 * 캐시뿐이라, 재기동 한 번에 통째로 날아가고 인스턴스 사이에 공유되지도 않았다.
 		 * 무엇을 저장하고 언제 다시 묻는지는 BidOpeningResultRepository 참고.
 		 */
+		Winner winner = winnerOfNotice(no);
 		Optional<List<Map<String, Object>>> stored = openingRepository.find(no);
 		if (stored.isPresent()) {
-			return present(stored.get(), bidNtceSqNo, type);
+			return present(stored.get(), bidNtceSqNo, type, winner);
 		}
 
 		// 차수(bidNtceOrd)는 일부러 안 싣는다 — narrowToOrd 주석 참고.
@@ -137,7 +154,69 @@ public class MarketIntelService {
 			return List.of();
 		}
 
-		return present(rows, bidNtceSqNo, type);
+		return present(rows, bidNtceSqNo, type, winner);
+	}
+
+	/**
+	 * 누가 낙찰받았는가 — <b>낙찰정보가 말해 주는 사실</b>.
+	 *
+	 * <p>개찰 응답에는 낙찰 표시가 없다. 순위로 짐작하면 3.2% 가 틀린다
+	 * ({@link #normalizeParticipant} 주석). 그래서 {@code bid_result} 의 낙찰업체와 맞춰 본다.
+	 *
+	 * <p><b>사업자번호를 먼저 본다.</b> 상호는 표기가 흔들린다("주식회사 태서식품 서울지점" 對
+	 * "주식회사태서식품서울지점"). 실측 불일치 7건 전부 사업자번호로는 정확히 찾혔다.
+	 * 번호가 비어 있는 예전 행을 위해 공백을 지운 상호 비교를 폴백으로 둔다.
+	 *
+	 * <p>{@link #NONE} 은 "낙찰정보가 없다"는 뜻이고 그때는 <b>아무에게도 배지를 달지 않는다</b>.
+	 * 개찰은 끝났지만 낙찰자 확정 전인 구간이 실제로 며칠씩 있다 — 그 사이에 1순위를 낙찰이라
+	 * 부르면 화면이 아직 일어나지 않은 일을 사실로 말하는 셈이다.
+	 */
+	record Winner(String bizno, String name) {
+
+		static final Winner NONE = new Winner("", "");
+
+		/*
+		 * **양쪽에 사업자번호가 있으면 그것만 본다.** 상호로도 함께 보려다 실측에서 오탐이
+		 * 났다 — R26BK01665876 에 "금오건설 주식회사"·"금오건설주식회사"·"금오건설 주식회사"
+		 * 셋이 참여했는데 사업자번호가 전부 다른 <b>별개 법인</b>이었다(둘은 실격). 공백만
+		 * 지우면 이름이 같아져 배지가 셋에 붙었다.
+		 *
+		 * 상호 비교는 한쪽에 번호가 없을 때의 폴백으로만 남긴다. 번호가 있는데 서로 다르면
+		 * 배지를 달지 않는다 — 엉뚱한 업체에 다는 것보다 아무에게도 안 다는 쪽이 낫다.
+		 */
+		boolean matches(Map<String, Object> row) {
+			String candidate = digits(firstNonBlank(row, "prcbdrBizno", "bdrBrn"));
+			if (!bizno.isBlank() && !candidate.isBlank()) {
+				return bizno.equals(candidate);
+			}
+			return !name.isBlank() && name.equals(squash(firstNonBlank(row, "prcbdrNm", "bdrNm")));
+		}
+
+		private static String digits(String value) {
+			return value == null ? "" : value.replaceAll("[^0-9]", "");
+		}
+
+		private static String squash(String value) {
+			return value == null ? "" : value.replaceAll("\\s+", "");
+		}
+
+		static Winner of(String bizno, String name) {
+			String no = digits(bizno);
+			String nm = squash(name);
+			return no.isBlank() && nm.isBlank() ? NONE : new Winner(no, nm);
+		}
+	}
+
+	/** 이 공고의 낙찰자. 낙찰정보가 아직 없으면 {@link Winner#NONE}. */
+	private Winner winnerOfNotice(String bidNtceNo) {
+		List<Map<String, Object>> rows = bidResultRepository.findByBidNtceNo(bidNtceNo);
+		for (Map<String, Object> row : rows) {
+			Winner candidate = Winner.of(str(row.get("bidwinnrBizno")), str(row.get("bidwinnrNm")));
+			if (candidate != Winner.NONE) {
+				return candidate;
+			}
+		}
+		return Winner.NONE;
 	}
 
 	/**
@@ -179,11 +258,11 @@ public class MarketIntelService {
 	 * bidprcRt)이 된다. 두 경로가 같은 함수를 타야 "저장분만 필드가 다르다"가 생기지 않는다.
 	 */
 	private List<Map<String, Object>> present(List<Map<String, Object>> rows, String bidNtceSqNo,
-			String type) {
+			String type, Winner winner) {
 		List<Map<String, Object>> scoped = narrowToOrd(rows, bidNtceSqNo);
 		List<Map<String, Object>> out = new ArrayList<>(scoped.size());
 		for (Map<String, Object> row : scoped) {
-			out.add(normalizeParticipant(row, type));
+			out.add(normalizeParticipant(row, type, winner));
 		}
 		return out;
 	}
@@ -215,14 +294,23 @@ public class MarketIntelService {
 	 * {@code bidprcrt}(끝이 소문자 t다). 원본 키도 남겨 둔다 — 지우면 사업자번호·투찰일시처럼
 	 * 지금은 안 쓰는 값이 나중에도 화면에 못 온다.
 	 *
-	 * <p><b>{@code sucsfbidYn} 은 상류에 없다.</b> 개찰순위 1위를 낙찰로 본다 — 표본 20건에서
-	 * 낙찰정보의 {@code bidwinnrNm} 과 20/20 일치했다. {@code rmrk} 를 쓰지 않는 이유는 그것이
-	 * 낙찰 표시가 아니라 투찰 상태이기 때문이다("정상" / "규격서평가부적격").
+	 * <p><b>{@code sucsfbidYn} 은 상류에 없다.</b> 예전에는 개찰순위 1위를 낙찰로 봤고 근거는
+	 * "표본 20건에서 낙찰정보의 {@code bidwinnrNm} 과 20/20 일치"였다. <b>표본을 220건으로
+	 * 늘리니 7건(3.2%)이 어긋났다</b> — 일곱 건 모두 실제 낙찰자의 투찰률이 1순위보다 높다.
+	 * 더 낮게 쓴 1순위가 적격심사에서 떨어지거나 포기한 것이다. {@code opengRank} 는
+	 * <b>투찰가 순위이지 낙찰 순위가 아니다</b>(실측: 낙찰자가 2순위 5건·3순위 1건·6순위 1건).
+	 *
+	 * <p>그래서 낙찰정보({@code bid_result})의 낙찰업체와 대조해 판정한다 —
+	 * {@link Winner} 참고. 낙찰정보가 없으면 아무에게도 배지를 달지 않는다.
+	 *
+	 * <p>{@code rmrk} 를 쓰지 않는 이유는 그것이 낙찰 표시가 아니라 투찰 상태이기 때문이다
+	 * ("정상" / "규격서평가부적격").
 	 *
 	 * <p>실격 업체는 순위·금액·투찰률이 모두 비어 온다. 채우지 않는다 — 0을 넣으면 투찰률
 	 * 추세와 담합 매트릭스가 있지도 않은 0원 투찰을 사실로 읽는다.
 	 */
-	private static Map<String, Object> normalizeParticipant(Map<String, Object> row, String type) {
+	private static Map<String, Object> normalizeParticipant(Map<String, Object> row, String type,
+			Winner winner) {
 		Map<String, Object> out = new LinkedHashMap<>(row);
 		String rank = firstNonBlank(row, "opengRank", "rank");
 		out.put("bdrNm", firstNonBlank(row, "prcbdrNm", "bdrNm"));
@@ -230,7 +318,7 @@ public class MarketIntelService {
 		out.put("rank", rank);
 		out.put("bidAmt", firstNonBlank(row, "bidprcAmt", "bidAmt"));
 		out.put("bidprcRt", firstNonBlank(row, "bidprcrt", "bidprcRt"));
-		boolean won = "1".equals(rank);
+		boolean won = winner.matches(row);
 		out.put("sucsfbidYn", won ? "Y" : "N");
 		out.put("_won", won);
 		if (type != null && !type.isBlank()) {
