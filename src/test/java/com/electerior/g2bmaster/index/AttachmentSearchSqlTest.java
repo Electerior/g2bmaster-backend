@@ -109,4 +109,52 @@ class AttachmentSearchSqlTest {
 		assertThat(sql).doesNotContain("LEFT JOIN");
 		assertThat(sql).doesNotContain("ftDocExclude");
 	}
+
+	/**
+	 * 총건수는 <b>후보 집합을 만들지 않고</b> 센다.
+	 *
+	 * <p>{@code candidateSql} 을 그대로 재사용하면 세기만 하는 데도 매치 행마다 FULLTEXT
+	 * 점수를 계산하고 두 브랜치를 임시 테이블로 실체화한 뒤 {@code MAX()} 세 개를 집계한다.
+	 * 색인이 318만 행으로 커진 뒤 '공사'(107만 건 매치)에서 22.7초가 나왔다 — 결과는 맞고
+	 * 로그도 깨끗한, 정확히 이 파일이 잠그려는 종류의 결함이다.
+	 */
+	@Test
+	@DisplayName("총건수 질의는 관련도·hit 플래그를 계산하지 않는다")
+	void countSqlSkipsScoringAndFlags() {
+		String sql = BidNoticeIndexRepository.disjointCountSql(where(List.of("서버"), List.of()));
+
+		assertThat(sql).doesNotContain("relevance");
+		assertThat(sql).doesNotContain("notice_hit");
+		assertThat(sql).doesNotContain("doc_hit");
+		// 실체화의 신호. 후보를 만들지 않으므로 둘 다 없어야 한다.
+		assertThat(sql).doesNotContain("UNION");
+		assertThat(sql).doesNotContain("GROUP BY");
+	}
+
+	/**
+	 * |공고 ∪ 첨부| = |공고| + |첨부 중 공고에 안 걸린 것|.
+	 *
+	 * <p>부정을 <b>첨부 쪽에</b> 걸어야 훑는 양이 첨부 브랜치 크기로 묶인다. 반대로 걸면
+	 * 공고 전체를 다시 훑어 이득이 사라진다 — 값은 같게 나오므로 테스트가 없으면 뒤집혀도 모른다.
+	 */
+	@Test
+	@DisplayName("첨부 브랜치에서 공고 매치를 빼 두 번 세지 않는다")
+	void countSqlSubtractsOverlapOnDocSide() {
+		String sql = BidNoticeIndexRepository.disjointCountSql(where(List.of("서버"), List.of()));
+
+		assertThat(sql).contains("COUNT(DISTINCT d.notice_id, d.source)");
+		// 부정이 붙는 자리는 첨부 브랜치다.
+		int docBranch = sql.indexOf("bid_notice_document");
+		assertThat(docBranch).isGreaterThan(-1);
+		assertThat(sql.indexOf("AND NOT (")).isGreaterThan(docBranch);
+	}
+
+	/** 필터는 세는 쪽에서도 두 항에 똑같이 붙어야 한다 — 한쪽만 붙으면 건수가 목록과 어긋난다. */
+	@Test
+	@DisplayName("총건수 질의에도 필터가 두 항 모두에 붙는다")
+	void countSqlAppliesFiltersToBothTerms() {
+		String sql = BidNoticeIndexRepository.disjointCountSql(where(List.of("서버"), List.of()));
+
+		assertThat(sql.split("n\\.region LIKE", -1)).hasSize(3);
+	}
 }

@@ -659,14 +659,69 @@ public class BidNoticeIndexRepository {
 	}
 
 	public int count(BidNoticeQueryBuilder.Where where) {
-		// UNION 은 같은 공고를 두 브랜치에서 낼 수 있다. GROUP BY 로 접은 뒤에 세지 않으면
-		// 제목과 규격서 양쪽에 걸린 공고가 총건수에서 두 번 세어져, 화면의 '12건'과 실제
-		// 목록 길이가 어긋난다.
-		String sql = where.unionsAttachments()
-				? "SELECT COUNT(*) FROM (" + candidateSql(where) + "\n       ) c"
-				: "SELECT COUNT(*)" + fromClause(where) + where.sql() + attachmentExcludeCondition(where);
+		// UNION 은 같은 공고를 두 브랜치에서 낼 수 있다. 접지 않고 세면 제목과 규격서 양쪽에
+		// 걸린 공고가 총건수에서 두 번 세어져, 화면의 '12건'과 실제 목록 길이가 어긋난다.
+		String sql;
+		if (!where.unionsAttachments()) {
+			sql = "SELECT COUNT(*)" + fromClause(where) + where.sql() + attachmentExcludeCondition(where);
+		} else if (where.excludesByAttachment()) {
+			// 반조인이 붙는 경로는 후보 집합을 실제로 만들어야 하므로 종전 형태를 그대로 쓴다.
+			sql = "SELECT COUNT(*) FROM (" + candidateSql(where) + "\n       ) c";
+		} else {
+			sql = disjointCountSql(where);
+		}
 		Integer total = jdbc.queryForObject(sql, new MapSqlParameterSource(where.params()), Integer.class);
 		return total == null ? 0 : total;
+	}
+
+	/**
+	 * 총건수 전용 질의 — <b>후보 집합을 만들지 않고</b> 센다.
+	 *
+	 * <p><b>왜 따로 두나.</b> {@link #candidateSql} 은 목록을 그리기 위한 것이라 관련도 점수와
+	 * {@code notice_hit}/{@code doc_hit} 를 함께 낸다. 세기만 할 때 그것들은 전부 낭비다 —
+	 * 매치된 행마다 FULLTEXT 점수를 계산하고, 두 브랜치를 임시 테이블로 실체화한 뒤,
+	 * {@code MAX()} 세 개를 집계하고 나서야 셀 수 있다.
+	 *
+	 * <p><b>대신 쓰는 항등식.</b> 합집합의 크기는 이렇게도 구해진다:
+	 * <pre>
+	 *   |공고 ∪ 첨부| = |공고| + |첨부 중 공고에 안 걸린 것|
+	 * </pre>
+	 * 오른쪽 둘째 항은 <b>첨부 매치 행에만</b> 공고 조건을 부정으로 걸어 세므로, 훑는 양이
+	 * 첨부 브랜치 크기로 묶인다. 공고 브랜치가 수십만 건이어도 그쪽은 인덱스 카운트로 끝난다.
+	 *
+	 * <p><b>실측</b>(2026-08-29, {@code bid_notice} 3,184,259행 ·
+	 * {@code bid_notice_document} done 158,604행):
+	 * <pre>
+	 *   낱말        매치      종전      이 형태
+	 *   '공사'   1,093,657   22.7s   →   5.3s
+	 *   '용역'   1,049,938   21.4s   →   4.7s
+	 *   '서버'      28,549    0.90s  →   0.41s
+	 *   '정수기'     1,364    0.43s  →   0.35s
+	 * </pre>
+	 * 네 낱말 모두 <b>종전과 같은 값</b>을 낸다. 흔한 낱말일수록 이득이 크고 드문 낱말에서도
+	 * 지지 않는다 — 종전이 늘 하던 실체화를 안 하기 때문이다.
+	 *
+	 * <p><b>왜 이제야 문제가 되었나.</b> {@code candidateSql} 의 UNION 형태를 정한 실측은
+	 * 2026-08-12 의 {@code bid_notice} 45,736행 기준이었다. 지금은 70배다. 그때는 어떤 낱말도
+	 * 후보가 수백 건이라 실체화 비용이 보이지 않았는데, 318만 행에서 '공사'는 34%(107만 건)를
+	 * 물어 온다. 형태가 틀렸던 것이 아니라 <b>전제가 만료된 것</b>이다.
+	 *
+	 * <p>첨부 제외(반조인)가 걸린 경로에는 쓰지 않는다 — 그쪽은 후보 집합 자체가 필요하다.
+	 */
+	static String disjointCountSql(BidNoticeQueryBuilder.Where where) {
+		String filters = where.filterSql().isEmpty() ? "" : "\n             AND " + where.filterSql();
+		String noticeOnly = "SELECT COUNT(*)"
+				+ "\n             FROM bid_notice n"
+				+ "\n            WHERE " + where.keywordSql() + filters;
+		// 공고 브랜치가 이미 센 것을 빼야 두 번 세지 않는다. 부정을 첨부 쪽에 걸어야
+		// 훑는 양이 첨부 브랜치로 묶인다 — 반대로 걸면 공고 전체를 다시 훑는다.
+		String docOnly = "SELECT COUNT(DISTINCT d.notice_id, d.source)"
+				+ "\n             FROM bid_notice_document d"
+				+ "\n             JOIN bid_notice n ON n.id = d.notice_id AND n.source = d.source"
+				+ "\n            WHERE d.status = 'done'"
+				+ "\n              AND MATCH(d.body_text) AGAINST (:ftDocQuery IN BOOLEAN MODE)"
+				+ "\n              AND NOT (" + where.keywordSql() + ")" + filters;
+		return "SELECT (" + noticeOnly + "\n       ) + (" + docOnly + "\n       )";
 	}
 
 	/**
