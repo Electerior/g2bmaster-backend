@@ -88,6 +88,69 @@ SPRINGDOC_APIDOCS_ENABLED=false SPRINGDOC_SWAGGERUI_ENABLED=false ./mvnw spring-
 mysql -u root -p -e "CREATE USER 'g2b'@'localhost' IDENTIFIED BY '비밀번호'; GRANT ALL ON g2b.* TO 'g2b'@'localhost';"
 ```
 
+### MySQL 기동 옵션 — 검색이 여기에 걸려 있다
+
+**모든 환경에서 아래 두 옵션으로 MySQL 을 띄워야 한다.** 애플리케이션 설정이 아니라 서버
+기동 옵션이고, 빠지면 앱은 멀쩡히 뜨는데 **검색 결과만 조용히 틀린다.**
+
+```
+--ngram-token-size=2
+--innodb-ft-enable-stopword=OFF
+```
+
+`--innodb-ft-enable-stopword=OFF` 가 없으면 이렇게 된다. ngram 파서는 stopword 를 '같으면'이
+아니라 **'포함하면'** 버리는데, InnoDB 기본 목록에 한 글자 `a`·`i` 가 있어서 **`a` 나 `i` 가
+든 모든 2글자 토큰이 색인에서 사라진다.**
+
+| 검색어 | 쪼개진 토큰 | 증상 |
+|---|---|---|
+| `AMD` | `[AM]`(소멸) `[MD]` | 사실상 `MD` 검색 — `GMDSS`·`MDR` 이 딸려 온다 |
+| `RAM` | `[RA]` `[AM]` 둘 다 소멸 | **0건**. 실제로는 있는데 없다고 나온다 |
+| `API`·`DATA`·`SATA` | 전멸 | 0건 |
+| `데이터` | 영향 없음 | 정상 — 한글은 기본 목록에 걸릴 게 없다 |
+
+한국어는 멀쩡하고 **영문 제품명·약어만** 부서지므로 눈으로는 잘 안 보인다.
+
+**세션 변수(`innodb_ft_user_stopword_table`)로 우회하지 말 것.** 색인을 만들 때만 적용되고
+유지되지 않는다 — 실측으로 두 번 무너졌다. ① 다른 세션이 `ALTER TABLE … ADD COLUMN` 을
+하면(FULLTEXT 가 있는 테이블은 컬럼 추가가 테이블 재구축을 부른다) 색인이 다시 만들어지며
+기본 목록으로 돌아갔고, ② 행이 들어오고 서버가 재기동한 뒤 `AM` 토큰이 0개가 되어 있었다.
+전역 설정은 새 세션이 물려받으므로 누가 어떤 DDL 로 재구축하든 살아남는다.
+
+**옵션을 빠뜨린 채 색인이 만들어졌다면** 옵션을 넣어 MySQL 을 다시 띄운 뒤 재구축한다.
+`DROP` 과 `ADD` 를 **한 `ALTER` 에 묶지 말 것** — MySQL 이 결과 정의가 같다고 보고 아무 일도
+하지 않는다(오류도 경고도 없이 성공으로 끝난다).
+
+```bash
+mysql -u g2b -p g2b -e "ALTER TABLE bid_notice DROP INDEX ft_bid_notice_text;"
+mysql -u g2b -p g2b -e "ALTER TABLE bid_notice ADD FULLTEXT KEY ft_bid_notice_text (notice_name, notice_body) WITH PARSER ngram;"
+```
+
+첨부 본문은 `bid_notice_document` 의 `ft_doc_body` 를 같은 방식으로 다시 만든다. 규모가 커서
+오래 걸리고(95,235행·2.9GB 기준 **23분 29초**) 그동안 그 테이블 쓰기가 막히므로 정비 창에서 한다.
+
+성공 여부는 **시간이 아니라 결과로** 확인한다. 두 값이 같아야 한다.
+
+```bash
+mysql -u g2b -p g2b -e "SELECT (SELECT COUNT(*) FROM bid_notice WHERE MATCH(notice_name,notice_body) AGAINST ('\"AMD\"' IN BOOLEAN MODE)) ft, (SELECT COUNT(*) FROM bid_notice WHERE notice_name LIKE '%AMD%' OR notice_body LIKE '%AMD%') lk;"
+```
+
+색인 자체의 설정을 직접 보려면(root 필요) — **`use_stopword` 가 `1` 이면 그 색인은 잘못
+만들어진 것이다.** 이 값은 **색인마다 저장**되므로, 두 색인을 따로 확인해야 한다.
+전역 옵션이 재구축을 견디는 이유도 이것이다 — 재구축 시점의 전역값이 여기에 박힌다.
+
+```bash
+mysql -u root -p -e "SET GLOBAL innodb_ft_aux_table='g2b/bid_notice'; SELECT * FROM INFORMATION_SCHEMA.INNODB_FT_CONFIG;"
+```
+
+```
+stopword_table_name        (비어 있어야 정상)
+use_stopword               0        ← 1 이면 재구축 필요
+```
+
+회귀는 `NgramFullTextIndexTest` 가 지킨다. Docker 가 필요하고, **CI 에 Docker 가 없으면 그
+테스트는 건너뛰어져 아무것도 지키지 못한다.**
+
 ### 마이그레이션 추가
 
 **버전 번호를 손으로 고르지 않는다.** 스크립트가 초 단위 타임스탬프로 만들어 준다.

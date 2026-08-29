@@ -46,46 +46,31 @@ public class DocumentIndexRepository {
 	/**
 	 * 첨부 색인이 아직 안 끝난 공고 한 묶음. {@code attachment_urls} 를 그대로 들고 온다.
 	 *
-	 * <p>{@code closeBefore} 가 있으면 <b>지금부터 그 시각까지 마감되는 공고</b>로 좁히고,
-	 * <b>마감이 급한 순</b>으로 준다. 전량 백필은 109,284파일이라 하루로 안 끝나는데, 실무에서
-	 * 급한 것은 "지금 들어갈 수 있는 건"이다 — 마감 임박 순이 체감 효용이 가장 크다.
+	 * <p><b>언제나 최신 게시순</b>이고 범위를 좁히는 손잡이가 없다. 전에는 "이 시각까지 마감"·
+	 * "이 시각까지 게시" 두 축으로 백필 범위를 잘라 줬는데, 그 값이 <b>한 번 지나가면 반드시
+	 * 낡는다</b>는 것이 문제였다 — 창을 지난 공고가 계속 쌓이는데 워커는 창 안에서 집을 것이
+	 * 없어 조용히 헛돈다(실측: 미색인 14,523건이 전부 창 밖이었고 워커는 매 회차 0건을 집었다).
 	 *
-	 * <p>{@code createdBefore} 는 <b>게시일 기준</b>의 다른 축이다("지난주 월요일까지의 공고를
-	 * 분석해 달라"). 마감 축과 겹치지 않는다 — 이미 마감된 공고도 대상이 되므로, 마감 임박
-	 * 순서로는 영영 차례가 오지 않는 구간을 이 축이 채운다. 둘 다 주면 둘 다 걸리고, 순서는
-	 * 마감 축이 이긴다(그쪽이 더 급한 요구다).
+	 * <p>최신순은 그 자체로 우선순위이기도 하다. 지금 막 올라온 공고가 가장 급하고, 밀린 것은
+	 * 워커가 신규를 다 따라잡은 회차에 자연히 뒤따라 내려간다. 처리량이 발생량을 못 따라가면
+	 * 오래된 것이 뒤로 밀리는데, 그것이 이 정렬이 의도하는 절충이다.
 	 */
-	public List<PendingNotice> findNoticesNeedingSeed(int limit, String closeBefore, String createdBefore) {
-		boolean byClose = closeBefore != null && !closeBefore.isBlank();
-		boolean byCreated = createdBefore != null && !createdBefore.isBlank();
+	public List<PendingNotice> findNoticesNeedingSeed(int limit) {
 		MapSqlParameterSource params = new MapSqlParameterSource("limit", limit);
-		if (byClose) {
-			params.addValue("closeBefore", closeBefore.replace('T', ' '));
-		}
-		if (byCreated) {
-			params.addValue("createdBefore", createdBefore.replace('T', ' '));
-		}
-		return jdbc.query(buildSeedSql(byClose, byCreated), params, (rs, n) -> new PendingNotice(
+		return jdbc.query(buildSeedSql(), params, (rs, n) -> new PendingNotice(
 				rs.getString("id"), rs.getString("source"), rs.getString("notice_order"),
 				rs.getString("attachment_urls")));
 	}
 
-	/**
-	 * 씨뿌리기 질의. 조립 규칙만 따로 떼어 문자열로 검증한다 — 범위를 잘못 조립하면 백필이
-	 * 조용히 <b>다른 공고 묶음</b>을 몇 시간 동안 내려받는다(실패가 아니라 헛일이라 눈에 안 띈다).
-	 */
-	static String buildSeedSql(boolean byClose, boolean byCreated) {
+	/** 씨뿌리기 질의. 조립 규칙만 따로 떼어 문자열로 검증한다. */
+	static String buildSeedSql() {
 		return """
 				SELECT id, source, notice_order, attachment_urls
 				  FROM bid_notice
 				 WHERE documents_indexed_at IS NULL
 				   AND attachment_urls IS NOT NULL
-				"""
-				+ (byClose ? "   AND close_date > NOW() AND close_date < :closeBefore\n" : "")
-				// 게시일 축은 마감 여부를 보지 않는다 — 이미 마감된 공고도 분석 대상이다.
-				+ (byCreated ? "   AND created_date <= :createdBefore\n" : "")
-				+ (byClose ? " ORDER BY close_date ASC\n" : " ORDER BY created_date DESC\n")
-				+ " LIMIT :limit";
+				 ORDER BY created_date DESC
+				 LIMIT :limit""";
 	}
 
 	/**
@@ -205,19 +190,11 @@ public class DocumentIndexRepository {
 	 * (거짓=0 이 먼저 정렬된다). 파서를 올려 전량 재추출이 걸린 날에도 신규 공고가 뒤로 밀리지
 	 * 않아야 한다 — 재추출은 이미 검색되는 문서를 다듬는 일이고, 신규는 아예 안 걸리는 문서다.
 	 */
-	public List<DocumentJob> claim(int limit, String extractorVersion, String closeBefore, String createdBefore) {
-		boolean byClose = closeBefore != null && !closeBefore.isBlank();
-		boolean byCreated = createdBefore != null && !createdBefore.isBlank();
+	public List<DocumentJob> claim(int limit, String extractorVersion) {
 		MapSqlParameterSource params = new MapSqlParameterSource()
 				.addValue("limit", limit)
 				.addValue("extractorVersion", extractorVersion);
-		if (byClose) {
-			params.addValue("closeBefore", closeBefore.replace('T', ' '));
-		}
-		if (byCreated) {
-			params.addValue("createdBefore", createdBefore.replace('T', ' '));
-		}
-		return jdbc.query(buildClaimSql(byClose, byCreated), params, (rs, n) -> new DocumentJob(
+		return jdbc.query(buildClaimSql(), params, (rs, n) -> new DocumentJob(
 				rs.getLong("id"), rs.getString("notice_id"), rs.getString("source"),
 				rs.getString("notice_order"), rs.getInt("file_seq"), rs.getString("file_name"),
 				rs.getString("source_url"), rs.getString("sha256"),
@@ -225,30 +202,26 @@ public class DocumentIndexRepository {
 	}
 
 	/**
-	 * 청구 질의. <b>씨뿌리기와 같은 범위를 걸어야 한다</b> — 큐에는 이전 범위로 세워 둔 행이
-	 * 그대로 남아 있어서, 청구가 범위를 안 보면 워커는 몇 시간 동안 <b>지금 요청과 무관한
-	 * 공고</b>를 내려받는다(실측: 대기 10,019건 중 요청 범위는 1,883건뿐이었다).
+	 * 청구 질의.
 	 *
-	 * <p>상태 조건의 괄호가 핵심이다. 원본은 {@code (A) OR (B)} 였고 여기에 범위를 그냥 이어
-	 * 붙이면 {@code AND} 가 뒤쪽 갈래에만 붙어, 범위 밖의 pending 이 전부 다시 새어 든다.
+	 * <p><b>씨뿌리기와 같은 순서로 집어야 한다.</b> 큐에는 예전에 세워 둔 행이 그대로 남아
+	 * 있어서, 청구가 {@code d.id}(=세운 순서) 로 집으면 씨뿌리기가 아무리 최신부터 세워도 워커는
+	 * 가장 오래된 것부터 내려받는다. 두 단계가 서로 다른 순서를 보면 최신순은 이름만 남는다.
+	 *
+	 * <p>상태 조건의 괄호는 그대로 둔다. {@code (A) OR (B)} 에 조건을 그냥 이어 붙이면
+	 * {@code AND} 가 뒤쪽 갈래에만 붙어 앞쪽 갈래가 통째로 새어 든다 — 조인이 늘 붙는 지금도
+	 * 다음 사람이 여기에 조건 하나를 더할 때 같은 함정이 그대로 있다.
 	 */
-	static String buildClaimSql(boolean byClose, boolean byCreated) {
+	static String buildClaimSql() {
 		return """
 				SELECT d.id, d.notice_id, d.source, d.notice_order, d.file_seq, d.file_name, d.source_url,
 				       d.sha256, d.extractor_version, d.retry_count
 				  FROM bid_notice_document d
-				"""
-				+ (byClose || byCreated
-						? "  JOIN bid_notice n ON n.id = d.notice_id AND n.source = d.source\n" : "")
-				+ """
+				  JOIN bid_notice n ON n.id = d.notice_id AND n.source = d.source
 				 WHERE ((d.status IN ('pending', 'failed') AND d.retry_count < 3)
-				     OR (d.status = 'done' AND d.extractor_version <> :extractorVersion))
-				"""
-				+ (byClose ? "   AND n.close_date > NOW() AND n.close_date < :closeBefore\n" : "")
-				+ (byCreated ? "   AND n.created_date <= :createdBefore\n" : "")
-				// 재추출(추출기 버전 변경)은 아직 한 번도 못 뽑은 것 뒤로 미룬다.
-				+ " ORDER BY d.status = 'done', d.id\n"
-				+ " LIMIT :limit";
+				     OR (d.status IN ('done', 'skip') AND d.extractor_version <> :extractorVersion))
+				 ORDER BY d.status IN ('done', 'skip'), n.created_date DESC, d.id
+				 LIMIT :limit""";
 	}
 
 	/**
@@ -294,16 +267,50 @@ public class DocumentIndexRepository {
 				""", params);
 	}
 
-	/** 추출 실패. 3회째면 {@code skip} 으로 닫아 큐가 같은 파일을 영원히 물고 있지 않게 한다. */
+	/**
+	 * <b>다시 해도 같은 결과</b>인 실패. 재시도 없이 바로 닫는다.
+	 *
+	 * <p>파싱 실패는 결정적이다 — 같은 바이트를 같은 파서에 넣으면 같은 자리에서 깨진다.
+	 * 그런데 재시도는 파일을 <b>다시 내려받는 것</b>부터 시작하므로, 3회까지 끌면 결과가 뻔한
+	 * 실패에 대역폭을 세 배로 쓴다(실측: 타임아웃 119건 · 파서 오류 186건이 이 경로였다).
+	 *
+	 * <p><b>그래서 추출기 버전을 함께 적는다.</b> 이 칸이 없으면 파서를 고쳐도 여기 닫힌 파일은
+	 * 영원히 다시 시도되지 않는다 — 재추출을 부르는 가장 잦은 사유가 문서 변경이 아니라 우리
+	 * 파서의 변경인데(실측 54%), 그 대상에서 통째로 빠지는 셈이다. {@link #buildClaimSql} 이
+	 * 낡은 버전의 {@code skip} 을 다시 집는다.
+	 */
+	public void skipPermanent(long id, String message) {
+		jdbc.update("""
+				UPDATE bid_notice_document
+				   SET status = 'skip',
+				       last_error = LEFT(:message, 500),
+				       extractor_version = :extractorVersion,
+				       verified_at = NOW(6)
+				 WHERE id = :id
+				""", new MapSqlParameterSource().addValue("id", id).addValue("message", message)
+						.addValue("extractorVersion", ExtractorVersion.CURRENT));
+	}
+
+	/**
+	 * 추출 실패. 3회째면 {@code skip} 으로 닫아 큐가 같은 파일을 영원히 물고 있지 않게 한다.
+	 *
+	 * <p><b>닫을 때 추출기 버전을 반드시 찍는다.</b> 청구가 "낡은 버전의 {@code skip}" 을 재추출
+	 * 대상으로 집기 때문에({@link #buildClaimSql}), 버전이 빈 채로 닫힌 행은 <b>매 회차 다시
+	 * 청구된다</b> — 실측으로 20개 행이 {@code retry_count=109} 까지 갔고, 회차가 9초마다
+	 * 같은 파일을 다시 내려받으며 헛돌았다. {@code skipPermanent} 는 처음부터 찍고 있었는데
+	 * 재시도 소진 경로만 빠져 있었다.
+	 */
 	public void fail(long id, String message) {
 		jdbc.update("""
 				UPDATE bid_notice_document
 				   SET status = IF(retry_count + 1 >= 3, 'skip', 'failed'),
+				       extractor_version = IF(retry_count + 1 >= 3, :extractorVersion, extractor_version),
 				       retry_count = retry_count + 1,
 				       last_error = LEFT(:message, 500),
 				       verified_at = NOW(6)
 				 WHERE id = :id
-				""", new MapSqlParameterSource().addValue("id", id).addValue("message", message));
+				""", new MapSqlParameterSource().addValue("id", id).addValue("message", message)
+						.addValue("extractorVersion", ExtractorVersion.CURRENT));
 	}
 
 	/**

@@ -47,11 +47,16 @@ public class HwpSubprocessExtractor {
 	public ParsedDocument extract(String filename, byte[] bytes) {
 		Path temp = null;
 		Path outFile = null;
+		Path errFile = null;
 		Process process = null;
 		try {
 			temp = Files.createTempFile("g2b-hwp-", ".hwp");
 			Files.write(temp, bytes);
 			outFile = Files.createTempFile("g2b-hwp-out-", ".txt");
+			// 자식의 stderr 를 버리지 않는다. 버리면 last_error 에 "종료코드 1" 만 남고, 그 뒤로는
+			// 파일을 손으로 받아 돌려 봐야 원인을 안다 — 실측에서 186건의 사유가 그렇게 가려져
+			// 있었고, 알고 보니 전부 hwplib 의 'This is not paragraph' 한 종류였다.
+			errFile = Files.createTempFile("g2b-hwp-err-", ".txt");
 
 			// **자식의 출력은 파이프가 아니라 파일로 받는다.** 파이프로 받으면 부모가
 			// readAllBytes() 로 스트림이 닫히기를 기다리는데, 자식이 안 끝나는 파일에 물리면
@@ -60,17 +65,35 @@ public class HwpSubprocessExtractor {
 			process = new ProcessBuilder(List.of(javaBin, "-cp", classpath,
 					"com.electerior.g2bmaster.attachment.HwpTextMain", temp.toString()))
 					.redirectOutput(outFile.toFile())
-					.redirectError(ProcessBuilder.Redirect.DISCARD)
+					.redirectError(errFile.toFile())
 					.start();
 
 			if (!process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
 				process.destroyForcibly();
+				// 멈춰 세운 뒤에도 미리보기는 읽을 수 있다 — PrvText 는 CFB 스트림 하나라
+				// hwplib 을 거치지 않는다. 그렇지 않으면 이 파일들은 색인에서 통째로 사라진다
+				// (실측 136건). 앞부분만이라는 사실은 truncated 로 올린다.
+				String preview = DocumentTextExtractor.previewText(bytes);
+				if (preview != null && !preview.isBlank()) {
+					log.debug("HWP 시간 초과 — 미리보기로 대체합니다: {}", filename);
+					return new ParsedDocument(filename, ParsedDocument.DocumentFormat.HWP, preview, 0, true);
+				}
 				throw new DocumentTextExtractor.DocumentParseException(
 						"HWP 파싱 시간 초과(" + TIMEOUT_SECONDS + "초) — 파서가 멈춰 세워졌습니다: " + filename, null);
 			}
-			if (process.exitValue() != 0) {
+			int exit = process.exitValue();
+			if (exit == HwpTextMain.EXIT_PARSE_FAILED) {
 				throw new DocumentTextExtractor.DocumentParseException(
-						"HWP 파싱 실패(종료코드 " + process.exitValue() + "): " + filename, null);
+						"HWP 파싱 실패: " + filename + " — " + firstLine(errFile), null);
+			}
+			if (exit != 0) {
+				// 자식이 우리 코드에 닿지도 못했다. **파싱 실패가 아니다** — 파싱 실패는
+				// 결정적이라 재시도 없이 닫히므로, 이것을 그쪽으로 보내면 멀쩡한 파일이 영구
+				// 실패가 된다(실측 6건: 배포 중 target/classes 가 갈아끼워지는 순간에 뜬
+				// 'Could not find or load main class'). 일시적 사정이므로 재시도로 돌린다.
+				throw new IllegalStateException(
+						"HWP 추출 프로세스가 시작되지 못했습니다(종료코드 " + exit + "): "
+								+ filename + " — " + firstLine(errFile));
 			}
 			String text = new String(Files.readAllBytes(outFile), StandardCharsets.UTF_8);
 			return new ParsedDocument(filename, ParsedDocument.DocumentFormat.HWP, text, 0,
@@ -89,7 +112,31 @@ public class HwpSubprocessExtractor {
 			}
 			deleteQuietly(temp);
 			deleteQuietly(outFile);
+			deleteQuietly(errFile);
 		}
+	}
+
+	/**
+	 * 자식이 남긴 사유의 첫 줄. {@code last_error} 는 500자로 잘리므로 스택은 버리고 사유만 싣는다.
+	 *
+	 * <p>사유를 못 읽는 것 자체는 실패로 만들지 않는다 — 원래 알리려던 실패를 덮어 버리면
+	 * 원인이 한 겹 더 멀어진다.
+	 */
+	private static String firstLine(Path errFile) {
+		if (errFile == null) {
+			return "(사유 없음)";
+		}
+		try {
+			for (String line : Files.readAllLines(errFile, StandardCharsets.UTF_8)) {
+				if (!line.isBlank()) {
+					return line.length() > 200 ? line.substring(0, 200) : line;
+				}
+			}
+		}
+		catch (IOException | RuntimeException e) {
+			return "(사유를 읽지 못했습니다)";
+		}
+		return "(사유 없음)";
 	}
 
 	private static void deleteQuietly(Path path) {

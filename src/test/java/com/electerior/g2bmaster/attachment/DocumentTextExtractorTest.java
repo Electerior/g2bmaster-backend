@@ -74,9 +74,12 @@ class DocumentTextExtractorTest {
 
 	@Test
 	void 지원하지_않는_형식은_조용히_넘기지_않고_거부한다() {
-		assertThatThrownBy(() -> extractor.extract("규격서.txt", new byte[] {1, 2, 3}))
+		// .egg(알집)는 실제로 첨부에 섞여 오지만(실측 6건) 별도 포맷이라 지원 대상이 아니다.
+		// 예외로 알려야 "규격서가 비었다"와 "형식을 모른다"가 구분된다.
+		assertThatThrownBy(() -> extractor.extract("규격서.egg", new byte[] {1, 2, 3}))
 				.isInstanceOf(DocumentTextExtractor.UnsupportedDocumentException.class)
-				.hasMessageContaining("HWPX·HWP·PDF·XLSX");
+				// 지원 목록은 늘어난다. 목록 문자열이 아니라 '거부했다'는 사실을 못박는다.
+				.hasMessageContaining("지원하지 않는 형식입니다");
 	}
 
 	@Test
@@ -190,6 +193,125 @@ class DocumentTextExtractorTest {
 		// (자식 프로세스 HwpTextMain 이 이 경로를 쓴다. 필드로 박으면 자식이 또 자식을 낳는다.)
 		assertThat(extractor.expandArchive("붙임.zip", zip))
 				.extracting(ParsedDocument::filename).containsExactly("안내문.hwpx");
+	}
+
+	@Test
+	void HML_은_문단별로_본문을_뽑고_BINDATA_는_버린다() {
+		// BINDATA 는 그림·OLE 를 base64 로 품고 있다. 그대로 두면 수백 KB 가 본문으로 들어가
+		// 색인이 부풀고 발췌가 쓰레기가 된다.
+		byte[] hml = ("<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+				+ "<HWPML><BODY><SECTION>"
+				+ "<P ParaShape=\"35\"><TEXT><CHAR>규격서: 노후 서버 교체</CHAR></TEXT></P>"
+				+ "<P ParaShape=\"35\"><TEXT><CHAR>NVIDIA H200 8개</CHAR></TEXT></P>"
+				+ "</SECTION></BODY>"
+				+ "<BINDATA>QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVo=</BINDATA></HWPML>")
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+		ParsedDocument doc = extractor.extract("계약일반조건.hml", hml);
+
+		assertThat(doc.text()).contains("규격서: 노후 서버 교체").contains("NVIDIA H200 8개");
+		// 문단이 줄로 갈려야 specContentScore 가 구조를 읽는다.
+		assertThat(doc.text()).contains("\n");
+		assertThat(doc.text()).doesNotContain("QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVo");
+	}
+
+	@Test
+	void HTML_은_태그를_걷어내고_본문만_남긴다() {
+		// 실측 18건이 .htm 이었다. 태그째 색인하면 발췌에 <table> 이 그대로 들어가 읽히지 않는다.
+		byte[] html = ("<html><head><title>x</title><style>p{color:red}</style></head>"
+				+ "<body><h1>입찰 공고</h1><table><tr><td>서버</td><td>3대</td></tr></table>"
+				+ "<script>var a=1;</script></body></html>").getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+		ParsedDocument doc = extractor.extract("공고문.htm", html);
+
+		assertThat(doc.format()).isEqualTo(ParsedDocument.DocumentFormat.TEXT);
+		assertThat(doc.text()).contains("입찰 공고").contains("서버").contains("3대");
+		// 스크립트·스타일 본문이 색인에 들어가면 안 된다 — 검색어가 거기 걸리면 헛것이 뜬다.
+		assertThat(doc.text()).doesNotContain("var a=1").doesNotContain("color:red");
+	}
+
+	@Test
+	void 평문은_UTF8_이_아니면_CP949_로_읽는다() {
+		// 대체문자를 허용하는 느슨한 디코딩을 쓰면 CP949 문서가 조용히 물음표 덩어리가 되어
+		// 색인에 들어간다 — 검색이 안 되는데 실패로도 안 잡히는 최악의 상태다.
+		byte[] cp949 = "노후 서버 교체".getBytes(java.nio.charset.Charset.forName("MS949"));
+
+		assertThat(extractor.extract("안내.txt", cp949).text()).contains("노후 서버 교체");
+		assertThat(extractor.extract("안내.txt", "UTF-8 본문".getBytes(java.nio.charset.StandardCharsets.UTF_8))
+				.text()).contains("UTF-8 본문");
+	}
+
+	@Test
+	void 본문을_못_읽는_HWPX_는_본문_XML_에서_전문을_뽑는다() throws Exception {
+		// 실측 14건(계약예규·일반조건 등)이 hwpxlib 으로 안 열렸는데, 그 파일들에는
+		// Preview/PrvText.txt 가 아예 없었다. 하지만 본문 XML 은 멀쩡했다 — 미리보기와 달리
+		// 이건 발췌가 아니라 전문이라 truncated 가 아니다.
+		byte[] broken = makeZip("mimetype", "application/hwp+zip".getBytes(),
+				"Contents/section0.xml", ("<?xml version=\"1.0\"?><hs:sec xmlns:hp=\"x\" xmlns:hs=\"y\">"
+						+ "<hp:p><hp:run><hp:t>(계약예규) 공사계약일반조건</hp:t></hp:run></hp:p>"
+						+ "<hp:p><hp:run><hp:t>제1조 총칙</hp:t></hp:run></hp:p></hs:sec>")
+						.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+				"Contents/header.xml", "<이건 유효한 hwpx 가 아니다>".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+		ParsedDocument doc = extractor.extract("공사계약일반조건.hwpx", broken);
+
+		assertThat(doc.text()).contains("(계약예규) 공사계약일반조건").contains("제1조 총칙");
+		assertThat(doc.text()).contains("\n");     // 문단이 줄로 갈린다
+		assertThat(doc.truncated()).isFalse();     // 전문이므로 잘린 것이 아니다
+	}
+
+	@Test
+	void 본문을_못_읽는_HWPX_도_미리보기로_떨어진다() throws Exception {
+		// HWPX 도 zip 안에 Preview/PrvText.txt 를 갖고 있다(실측 표본 2개 모두). 인코딩은
+		// UTF-8 로, HWP 의 OLE 스트림(UTF-16LE)과 다르다.
+		byte[] broken = makeZip("mimetype", "application/hwp+zip".getBytes(),
+				"Preview/PrvText.txt", "규격서: 노후 서버 교체\nNVIDIA H200".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+				"Contents/section0.xml", "<이건 유효한 hwpx 가 아니다>".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+		ParsedDocument doc = extractor.extract("과업내용서.hwpx", broken);
+
+		assertThat(doc.text()).contains("NVIDIA H200");
+		assertThat(doc.truncated()).isTrue();
+	}
+
+	@Test
+	void 본문을_못_읽는_HWP_는_미리보기_텍스트로_떨어진다() throws Exception {
+		// hwplib 이 'This is not paragraph' 로 넘어지는 문서군이 있다(실측 232건, 백필 실패 1위).
+		// 그 파일들도 CFB 안 PrvText 는 온전했다 — 표본 3개 전부. 본문을 못 읽었다고 아무것도
+		// 없는 것으로 두면 "규격서에 그 부품이 없다"와 "규격서를 못 읽었다"가 구분되지 않는다.
+		byte[] broken = oleWithPreview("공고문: 노후 서버 교체\nNVIDIA H200 8개");
+
+		ParsedDocument doc = extractor.extract("공고문.hwp", broken);
+
+		assertThat(doc.format()).isEqualTo(ParsedDocument.DocumentFormat.HWP);
+		assertThat(doc.text()).contains("NVIDIA H200 8개");
+		// 미리보기는 문서의 앞부분일 뿐이다 — 온전한 본문인 척하면 안 된다.
+		assertThat(doc.truncated()).isTrue();
+	}
+
+	@Test
+	void 미리보기도_없으면_실패로_닫는다() throws Exception {
+		// 폴백이 실패를 삼키면 안 된다. 빈 본문을 조용히 넣으면 색인에 구멍이 안 보이게 된다.
+		byte[] empty = oleWithPreview(null);
+
+		assertThatThrownBy(() -> extractor.extract("깨진.hwp", empty))
+				.isInstanceOf(DocumentTextExtractor.DocumentParseException.class);
+	}
+
+	/** hwplib 이 못 읽는 OLE 컨테이너. {@code preview} 가 있으면 PrvText 스트림으로 넣는다. */
+	private static byte[] oleWithPreview(String preview) throws Exception {
+		try (org.apache.poi.poifs.filesystem.POIFSFileSystem fs =
+						new org.apache.poi.poifs.filesystem.POIFSFileSystem();
+				ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			if (preview != null) {
+				fs.getRoot().createDocument("PrvText",
+						new java.io.ByteArrayInputStream(preview.getBytes(java.nio.charset.StandardCharsets.UTF_16LE)));
+			}
+			fs.getRoot().createDocument("FileHeader",
+					new java.io.ByteArrayInputStream(new byte[64]));   // 서명은 있으나 내용이 온전치 않다
+			fs.writeFilesystem(out);
+			return out.toByteArray();
+		}
 	}
 
 	@Test

@@ -54,7 +54,9 @@
 - 고정 ENUM: `category('계획','사전규격','입찰','마감')`, `state('취소','재','다시','정정') NULL 허용`,
   `business_division('물품','용역','공사','외자') NOT NULL`.
 - `notice_body` MEDIUMTEXT + **FULLTEXT(ngram)**, V11에서 `estimated_price` VIRTUAL 생성 컬럼 +
-  DESC 인덱스 2본 추가(실측 20,403행).
+  DESC 인덱스 2본 추가(실측 20,403행). → V20260814113541에서 금액 축을 `filter_amount`
+  (소스별 대표 금액 COALESCE) VIRTUAL + DESC 인덱스 2본으로 옮겼고, `estimated_price`의
+  인덱스 2본은 내렸다(컬럼은 유지). 사유는 아래 §6 및 그 마이그레이션 주석.
 - `dwt_*` 팩트는 표시 경로에 없다(읽는 코드는 운영 집계 COUNT뿐).
 
 ### 1-B. 적재 경로
@@ -211,6 +213,11 @@ ALTER TABLE `bid_notice`
   D2B 목록 `bsicExpt`→`price_detail.basicExpectedPrice`, 상세 `budgetAmount`→`assignedBudget`,
   `estmPrce`(추정가격)→`estimatedPrice`. 결과적으로 **V11 생성 컬럼 `estimated_price`는 표현식 변경
   없이** 동작한다: 누리 전 행과 D2B 목록-단계 행은 NULL(금액 정렬 시 후순위 — 의도된 NULL 정책, §6).
+  ⚠ **정렬에서는 의도된 후순위였지만 필터에서는 그렇지 않았다**(2026-08-14 실측). `estimated_price`가
+  NULL인 행은 `minAmount`/`maxAmount` 조건에서 **통째로 빠진다** — 사전규격 12,119건과 누리·D2B
+  2,045건, 전체의 28%다. `price_detail` 안의 분리는 그대로 두되, **필터·정렬 축만**
+  `filter_amount`(추정가격→배정예산→기준금액→기초예비가격 COALESCE, 0은 미공개로 간주)로 옮겼다.
+  합친 사실은 숨기지 않는다 — 응답의 `amountKind`가 어느 금액인지 말하고 화면이 그것을 적는다.
   ⚠ 주의: 현행 팬아웃 `D2bNormalizer`는 `bsicExpt|budgetAmount`를 **`presmptPrce`에 넣어 표시**하고
   있다(실측). 색인 적재를 시작할 때 이 정책과 위 정책 중 하나로 **통일**해야 화면·색인 간 금액이
   어긋나지 않는다 — 본 문서는 "기초예비가격≠추정가격" 분리를 권장.
@@ -394,7 +401,8 @@ raw 원문은 기존 `raw_generic_list` 재사용을 검토하되 D2B가 XML 전
 | `notice_institution_code` | `ntceInsttCd` | **없음 → NULL**(목록 응답에 코드 부재) | `orntCode` | NULL 허용(기존). 기관코드 조회는 source 조건 필수(§5.1) |
 | `demand_institution_name/code` | `dminsttNm`/`dminsttCd` | 목록에 없음 → NULL(낙찰 응답 `dminsttCd/Nm`으로 후행 보강 가능) | 개념 없음 → NULL | NULL |
 | `price_detail.assignedBudget` | `asignBdgtAmt` | `asignBdgtAmt` | 상세 `budgetAmount` | 목록-단계 D2B 행은 키 없음 |
-| `price_detail.estimatedPrice` → `estimated_price`(V11) | `presmptPrce` | **없음**(예가 체계 부재 — 기준금액 `refAmt`는 별도 키 `referenceAmount`) | 상세 `estmPrce` (목록 `bsicExpt`는 `basicExpectedPrice`로 분리 — 현행 팬아웃의 `presmptPrce` 매핑과 정책 통일 필요, §4.1 ⚠) | NULL — 금액 정렬 시 후순위 |
+| `price_detail.estimatedPrice` → `estimated_price`(V11) | `presmptPrce` | **없음**(예가 체계 부재 — 기준금액 `refAmt`는 별도 키 `referenceAmount`) | 상세 `estmPrce` (목록 `bsicExpt`는 `basicExpectedPrice`로 분리 — 현행 팬아웃의 `presmptPrce` 매핑과 정책 통일 필요, §4.1 ⚠) | NULL — 금액 **정렬**에서만 후순위. **필터는 `filter_amount`를 본다**(아래 줄) |
+| `filter_amount`(V20260814113541) — 검색 전용 대표 금액 | `estimatedPrice`(입찰·마감·계획) / `assignedBudget`(사전규격) | `assignedBudget`, 없으면 `referenceAmount` | `basicExpectedPrice`, 상세가 붙으면 `estimatedPrice`/`assignedBudget` | 후보가 전부 없거나 0이면 NULL — **그 행은 금액 조건에서 빠진다**(실측 2,180건 = 4.2%, 화면이 문장으로 알린다) |
 | `created_date` (게시) | `bidNtceDt` | `nticeDt`(게시)·`rgstDt`(등록) — 게시일 우선 | **확인 필요** — 요청 파라미터 `anmtDateBegin/End`(공고일)는 있으나 응답 필드 미확인. 확인 전 수집시각 대체 금지, NULL | NULL 허용(기존) |
 | `close_date` (마감) | `bidClseDt` | `bidClseDt` | `biddocPresentnClosDt`(경쟁)/`prqudoPresentnClosDate` 계열(공개수의 — 응답 필드명 **확인 필요**) | NULL이면 마감 스위퍼 미전이 — 스위퍼는 close_date 기준 동작 유지, 소스 조건 불요 |
 | `state` | `ntceKindNm` 매핑(기존) | `ntceDivNm`: 재공고→'재', 변경공고→'정정', 취소공고→'취소', 긴급공고→'긴급', 등록공고→NULL | `pblancSe`: 정상→NULL, 긴급→'긴급', 정정→'정정', 취소→'취소', 연기→'연기' | 평시 NULL(기존 규약) |

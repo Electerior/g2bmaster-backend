@@ -99,6 +99,65 @@ class DocumentSnifferTest {
 	}
 
 	@Test
+	@DisplayName("컨테이너를 자처했는데 확인이 안 되면 파서로 보내지 않는다")
+	void rejectsALyingContainerName() {
+		// 이름은 .hwp 인데 OLE2 가 아닌 바이트. 이름만 믿고 넣으면 hwplib 이
+		// NotOLE2FileException 으로 넘어지고(실측 9건), 사유가 파서 내부 예외로 남아
+		// "애초에 HWP 가 아니었다"는 사실이 로그에서 읽히지 않는다.
+		byte[] notContainer = "<html><body>공고문</body></html>".getBytes(StandardCharsets.UTF_8);
+
+		assertThat(DocumentSniffer.resolveName("공고문.hwp", notContainer)).isNull();
+		assertThat(DocumentSniffer.resolveName("규격서.hwpx", notContainer)).isNull();
+	}
+
+	@Test
+	@DisplayName("HWPML 은 이름이 .hwp 라도 XML 로 갈라낸다")
+	void detectsHwpmlBehindAHwpName() {
+		// 실측: "형식 미지원" 으로 닫힌 .hwp 23건이 전부 이것이었다(표본 3개 모두 루트가 <HWPML>).
+		// 바이너리 HWP 파서에 넣으면 OLE 가 아니라 넘어진다.
+		byte[] hml = ("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- 한글 -->\n"
+				+ "<HWPML Version=\"2.8\"><BODY><SECTION><P><TEXT><CHAR>공고문</CHAR></TEXT></P></SECTION></BODY></HWPML>")
+				.getBytes(StandardCharsets.UTF_8);
+
+		assertThat(DocumentSniffer.sniff(hml)).isEqualTo("hml");
+		assertThat(DocumentSniffer.resolveName("(계약예규) 용역계약일반조건.hwp", hml))
+				.isEqualTo("(계약예규) 용역계약일반조건.hwp.hml");
+	}
+
+	@Test
+	@DisplayName("BOM 이 붙어 있어도 판정한다")
+	void skipsByteOrderMark() {
+		// 실측: 끝까지 '형식 미지원' 으로 남던 .hml 2건이 전부 UTF-8 BOM 으로 시작했다.
+		// 세 바이트 때문에 판정이 어긋나 읽을 수 있는 파일이 색인에서 사라진다.
+		byte[] body = "<?xml version=\"1.0\"?><HWPML><BODY/></HWPML>".getBytes(StandardCharsets.UTF_8);
+		byte[] withBom = new byte[body.length + 3];
+		withBom[0] = (byte) 0xEF;
+		withBom[1] = (byte) 0xBB;
+		withBom[2] = (byte) 0xBF;
+		System.arraycopy(body, 0, withBom, 3, body.length);
+
+		assertThat(DocumentSniffer.sniff(withBom)).isEqualTo("hml");
+	}
+
+	@Test
+	@DisplayName("HWPML 이 아닌 XML 은 판정하지 않는다")
+	void plainXmlIsNotHml() {
+		byte[] xml = "<?xml version=\"1.0\"?><catalog><item>x</item></catalog>".getBytes(StandardCharsets.UTF_8);
+
+		assertThat(DocumentSniffer.sniff(xml)).isNull();
+	}
+
+	@Test
+	@DisplayName("매직 넘버가 없는 형식은 이름을 믿는다 — 그것 말고 판정할 방법이 없다")
+	void trustsTheNameForMagiclessFormats() {
+		byte[] html = "<html><body>공고문</body></html>".getBytes(StandardCharsets.UTF_8);
+
+		assertThat(DocumentSniffer.resolveName("공고문.htm", html)).isEqualTo("공고문.htm");
+		assertThat(DocumentSniffer.resolveName("안내.txt", "그냥 글".getBytes(StandardCharsets.UTF_8)))
+				.isEqualTo("안내.txt");
+	}
+
+	@Test
 	@DisplayName("알 수 없는 바이트는 null — 조용히 빈 결과를 만들지 않는다")
 	void unknownIsNull() {
 		assertThat(DocumentSniffer.sniff("hello world, not a document".getBytes(StandardCharsets.UTF_8))).isNull();

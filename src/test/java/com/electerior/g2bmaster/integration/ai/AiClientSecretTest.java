@@ -90,7 +90,9 @@ class AiClientSecretTest {
 				new G2bProperties.Security("", ""),
 				new G2bProperties.Alert("", "", "", ""),
 				new G2bProperties.Sync(false),
-				new G2bProperties.Index(false, 600_000, 300_000, 7),
-				new G2bProperties.Documents(false, 1_800_000, 200, 500, 4, null, null));
+				new G2bProperties.Index(false, 300_000, 1_800_000, 300_000, 7,
+							new G2bProperties.Night(23, 7, 6)),
+				new G2bProperties.Documents(false, 1_800_000, 200, 500, 4),
+				new G2bProperties.Search(true));
 	}
 }

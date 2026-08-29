@@ -114,6 +114,14 @@ public final class UnitCostValidator {
 	 * 빈 결과를 돌려줬다. 이걸 못 찾음으로 읽으면 차단 구간 내내 조용히 품질이 떨어진다.
 	 */
 	public static final String WARN_SEARCH_UNAVAILABLE = "discovery-search-unavailable";
+	/**
+	 * 원가 합산에 받아들여진(accepted) 행이 절반이 안 되면 총액으로 확정할 수 없다.
+	 *
+	 * <p>실측: 6부품 중 RAID 카드 1개만 가격이 잡힌 매체제어서버가 마진 95%로 확정됐다.
+	 * 대체·추정(inferred)·가격 없음(unpriced) 행은 전부 accepted 에서 빠지므로
+	 * "값을 아는 부품보다 모르는 부품이 많다"는 이 판정에 걸린다.
+	 */
+	public static final String WARN_MAJORITY_UNPRICED = "majority-unpriced";
 
 	/**
 	 * 등급을 깎지 않는 경고 — <b>숫자가 틀렸다는 뜻이 아닌 것들</b>.
@@ -360,8 +368,17 @@ public final class UnitCostValidator {
 		Set<String> grading = new LinkedHashSet<>(warnings);
 		grading.removeAll(INFORMATIONAL);
 
+		// 원가 합산에 받아들여진 행이 절반이 안 되면 총액으로 확정할 수 없다.
+		// 대체·추정·가격없음 행은 acceptedForCost=false 라서 이 판정에 같이 걸린다.
+		long acceptedRows = rows.stream().filter(r -> Boolean.TRUE.equals(r.get("acceptedForCost"))).count();
+		boolean majorityUnpriced = !rows.isEmpty() && acceptedRows * 2 < rows.size();
+
 		Confidence confidence;
 		if (specNorm.isEmpty() || acceptedTotal.signum() == 0) {
+			confidence = Confidence.UNTRUSTED;
+		}
+		else if (majorityUnpriced) {
+			warnings.add(WARN_MAJORITY_UNPRICED);
 			confidence = Confidence.UNTRUSTED;
 		}
 		else if (ratio < MIN_EVIDENCE_RATIO) {

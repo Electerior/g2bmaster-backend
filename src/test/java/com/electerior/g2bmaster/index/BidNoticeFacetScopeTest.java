@@ -42,13 +42,14 @@ class BidNoticeFacetScopeTest {
 	/** '마감 전 공고만 보기' + 단계 미지정 — 화면의 기본 상태이자 문제가 났던 조합이다. */
 	private static NoticeSearchRequest activeOnlyWithoutCategory() {
 		return new NoticeSearchRequest(null, null, null, null, null, null, null, null, null, null,
-				null, null, null, null, null, null, null, null, null, "true", null, null, null, null, null, null);
+				null, null, null, null, null, null, null, null, null, "true", null, null, null, null, null, null,
+				null);
 	}
 
 	@Test
 	@DisplayName("단계 패싯만 스코프를 뺀 WHERE 로 센다 — 나머지 축은 목록과 같은 조건이다")
 	void stageAxisAloneDropsTheScope() {
-		service.facets(activeOnlyWithoutCategory());
+		service.facets(activeOnlyWithoutCategory(), false);
 
 		Map<String, String> sqlByColumn = capturedSqlByColumn();
 		assertThat(sqlByColumn.get("category")).doesNotContain(SCOPE);
@@ -64,7 +65,7 @@ class BidNoticeFacetScopeTest {
 	void totalCountsTheListScope() {
 		when(repository.count(any())).thenReturn(11_306);
 
-		Map<String, Object> facets = service.facets(activeOnlyWithoutCategory());
+		Map<String, Object> facets = service.facets(activeOnlyWithoutCategory(), false);
 
 		assertThat(facets.get("total")).isEqualTo(11_306);
 

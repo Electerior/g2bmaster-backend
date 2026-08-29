@@ -2,6 +2,7 @@ package com.electerior.g2bmaster.index;
 
 import com.electerior.g2bmaster.common.PagedResponse;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -47,9 +48,13 @@ public class BidNoticeSearchService {
 			"close", "n.close_date IS NULL, n.close_date %s",
 			"name", "n.notice_name %s",
 			"updated", "n.updated_at %s",
-			// V11 에서 price_detail JSON 을 생성 컬럼으로 승격했다. 식을 다시 인라인하면
-			// ix_bid_notice_category_amount 를 못 쓰고 정렬이 filesort 로 떨어진다.
-			"amount", "n.estimated_price %s",
+			// price_detail JSON 을 생성 컬럼으로 승격한 것(V11)을 소스별 대표 금액으로 넓혔다
+			// (V20260814113541). 식을 다시 인라인하면 ix_bid_notice_category_filter_amount 를
+			// 못 쓰고 정렬이 filesort 로 떨어진다.
+			"amount", "n.filter_amount %s",
+			// 마진율도 같은 처방이다(V20260814132535). NULL 처리는 방향마다 다르므로
+			// 여기에 IS NULL 을 박지 않는다 — {@link #nullsLastPrefix} 참고.
+			"margin", "n.margin_rate %s",
 			"relevance", "relevance %s");
 
 	/**
@@ -84,11 +89,40 @@ public class BidNoticeSearchService {
 			"created", "DESC",
 			// V7: ix_bid_notice_updated (updated_at)  — 방향 미지정이므로 ASC
 			"updated", "ASC",
-			// V11: ix_bid_notice_category_amount (category, estimated_price DESC)
-			"amount", "DESC");
+			// V20260814113541: ix_bid_notice_category_filter_amount (category, filter_amount DESC)
+			"amount", "DESC",
+			// V20260814132535: ix_bid_notice_margin_rate (margin_rate DESC)
+			"margin", "DESC");
+
+	/**
+	 * 대표 금액 후보 — <b>앞자리가 이긴다</b>.
+	 *
+	 * <p>생성 컬럼 {@code filter_amount}({@code V20260814113541})의 {@code COALESCE} 순서와
+	 * 같은 표다. 필터·정렬은 그 컬럼을 보고, 화면에 적히는 금액과 종류는 이 표로 고른다 —
+	 * 둘이 갈라지면 "이 금액으로 걸렀다"는 표시가 거짓이 된다.
+	 *
+	 * <p>순서의 근거는 마이그레이션 주석에 실측과 함께 적혀 있다. 요지는 추정가격에 가까운
+	 * 것부터라는 것이다: 추정가격(G2B) → 배정예산(사전규격·누리) → 기준금액(누리 투찰 상한)
+	 * → 기초예비가격(D2B).
+	 */
+	private static final List<String> AMOUNT_KEYS =
+			List.of("estimatedPrice", "assignedBudget", "referenceAmount", "basicExpectedPrice");
 
 	/** 관련도 정렬 키. 저장소가 전문검색 전용 경로를 탈지 판단하는 데도 쓴다. */
 	private static final String RELEVANCE = "relevance";
+
+	/** 마진율 정렬 키. NULL 을 뒤로 보내는 규칙이 이 키에만 걸린다({@link #nullsLastPrefix}). */
+	private static final String MARGIN = "margin";
+
+	/**
+	 * 부가세율. 마진율의 분모(실추정가 = 대표금액 × 1.1)를 화면에 함께 내려주는 데 쓴다.
+	 *
+	 * <p>계산 자체는 여기가 아니라 생성 컬럼 {@code margin_rate}({@code V20260814132535})가 한다 —
+	 * 정의가 두 곳에 있으면 반드시 갈라진다. 여기서 쓰는 것은 <b>같은 분모를 표시용으로</b>
+	 * 복원하기 위해서이고, 그래서 상수도 마이그레이션과 같은 값이어야 한다.
+	 * 전제는 그쪽 주석에 있다: 대표금액은 부가세 별도, 원가는 부가세 포함.
+	 */
+	private static final BigDecimal VAT = new BigDecimal("1.1");
 
 	/** 단계 패싯의 이름. 이 축만 WHERE 가 다르다 — 이유는 {@link #facets} 주석. */
 	private static final String STAGE_FACET = "category";
@@ -112,8 +146,14 @@ public class BidNoticeSearchService {
 
 	// ── 검색 ────────────────────────────────────────────────────────────────
 
-	public PagedResponse<Map<String, Object>> search(NoticeSearchRequest request) {
-		BidNoticeQueryBuilder.Where where = buildWhere(request);
+	/**
+	 * 한 페이지.
+	 *
+	 * @param includeAttachments 첨부 본문까지 검색 대상에 넣는가. {@code GET /api/search/notices} 는
+	 *                           켠 채로, {@code GET /api/search/notices/text} 는 끈 채로 부른다
+	 */
+	public PagedResponse<Map<String, Object>> search(NoticeSearchRequest request, boolean includeAttachments) {
+		BidNoticeQueryBuilder.Where where = buildWhere(request, includeAttachments);
 		String sortKey = effectiveSortKey(request, where.fullText());
 		String orderBy = orderBy(request, sortKey);
 
@@ -124,7 +164,34 @@ public class BidNoticeSearchService {
 
 		LocalDateTime now = LocalDateTime.now();
 		List<Map<String, Object>> items = rows.stream().map(row -> shape(row, now)).toList();
-		return new PagedResponse<>(items, total, request.pageValue(), request.perPageValue());
+		return new PagedResponse<>(items, total, request.pageValue(), request.perPageValue(),
+				searchMeta(where, includeAttachments));
+	}
+
+	/**
+	 * 응답 메타 — "첨부까지 봤는가, 어디까지 봤는가".
+	 *
+	 * <p>첨부 검색은 <b>색인된 만큼만</b> 동작한다. 그 사실을 응답에 적지 않으면 화면에서
+	 * "그 낱말이 없는 공고"와 "아직 읽지 못한 공고"가 똑같이 보이고, 사용자는 규격서에
+	 * 답이 있는 공고를 조용히 놓친다({@code bid_notice_document} 의 {@code needs_ocr} 과 같은 이유다).
+	 *
+	 * <p>스코프를 껐을 때도 메타를 낸다 — 프론트가 두 엔드포인트를 같은 렌더러로 그리는데
+	 * 한쪽에만 칸이 있으면 분기가 생긴다.
+	 */
+	private Map<String, Object> searchMeta(BidNoticeQueryBuilder.Where where, boolean includeAttachments) {
+		Map<String, Object> meta = new LinkedHashMap<>();
+		Map<String, Object> attachment = new LinkedHashMap<>();
+		attachment.put("scope", includeAttachments);
+		// 스코프를 켰어도 실제로 첨부를 뒤졌는지는 별개다 — 검색어가 없거나 한 글자뿐이면 안 뒤진다.
+		attachment.put("applied", where.unionsAttachments());
+		attachment.put("excludeApplied", where.excludesByAttachment());
+		attachment.put("skippedTerms", where.attachment() == null
+				? List.of() : where.attachment().skippedTerms());
+		if (includeAttachments) {
+			attachment.putAll(repository.attachmentCoverage());
+		}
+		meta.put("attachmentSearch", attachment);
+		return meta;
 	}
 
 	/**
@@ -140,9 +207,9 @@ public class BidNoticeSearchService {
 	 * <p>{@code total} 은 <b>이 응답의 조건 그대로</b>의 총건수다. 화면의 '전체' 칩이 쓴다:
 	 * 단계 버킷의 합을 쓰면 스코프를 뺀 수를 더하게 되어, 눌렀을 때 나오는 수보다 커진다.
 	 */
-	public Map<String, Object> facets(NoticeSearchRequest request) {
-		BidNoticeQueryBuilder.Where where = buildWhere(request);
-		BidNoticeQueryBuilder.Where stageWhere = buildBuilder(request)
+	public Map<String, Object> facets(NoticeSearchRequest request, boolean includeAttachments) {
+		BidNoticeQueryBuilder.Where where = buildWhere(request, includeAttachments);
+		BidNoticeQueryBuilder.Where stageWhere = buildBuilder(request, includeAttachments)
 				.withoutActiveStageScope()
 				.build();
 		Map<String, Object> facets = new LinkedHashMap<>();
@@ -167,11 +234,13 @@ public class BidNoticeSearchService {
 	 * <p>검색과 패싯이 <b>반드시 같은 조건</b>을 써야 하므로 한 곳에서만 만든다. 갈라 두면
 	 * 언젠가 한쪽에만 필터가 추가되고, 화면은 "12건"이라 써 놓고 3건을 보여준다.
 	 */
-	private BidNoticeQueryBuilder buildBuilder(NoticeSearchRequest request) {
+	private BidNoticeQueryBuilder buildBuilder(NoticeSearchRequest request, boolean includeAttachments) {
 		return new BidNoticeQueryBuilder()
+				.attachmentScope(includeAttachments)
 				.keywords(request.and(), request.or(), request.not())
 				.category(request.categoryValue())
 				.state(request.stateValue())
+				.excludeState(request.excludeStateValue())
 				.businessDivision(request.divisionValue())
 				.source(request.sourceValue())
 				.region(request.region())
@@ -184,11 +253,11 @@ public class BidNoticeSearchService {
 				.createdBetween(request.createdFrom(), request.createdTo())
 				.closeBetween(request.closeFromValue(), request.closeToValue())
 				.activeOnly(request.activeOnlyEnabled())
-				.estimatedPriceBetween(request.minAmount(), request.maxAmount());
+				.amountBetween(request.minAmount(), request.maxAmount());
 	}
 
-	private BidNoticeQueryBuilder.Where buildWhere(NoticeSearchRequest request) {
-		return buildBuilder(request).build();
+	private BidNoticeQueryBuilder.Where buildWhere(NoticeSearchRequest request, boolean includeAttachments) {
+		return buildBuilder(request, includeAttachments).build();
 	}
 
 	/**
@@ -218,13 +287,39 @@ public class BidNoticeSearchService {
 	 * 근거는 {@link #INDEX_DIRECTION} 에 있다 — 방향 하나가 어긋나면 같은 인덱스를 쓰고도
 	 * 수천 행을 다시 정렬한다.
 	 */
-	private String orderBy(NoticeSearchRequest request, String key) {
+	static String orderBy(NoticeSearchRequest request, String key) {
 		String direction = "asc".equalsIgnoreCase(request.dir()) ? "ASC" : "DESC";
 		// 마감 임박은 '가까운 것부터'가 자연스럽다 — 방향 지정이 없으면 오름차순으로 뒤집는다.
 		if ("close".equals(key) && request.dir() == null) {
 			direction = "ASC";
 		}
-		return SORTS.get(key).formatted(direction) + ", n.id " + tiebreakerDirection(key, direction);
+		return nullsLastPrefix(key, direction) + SORTS.get(key).formatted(direction)
+				+ ", n.id " + tiebreakerDirection(key, direction);
+	}
+
+	/**
+	 * 값이 없는 행을 뒤로 보내는 접두 절.
+	 *
+	 * <p><b>마진율에만, 그것도 오름차순에만 붙는다.</b> 마진을 아는 공고는 지금 소수이고
+	 * (원가는 딜 분석이나 사람이 확정한 가격표에서만 온다) 나머지는 전부 NULL 이다. MySQL 에서
+	 * NULL 은 가장 작은 값이라:
+	 *
+	 * <pre>
+	 *   마진 높은 순(DESC)  →  NULL 이 자연히 맨 뒤. 접두 절이 필요 없다
+	 *   마진 낮은 순(ASC)   →  NULL 이 맨 앞. 역마진 공고를 보려고 고른 정렬인데
+	 *                          미분석 공고 수만 건이 먼저 나온다
+	 * </pre>
+	 *
+	 * <p>ASC 에 접두 절을 붙이면 filesort 를 문다(실측 47,101행). 그래도 붙이는 쪽이 맞다 —
+	 * DESC 가 기본이자 사용의 대부분이라 인덱스 경로는 지켜지고, ASC 는 "역마진부터 보여 달라"는
+	 * 요청이므로 순서가 틀린 빠른 답보다 느린 정답이 낫다. {@code close} 가 같은 이유로 같은
+	 * 선택을 했다(그쪽은 방향과 무관하게 항상 붙인다 — 받쳐 주는 인덱스가 없어 어차피 filesort 다).
+	 *
+	 * <p>대안이었던 <b>{@code WHERE margin_rate IS NOT NULL}</b> 은 쓰지 않는다. 정렬을 바꿨을
+	 * 뿐인데 결과 집합이 줄어드는 것은 사용자가 검증할 수 없는 종류의 거짓말이다.
+	 */
+	static String nullsLastPrefix(String key, String direction) {
+		return MARGIN.equals(key) && "ASC".equals(direction) ? "n.margin_rate IS NULL, " : "";
 	}
 
 	/**
@@ -306,10 +401,108 @@ public class BidNoticeSearchService {
 			out.put("relevance", row.get("relevance"));
 		}
 
+		// 첨부 본문에서만 걸린 공고는 제목·본문 어디에도 그 낱말이 없다 — 표시하지 않으면
+		// 사용자는 관계없는 공고가 섞였다고 읽는다. 어느 쪽에서 걸렸는지를 그대로 내려준다.
+		List<String> matchedIn = matchedIn(row);
+		if (matchedIn != null) {
+			out.put("matchedIn", matchedIn);
+		}
+		// "안 걸림"과 "아직 못 읽음"을 화면이 가를 수 있게. 첨부가 없는 공고도 false 다 —
+		// 어느 쪽이든 "이 공고의 첨부 본문으로는 판단할 수 없다"는 뜻이라 화면에는 같은 사실이다.
+		out.put("attachmentIndexed", row.get("documents_indexed_at") != null);
+
 		// 화면이 매번 계산하지 않도록 서버에서 붙인다. 마감이 없으면(계획) null.
 		out.put("dday", dday(row.get("close_date"), now));
 		out.put("estimatedPrice", numberIn(out.get("priceDetail"), "estimatedPrice"));
+
+		// 금액 필터·정렬이 실제로 본 값과 그 종류. 값만 주면 화면이 배정예산을 추정가격으로
+		// 읽어 서로 다른 금액을 한 줄로 비교하게 된다 — 종류를 함께 준다.
+		Amount amount = amountOf(out.get("priceDetail"));
+		out.put("amount", amount.value());
+		out.put("amountKind", amount.kind());
+
+		// 마진 축(V20260814132535). 비율만 주면 화면이 그 수를 검증할 방법이 없다 — 분자·분모를
+		// 이루는 원가와 실추정가, 그리고 그 원가가 사람이 확정한 것인지 AI 추정인지를 함께 준다.
+		// marginRate 가 null 인 공고는 '마진 0'이 아니라 '아직 원가를 모른다'는 뜻이다.
+		out.put("marginRate", row.get("margin_rate"));
+		out.put("marginCost", row.get("margin_cost"));
+		out.put("marginSource", row.get("margin_source"));
+		out.put("marginUpdatedAt", row.get("margin_updated_at"));
+		out.put("marginBase", marginBase(amount.value()));
 		return out;
+	}
+
+	/**
+	 * 마진율의 분모 — 실추정가(대표금액 × 부가세).
+	 *
+	 * <p>DB 가 아니라 여기서 다시 계산한다. 생성 컬럼은 비율만 내놓고 분모는 남기지 않는데,
+	 * 화면이 "마진 30%"의 근거를 적으려면 그 분모가 필요하다({@code amountKind} 와 같은 이유다 —
+	 * 값만 주고 무엇으로 계산했는지 숨기면 사용자가 검증할 수 없다).
+	 */
+	private static BigDecimal marginBase(Object amount) {
+		if (!(amount instanceof Number number)) {
+			return null;
+		}
+		return new BigDecimal(number.toString()).multiply(VAT).setScale(0, RoundingMode.HALF_UP);
+	}
+
+	/**
+	 * 금액 필터·정렬이 본 값과 그 종류.
+	 *
+	 * @param value 고른 금액. 어느 후보도 없으면 {@code null}
+	 * @param kind  {@code estimatedPrice} / {@code assignedBudget} / {@code referenceAmount}
+	 *              / {@code basicExpectedPrice}. 값이 없으면 {@code null}
+	 */
+	record Amount(Object value, String kind) {
+
+		static final Amount NONE = new Amount(null, null);
+	}
+
+	/**
+	 * {@code price_detail} 에서 대표 금액 하나를 고른다.
+	 *
+	 * <p><b>순서와 0 처리가 생성 컬럼 {@code filter_amount} 와 정확히 같아야 한다</b>
+	 * ({@code V20260814113541}). 어긋나면 화면이 "이 금액으로 걸렀다"며 필터가 실제로 본 것과
+	 * 다른 숫자를 보여주게 되고, 그 종류의 거짓말은 사용자가 검증할 방법이 없다.
+	 * DB 가 아니라 여기서 다시 고르는 이유는 <b>종류</b>까지 알아야 하기 때문이다 —
+	 * 값만 필요했다면 생성 컬럼을 SELECT 하면 그만이다.
+	 *
+	 * <p>0 을 값으로 인정하지 않는 것도 그쪽과 같다. 배정예산 0 은 '0원짜리 공고'가 아니라
+	 * '미공개'다(실측 1,486건, 대부분 누리장터 민간공고). 0 으로 내려보내면 화면에 '0원'이라
+	 * 적히고 {@code maxAmount} 검색이 금액을 모르는 공고를 데려온다.
+	 */
+	static Amount amountOf(Object priceDetail) {
+		for (String key : AMOUNT_KEYS) {
+			Object value = numberIn(priceDetail, key);
+			if (value instanceof Number number && number.doubleValue() != 0) {
+				return new Amount(value, key);
+			}
+		}
+		return Amount.NONE;
+	}
+
+	/**
+	 * 이 행이 걸린 경로. 첨부 스코프를 타지 않은 질의는 두 칸이 아예 없으므로 {@code null} 이다.
+	 *
+	 * <p>MySQL 이 {@code 1 AS notice_hit} 를 {@code Long}·{@code BigDecimal} 중 무엇으로 줄지는
+	 * UNION 분기와 드라이버 버전에 달렸다. 타입을 가정하지 않고 수치로 읽는다.
+	 */
+	private static List<String> matchedIn(Map<String, Object> row) {
+		if (!row.containsKey("notice_hit") && !row.containsKey("doc_hit")) {
+			return null;
+		}
+		List<String> matched = new java.util.ArrayList<>(2);
+		if (isTrue(row.get("notice_hit"))) {
+			matched.add("notice");
+		}
+		if (isTrue(row.get("doc_hit"))) {
+			matched.add("attachment");
+		}
+		return List.copyOf(matched);
+	}
+
+	private static boolean isTrue(Object value) {
+		return value instanceof Number number && number.longValue() > 0;
 	}
 
 	/**

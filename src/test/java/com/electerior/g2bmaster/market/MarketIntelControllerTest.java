@@ -43,7 +43,8 @@ class MarketIntelControllerTest {
 				mock(com.electerior.g2bmaster.integration.ai.AiClient.class),
 				mock(com.electerior.g2bmaster.pricing.DealAnalysisRepository.class),
 				mock(com.electerior.g2bmaster.saved.SavedNoticeRepository.class),
-				mock(com.electerior.g2bmaster.notice.BidResultService.class));
+				mock(com.electerior.g2bmaster.notice.BidResultService.class),
+				mock(com.electerior.g2bmaster.index.NoticeMarginService.class));
 		mockMvc = MockMvcBuilders.standaloneSetup(controller)
 				.setControllerAdvice(new GlobalExceptionHandler(new G2bErrorTranslator()))
 				.build();

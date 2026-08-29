@@ -163,7 +163,7 @@ public class BidNoticeIngestService {
 	// ── 실행 ────────────────────────────────────────────────────────────────
 
 	/**
-	 * 전 출처 1회차 + 마감 전이.
+	 * 전 출처 1회차 + 마감 전이. 수동 적재가 쓰는 경로다.
 	 *
 	 * <p><b>한 출처가 실패해도 나머지는 계속한다.</b> 나라장터는 오퍼레이션 단위로 점검·장애가
 	 * 나므로, 하나가 죽었다고 전체 적재를 멈추면 멀쩡한 여덟 출처의 데이터까지 낡는다.
@@ -172,17 +172,45 @@ public class BidNoticeIngestService {
 	 *                     거슬러 올라가 다시 읽는다({@link #startOf} 참고)
 	 */
 	public IngestResult ingestAll(int backfillDays) {
+		return ingest(sources, d2bSources, true, backfillDays);
+	}
+
+	/**
+	 * 조달청 계열(나라장터·누리장터 + 참가가능지역)만.
+	 *
+	 * <p>D2B 와 갈라 놓은 이유는 <b>쿼터가 두 자릿수 배로 다르기 때문</b>이다. 조달청 계정은
+	 * 오퍼레이션당 하루 수천 건이라 5분 주기(288회/일)가 여유롭지만, D2B 개발계정은 오퍼레이션당
+	 * 하루 100건이라 같은 주기로 돌리면 3배 가까이 초과한다 — docs/d2b-openapi/INDEX.md.
+	 * 한 주기로 묶으면 둘 중 빡빡한 쪽이 전체 신선도를 결정해 버린다.
+	 */
+	public IngestResult ingestProcurement(int backfillDays) {
+		return ingest(sources, List.of(), true, backfillDays);
+	}
+
+	/** D2B 만. 지역 오퍼레이션은 D2B 에 없으므로 건너뛴다. */
+	public IngestResult ingestD2b(int backfillDays) {
+		return ingest(List.of(), d2bSources, false, backfillDays);
+	}
+
+	/**
+	 * 회차 하나.
+	 *
+	 * <p>마감 전이는 어느 묶음으로 불려도 돈다 — 출처와 무관한 시간 함수이고 인덱스를 타는
+	 * UPDATE 한 번이라, 조건을 붙여 아끼는 것보다 그냥 도는 편이 싸고 덜 틀린다.
+	 */
+	private IngestResult ingest(List<Source> g2bSources, List<D2bSource> defenseSources,
+			boolean includeRegions, int backfillDays) {
 		LocalDateTime now = LocalDateTime.now();
 		List<SourceResult> results = new ArrayList<>();
 		int totalIndexed = 0;
 
-		for (Source source : sources) {
+		for (Source source : g2bSources) {
 			SourceResult result = ingestOne(source, now, backfillDays);
 			results.add(result);
 			totalIndexed += result.indexed();
 		}
 
-		for (D2bSource source : d2bSources) {
+		for (D2bSource source : defenseSources) {
 			SourceResult result = ingestD2bOne(source, now, backfillDays);
 			results.add(result);
 			totalIndexed += result.indexed();
@@ -190,8 +218,10 @@ public class BidNoticeIngestService {
 
 		// 지역은 입찰공고가 색인된 뒤에 돌아야 붙을 대상이 있다 — 순서가 의미를 갖는다.
 		// 나라장터·누리장터가 각각 참가가능지역 오퍼레이션을 따로 갖는다(D2B 는 없다).
-		results.add(ingestRegions("region", regionUrl, NoticeSource.G2B, now, backfillDays));
-		results.add(ingestRegions("nuri:region", nuriRegionUrl, NoticeSource.NURI, now, backfillDays));
+		if (includeRegions) {
+			results.add(ingestRegions("region", regionUrl, NoticeSource.G2B, now, backfillDays));
+			results.add(ingestRegions("nuri:region", nuriRegionUrl, NoticeSource.NURI, now, backfillDays));
+		}
 
 		int swept = repository.sweepClosed();
 		if (swept > 0) {

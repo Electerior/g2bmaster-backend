@@ -34,6 +34,17 @@ public final class HwpTextMain {
 	private HwpTextMain() {
 	}
 
+	/**
+	 * 파싱 실패를 알리는 종료 코드.
+	 *
+	 * <p><b>1 을 쓰지 않는 이유.</b> JVM 이 우리 코드에 닿기도 전에 죽어도 1 이다
+	 * ({@code Could not find or load main class} — 실측 6건). 그것을 파싱 실패로 읽으면
+	 * <b>멀쩡한 파일이 영구 실패로 닫힌다</b>: 파싱 실패는 결정적이라 재시도하지 않기 때문이다.
+	 * 우리 코드가 실제로 돌았을 때만 이 코드를 내보내면, 그 밖의 종료 코드는 전부
+	 * "자식이 시작조차 못 했다"는 뜻이 되어 부모가 재시도로 돌릴 수 있다.
+	 */
+	public static final int EXIT_PARSE_FAILED = 3;
+
 	public static void main(String[] args) {
 		if (args.length < 1) {
 			System.exit(2);
@@ -48,9 +59,17 @@ public final class HwpTextMain {
 			System.exit(0);
 		}
 		catch (Throwable e) {
-			// 사유는 stderr 로. 부모가 종료코드만 보고 실패로 닫는다.
-			System.err.println(e);
-			System.exit(1);
+			// 사유는 stderr 로. **맨 안쪽 원인까지 적는다** — 겉 예외만 찍으면
+			// "HWP 파싱 실패: 파일명" 이라는, 이미 아는 사실만 부모에게 건네게 된다.
+			// 실측에서 이 한 줄이 186건의 정체를 가리고 있었다(전부 'This is not paragraph').
+			// 맨 안쪽 원인만 적는다. 겉 예외("HWP 파싱 실패: <임시파일명>")는 부모가 진짜 파일명으로
+			// 이미 적고 있어서, 그대로 실으면 같은 말이 두 번 들어가 500자 상한만 잡아먹는다.
+			Throwable root = e;
+			while (root.getCause() != null && root.getCause() != root) {
+				root = root.getCause();
+			}
+			System.err.println(root);
+			System.exit(EXIT_PARSE_FAILED);
 		}
 	}
 }
