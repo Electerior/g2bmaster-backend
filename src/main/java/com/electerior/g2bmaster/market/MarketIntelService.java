@@ -39,11 +39,17 @@ public class MarketIntelService {
 
 	private static final Logger log = LoggerFactory.getLogger(MarketIntelService.class);
 
-	/** 개찰결과 페이지 크기. 한 공고의 참여업체가 100을 넘는 일은 사실상 없다. */
-	private static final int OPENING_ROWS = 100;
+	/**
+	 * 개찰결과 페이지 크기.
+	 *
+	 * <p>예전 값(100)은 "참여업체가 100을 넘는 일은 사실상 없다"는 가정이었는데 사실이 아니다 —
+	 * 적격심사 공사·용역은 실측으로 151·176·256개사가 나온다. 그 값으로 두면 경쟁 현황이
+	 * 조용히 잘린 채 "총 100개사"로 보인다.
+	 */
+	private static final int OPENING_ROWS = 999;
 
-	/** 개찰결과는 {@code inqryDiv=2}(공고번호 기준)로만 조회된다 — 1은 날짜 기준이라 빈 응답이 온다. */
-	private static final int OPENING_INQRY_DIV = 2;
+	/** 한 공고에서 받아 올 참여업체 상한. 999를 넘는 공고는 드물지만 잘라 내지는 않는다. */
+	private static final int MAX_OPENING_PARTICIPANTS = 3000;
 
 	/** 업체 이력·담당자 조회 기본 구간(일). 검색 탭(7일)보다 넓다 — 이력은 추세가 목적이다. */
 	private static final int DEFAULT_HISTORY_DAYS = 90;
@@ -78,23 +84,94 @@ public class MarketIntelService {
 	/**
 	 * 공고 하나의 참여업체별 투찰 내역.
 	 *
-	 * <p>실패는 빈 목록으로 삼킨다 — 미공개/미지원과 장애를 호출부가 구분할 방법이 없고,
-	 * 실제 운용에서 압도적 다수가 전자다.
+	 * <p>양쪽 다 빈 목록을 돌려주지만 <b>로그는 갈라 둔다</b>. 예전에는 호출 실패까지
+	 * "미공개"로 묻어 버려서, 오퍼레이션 URL이 통째로 죽어 있던 몇 달 동안 화면과 로그
+	 * 어디에도 단서가 없었다. 미공개는 debug, 호출 실패는 warn 이다.
+	 *
+	 * <p>응답을 빈 목록으로 삼키는 것 자체는 그대로다 — 개찰 전 공고를 열어 본 사용자에게
+	 * 500을 보여 줄 수는 없다.
 	 */
 	public List<Map<String, Object>> fetchOpeningResults(String bidNtceNo, String bidNtceSqNo, String type) {
-		Map<String, Object> params = new LinkedHashMap<>();
-		params.put("inqryDiv", OPENING_INQRY_DIV);
-		params.put("bidNtceNo", bidNtceNo);
-		params.put("bidNtceSqNo", (bidNtceSqNo == null || bidNtceSqNo.isBlank()) ? "000" : bidNtceSqNo);
-		params.put("pageNo", 1);
-		params.put("numOfRows", OPENING_ROWS);
-		try {
-			return fetchService.callCached(endpoints.opengResultOf(type), params).items();
-		}
-		catch (RuntimeException ex) {
-			log.debug("개찰결과 미공개/미지원 {}: {}", bidNtceNo, ex.getMessage());
+		String no = bidNtceNo == null ? "" : bidNtceNo.trim();
+		if (no.isEmpty()) {
 			return List.of();
 		}
+		// 차수(bidNtceOrd)는 일부러 안 싣는다 — narrowToOrd 주석 참고.
+		Map<String, Object> params = new LinkedHashMap<>();
+		params.put("bidNtceNo", no);
+
+		List<Map<String, Object>> rows;
+		try {
+			rows = fetchService.fetchPaged(endpoints.opengCompete(), params,
+					OPENING_ROWS, MAX_OPENING_PARTICIPANTS);
+		}
+		catch (RuntimeException ex) {
+			log.warn("개찰결과 조회 실패 {} — {}", no, ex.getMessage());
+			return List.of();
+		}
+		if (rows.isEmpty()) {
+			// resultCode 00 · totalCount 0 — 개찰 전이거나 유찰이라 참여업체가 없다(정상).
+			log.debug("개찰결과 미공개 {} — 개찰 전이거나 유찰", no);
+			return List.of();
+		}
+
+		List<Map<String, Object>> scoped = narrowToOrd(rows, bidNtceSqNo);
+		List<Map<String, Object>> out = new ArrayList<>(scoped.size());
+		for (Map<String, Object> row : scoped) {
+			out.add(normalizeParticipant(row, type));
+		}
+		return out;
+	}
+
+	/**
+	 * 차수 좁히기는 <b>응답을 받은 뒤에</b> 한다.
+	 *
+	 * <p>{@code bidNtceOrd} 를 요청에 실으면 차수가 어긋나는 순간 상류가 0건을 준다(실측:
+	 * 실제 차수가 002인 공고에 000을 보내면 {@code totalCount=0}). 화면은 차수를 모를 때
+	 * 기본값 "000"을 보내오므로, 그대로 실어 보내면 재공고된 공고가 전부 빈 채로 나온다.
+	 * 그래서 전 차수를 받아 두고, 요청한 차수가 실제로 있을 때만 그쪽으로 좁힌다.
+	 */
+	private static List<Map<String, Object>> narrowToOrd(List<Map<String, Object>> rows, String bidNtceSqNo) {
+		String ord = bidNtceSqNo == null ? "" : bidNtceSqNo.trim();
+		if (ord.isEmpty()) {
+			return rows;
+		}
+		List<Map<String, Object>> matched = rows.stream()
+				.filter(row -> ord.equals(str(row.get("bidNtceOrd"))))
+				.toList();
+		return matched.isEmpty() ? rows : matched;
+	}
+
+	/**
+	 * 개찰완료 한 줄을 화면 계약({@code bdrNm}·{@code rank}·{@code bidAmt}·{@code bidprcRt}·
+	 * {@code sucsfbidYn})으로 옮긴다.
+	 *
+	 * <p>상류 이름이 다르다: {@code prcbdrNm}·{@code opengRank}·{@code bidprcAmt}·
+	 * {@code bidprcrt}(끝이 소문자 t다). 원본 키도 남겨 둔다 — 지우면 사업자번호·투찰일시처럼
+	 * 지금은 안 쓰는 값이 나중에도 화면에 못 온다.
+	 *
+	 * <p><b>{@code sucsfbidYn} 은 상류에 없다.</b> 개찰순위 1위를 낙찰로 본다 — 표본 20건에서
+	 * 낙찰정보의 {@code bidwinnrNm} 과 20/20 일치했다. {@code rmrk} 를 쓰지 않는 이유는 그것이
+	 * 낙찰 표시가 아니라 투찰 상태이기 때문이다("정상" / "규격서평가부적격").
+	 *
+	 * <p>실격 업체는 순위·금액·투찰률이 모두 비어 온다. 채우지 않는다 — 0을 넣으면 투찰률
+	 * 추세와 담합 매트릭스가 있지도 않은 0원 투찰을 사실로 읽는다.
+	 */
+	private static Map<String, Object> normalizeParticipant(Map<String, Object> row, String type) {
+		Map<String, Object> out = new LinkedHashMap<>(row);
+		String rank = firstNonBlank(row, "opengRank", "rank");
+		out.put("bdrNm", firstNonBlank(row, "prcbdrNm", "bdrNm"));
+		out.put("bdrBrn", firstNonBlank(row, "prcbdrBizno", "bdrBrn"));
+		out.put("rank", rank);
+		out.put("bidAmt", firstNonBlank(row, "bidprcAmt", "bidAmt"));
+		out.put("bidprcRt", firstNonBlank(row, "bidprcrt", "bidprcRt"));
+		boolean won = "1".equals(rank);
+		out.put("sucsfbidYn", won ? "Y" : "N");
+		out.put("_won", won);
+		if (type != null && !type.isBlank()) {
+			out.put("_type", type);
+		}
+		return out;
 	}
 
 	/**
