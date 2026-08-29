@@ -39,17 +39,26 @@ public class MarketIntelService {
 
 	private static final Logger log = LoggerFactory.getLogger(MarketIntelService.class);
 
-	/** 개찰결과 페이지 크기. 한 공고의 참여업체가 100을 넘는 일은 사실상 없다. */
-	private static final int OPENING_ROWS = 100;
+	/**
+	 * 개찰결과 페이지 크기.
+	 *
+	 * <p>예전 값(100)은 "참여업체가 100을 넘는 일은 사실상 없다"는 가정이었는데 사실이 아니다 —
+	 * 적격심사 공사·용역은 실측으로 151·176·256개사가 나온다. 그 값으로 두면 경쟁 현황이
+	 * 조용히 잘린 채 "총 100개사"로 보인다.
+	 */
+	private static final int OPENING_ROWS = 999;
 
-	/** 개찰결과는 {@code inqryDiv=2}(공고번호 기준)로만 조회된다 — 1은 날짜 기준이라 빈 응답이 온다. */
-	private static final int OPENING_INQRY_DIV = 2;
+	/** 한 공고에서 받아 올 참여업체 상한. 999를 넘는 공고는 드물지만 잘라 내지는 않는다. */
+	private static final int MAX_OPENING_PARTICIPANTS = 3000;
 
 	/** 업체 이력·담당자 조회 기본 구간(일). 검색 탭(7일)보다 넓다 — 이력은 추세가 목적이다. */
 	private static final int DEFAULT_HISTORY_DAYS = 90;
 
 	/** 날짜범위 개찰결과 조회 페이지 크기. */
 	private static final int OPENING_RANGE_ROWS = 500;
+
+	/** 날짜범위 개찰결과의 조회구분 — 3(개찰일시). 1은 입력일시, 2는 공고일시라 이력의 축이 아니다. */
+	private static final int OPENING_RANGE_INQRY_DIV = 3;
 
 	/** 낙찰정보 조회 페이지 크기. */
 	private static final int RESULT_ROWS = 500;
@@ -78,63 +87,167 @@ public class MarketIntelService {
 	/**
 	 * 공고 하나의 참여업체별 투찰 내역.
 	 *
-	 * <p>실패는 빈 목록으로 삼킨다 — 미공개/미지원과 장애를 호출부가 구분할 방법이 없고,
-	 * 실제 운용에서 압도적 다수가 전자다.
+	 * <p>양쪽 다 빈 목록을 돌려주지만 <b>로그는 갈라 둔다</b>. 예전에는 호출 실패까지
+	 * "미공개"로 묻어 버려서, 오퍼레이션 URL이 통째로 죽어 있던 몇 달 동안 화면과 로그
+	 * 어디에도 단서가 없었다. 미공개는 debug, 호출 실패는 warn 이다.
+	 *
+	 * <p>응답을 빈 목록으로 삼키는 것 자체는 그대로다 — 개찰 전 공고를 열어 본 사용자에게
+	 * 500을 보여 줄 수는 없다.
 	 */
 	public List<Map<String, Object>> fetchOpeningResults(String bidNtceNo, String bidNtceSqNo, String type) {
-		Map<String, Object> params = new LinkedHashMap<>();
-		params.put("inqryDiv", OPENING_INQRY_DIV);
-		params.put("bidNtceNo", bidNtceNo);
-		params.put("bidNtceSqNo", (bidNtceSqNo == null || bidNtceSqNo.isBlank()) ? "000" : bidNtceSqNo);
-		params.put("pageNo", 1);
-		params.put("numOfRows", OPENING_ROWS);
-		try {
-			return fetchService.callCached(endpoints.opengResultOf(type), params).items();
-		}
-		catch (RuntimeException ex) {
-			log.debug("개찰결과 미공개/미지원 {}: {}", bidNtceNo, ex.getMessage());
+		String no = bidNtceNo == null ? "" : bidNtceNo.trim();
+		if (no.isEmpty()) {
 			return List.of();
 		}
+		// 차수(bidNtceOrd)는 일부러 안 싣는다 — narrowToOrd 주석 참고.
+		Map<String, Object> params = new LinkedHashMap<>();
+		params.put("bidNtceNo", no);
+
+		List<Map<String, Object>> rows;
+		try {
+			rows = fetchService.fetchPaged(endpoints.opengCompete(), params,
+					OPENING_ROWS, MAX_OPENING_PARTICIPANTS);
+		}
+		catch (RuntimeException ex) {
+			log.warn("개찰결과 조회 실패 {} — {}", no, ex.getMessage());
+			return List.of();
+		}
+		if (rows.isEmpty()) {
+			// resultCode 00 · totalCount 0 — 개찰 전이거나 유찰이라 참여업체가 없다(정상).
+			log.debug("개찰결과 미공개 {} — 개찰 전이거나 유찰", no);
+			return List.of();
+		}
+
+		List<Map<String, Object>> scoped = narrowToOrd(rows, bidNtceSqNo);
+		List<Map<String, Object>> out = new ArrayList<>(scoped.size());
+		for (Map<String, Object> row : scoped) {
+			out.add(normalizeParticipant(row, type));
+		}
+		return out;
+	}
+
+	/**
+	 * 차수 좁히기는 <b>응답을 받은 뒤에</b> 한다.
+	 *
+	 * <p>{@code bidNtceOrd} 를 요청에 실으면 차수가 어긋나는 순간 상류가 0건을 준다(실측:
+	 * 실제 차수가 002인 공고에 000을 보내면 {@code totalCount=0}). 화면은 차수를 모를 때
+	 * 기본값 "000"을 보내오므로, 그대로 실어 보내면 재공고된 공고가 전부 빈 채로 나온다.
+	 * 그래서 전 차수를 받아 두고, 요청한 차수가 실제로 있을 때만 그쪽으로 좁힌다.
+	 */
+	private static List<Map<String, Object>> narrowToOrd(List<Map<String, Object>> rows, String bidNtceSqNo) {
+		String ord = bidNtceSqNo == null ? "" : bidNtceSqNo.trim();
+		if (ord.isEmpty()) {
+			return rows;
+		}
+		List<Map<String, Object>> matched = rows.stream()
+				.filter(row -> ord.equals(str(row.get("bidNtceOrd"))))
+				.toList();
+		return matched.isEmpty() ? rows : matched;
+	}
+
+	/**
+	 * 개찰완료 한 줄을 화면 계약({@code bdrNm}·{@code rank}·{@code bidAmt}·{@code bidprcRt}·
+	 * {@code sucsfbidYn})으로 옮긴다.
+	 *
+	 * <p>상류 이름이 다르다: {@code prcbdrNm}·{@code opengRank}·{@code bidprcAmt}·
+	 * {@code bidprcrt}(끝이 소문자 t다). 원본 키도 남겨 둔다 — 지우면 사업자번호·투찰일시처럼
+	 * 지금은 안 쓰는 값이 나중에도 화면에 못 온다.
+	 *
+	 * <p><b>{@code sucsfbidYn} 은 상류에 없다.</b> 개찰순위 1위를 낙찰로 본다 — 표본 20건에서
+	 * 낙찰정보의 {@code bidwinnrNm} 과 20/20 일치했다. {@code rmrk} 를 쓰지 않는 이유는 그것이
+	 * 낙찰 표시가 아니라 투찰 상태이기 때문이다("정상" / "규격서평가부적격").
+	 *
+	 * <p>실격 업체는 순위·금액·투찰률이 모두 비어 온다. 채우지 않는다 — 0을 넣으면 투찰률
+	 * 추세와 담합 매트릭스가 있지도 않은 0원 투찰을 사실로 읽는다.
+	 */
+	private static Map<String, Object> normalizeParticipant(Map<String, Object> row, String type) {
+		Map<String, Object> out = new LinkedHashMap<>(row);
+		String rank = firstNonBlank(row, "opengRank", "rank");
+		out.put("bdrNm", firstNonBlank(row, "prcbdrNm", "bdrNm"));
+		out.put("bdrBrn", firstNonBlank(row, "prcbdrBizno", "bdrBrn"));
+		out.put("rank", rank);
+		out.put("bidAmt", firstNonBlank(row, "bidprcAmt", "bidAmt"));
+		out.put("bidprcRt", firstNonBlank(row, "bidprcrt", "bidprcRt"));
+		boolean won = "1".equals(rank);
+		out.put("sucsfbidYn", won ? "Y" : "N");
+		out.put("_won", won);
+		if (type != null && !type.isBlank()) {
+			out.put("_type", type);
+		}
+		return out;
 	}
 
 	/**
 	 * 날짜범위 개찰결과.
 	 *
-	 * <p>파라미터 후보를 <b>순서대로 시도</b>한다. 개찰결과 API는 오퍼레이션마다 지원하는
-	 * 날짜 파라미터가 다르고, 문서에 나와 있지 않다. 개찰일 기준({@code opengBgnDt})이
-	 * 먼저인 것은 그쪽이 의미상 맞기 때문이고, 안 되면 조회일 기준으로 물러선다.
+	 * <p>예전에는 {@code opengBgnDt}·{@code inqryBgnDt} 두 벌을 순서대로 찔러 봤다. 그럴 필요가
+	 * 없다 — 이 오퍼레이션의 날짜 파라미터는 {@code inqryBgnDt}/{@code inqryEndDt} 한 벌이고
+	 * 무엇을 기준으로 볼지는 {@code inqryDiv} 가 정한다(1 입력일시 · 2 공고일시 · 3 개찰일시).
+	 * 업체 이력의 축은 개찰일시이므로 3이다.
+	 *
+	 * <p><b>여기서 오는 것은 참여업체 전수가 아니라 낙찰자 한 명</b>이다({@link #winnerOf}).
+	 * 그게 이 오퍼레이션이 주는 전부이고, 전수가 필요하면 공고별로
+	 * {@link #fetchOpeningResults} 를 불러야 한다.
 	 */
 	public List<Map<String, Object>> fetchOpeningByDateRange(String from, String to) {
-		List<Map<String, String>> candidates = List.of(
-				Map.of("opengBgnDt", ymd(from), "opengEndDt", ymd(to)),
-				Map.of("inqryBgnDt", from, "inqryEndDt", to));
-
 		List<Map.Entry<String, String>> urls = new ArrayList<>(endpoints.opengResult().entrySet());
 		return MapLimit.flatMap(urls, 3, entry -> {
-			for (Map<String, String> dateParams : candidates) {
-				try {
-					Map<String, Object> params = new LinkedHashMap<>();
-					params.put("inqryDiv", 1);
-					params.putAll(dateParams);
-					params.put("pageNo", 1);
-					params.put("numOfRows", OPENING_RANGE_ROWS);
-					var response = fetchService.callCached(entry.getValue(), params);
-					if (response.totalCount() > 0 || !response.items().isEmpty()) {
-						List<Map<String, Object>> typed = new ArrayList<>(response.items().size());
-						for (Map<String, Object> item : response.items()) {
-							Map<String, Object> copy = new LinkedHashMap<>(item);
-							copy.put("_type", entry.getKey());
-							typed.add(copy);
-						}
-						return typed;
-					}
+			Map<String, Object> params = new LinkedHashMap<>();
+			params.put("inqryDiv", OPENING_RANGE_INQRY_DIV);
+			params.put("inqryBgnDt", from);
+			params.put("inqryEndDt", to);
+			params.put("pageNo", 1);
+			params.put("numOfRows", OPENING_RANGE_ROWS);
+			try {
+				var response = fetchService.callCached(entry.getValue(), params);
+				if (response.totalCount() > response.items().size()) {
+					// 한 페이지만 본다. 하루치도 구분당 1000건을 넘으므로 전량을 훑으면 호출량이
+					// 쿼터를 태운다. 여기서 못 찾은 업체는 공고별 개별 조회로 물러서므로
+					// (companyHistory 의 2단 폴백) 잘림이 곧 누락은 아니다.
+					log.debug("개찰결과 날짜조회 {} — {}건 중 {}건만 본다(첫 페이지)",
+							entry.getKey(), response.totalCount(), response.items().size());
 				}
-				catch (RuntimeException ex) {
-					log.debug("개찰결과 날짜조회 실패 {}: {}", entry.getKey(), ex.getMessage());
+				List<Map<String, Object>> typed = new ArrayList<>(response.items().size());
+				for (Map<String, Object> item : response.items()) {
+					Map<String, Object> copy = winnerOf(item);
+					copy.put("_type", entry.getKey());
+					typed.add(copy);
 				}
+				return typed;
 			}
-			return List.<Map<String, Object>>of();
+			catch (RuntimeException ex) {
+				log.warn("개찰결과 날짜조회 실패 {} — {}", entry.getKey(), ex.getMessage());
+				return List.<Map<String, Object>>of();
+			}
 		});
+	}
+
+	/**
+	 * 날짜범위 개찰결과 한 줄에서 낙찰자를 참여업체 모양으로 꺼낸다.
+	 *
+	 * <p>이 오퍼레이션은 공고 한 건이 한 줄이고, 업체 정보는 {@code opengCorpInfo} 하나에
+	 * {@code 업체명^사업자번호^대표자명^투찰금액^투찰률} 로 접혀 있다.
+	 *
+	 * <p>유찰이면 이 칸이 통째로 비고, 협상에 의한 계약이면 금액·투찰률이 빠지며,
+	 * 낙찰예정자가 여럿이면 업체명 자리에 "낙찰예정자 다수"가 온다. 셋 다 그대로 싣는다 —
+	 * 없는 값을 지어내면 업체 이력의 투찰률 추세가 조용히 틀어진다.
+	 */
+	private static Map<String, Object> winnerOf(Map<String, Object> item) {
+		Map<String, Object> out = new LinkedHashMap<>(item);
+		String[] parts = str(item.get("opengCorpInfo")).split("\\^", -1);
+		String name = part(parts, 0);
+		out.put("bdrNm", name);
+		out.put("bdrBrn", part(parts, 1));
+		out.put("bidAmt", part(parts, 3));
+		out.put("bidprcRt", part(parts, 4));
+		out.put("rank", name.isEmpty() ? "" : "1");
+		out.put("sucsfbidYn", name.isEmpty() ? "N" : "Y");
+		out.put("_won", !name.isEmpty());
+		return out;
+	}
+
+	private static String part(String[] parts, int index) {
+		return index < parts.length ? parts[index].trim() : "";
 	}
 
 	// ── 업체 이력 ───────────────────────────────────────────────────────────
@@ -457,11 +570,6 @@ public class MarketIntelService {
 
 	private static String blankTo(String value, String fallback) {
 		return value == null || value.isBlank() ? fallback : value;
-	}
-
-	private static String ymd(String value) {
-		String digits = value == null ? "" : value.replaceAll("\\D", "");
-		return digits.length() >= 8 ? digits.substring(0, 8) : digits;
 	}
 
 	private static String str(Object value) {

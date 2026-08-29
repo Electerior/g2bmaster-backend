@@ -112,9 +112,15 @@ class SearchWiringSmokeTest {
 							+ "/as/ScsbidInfoService/getScsbidListSttusCnstwkPPSSrch");
 			assertThat(endpoints.opengResultOf("용역"))
 					.isEqualTo("https://apis.data.go.kr/1230000"
-							+ "/ao/OpengResultInfoService/getOpengResultListServc");
+							+ "/as/ScsbidInfoService/getOpengResultListInfoServc");
 			// 알 수 없는 구분은 물품으로 떨어진다(원본과 같다).
 			assertThat(endpoints.opengResultOf("외자")).isEqualTo(endpoints.opengResult().get("물품"));
+			// 참여업체 전수는 구분을 받지 않는 오퍼레이션 하나다 — 여기만 3중 팬아웃이 없다.
+			assertThat(endpoints.opengCompete())
+					.isEqualTo("https://apis.data.go.kr/1230000"
+							+ "/as/ScsbidInfoService/getOpengResultListInfoOpengCompt");
+			// 폐기된 ao/OpengResultInfoService 로 돌아가지 않는다 — 그 서비스는 사유코드 12를 낸다.
+			assertThat(endpoints.opengResult().values()).noneMatch(url -> url.contains("OpengResultInfoService"));
 
 			// 맵 순서는 물품 → 용역 → 공사로 고정 — 응답 순서가 동점 정렬의 사실상 기본값이다.
 			assertThat(endpoints.bidAnnounce().keySet()).containsExactly("물품", "용역", "공사");
