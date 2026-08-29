@@ -157,4 +157,42 @@ class AttachmentSearchSqlTest {
 
 		assertThat(sql.split("n\\.region LIKE", -1)).hasSize(3);
 	}
+
+	/**
+	 * 관련도 정렬일 때 공고 브랜치를 <b>union 에 넣기 전에</b> 자른다.
+	 *
+	 * <p>union 뒤에서 자르면 이미 다 세운 뒤다 — 색인이 318만 행으로 커진 뒤 '공사'(107만 건
+	 * 매치)에서 후보 세우기에만 23.1초가 들었다. 미리 자르면 4.5초다(5.2배).
+	 *
+	 * <p>정확성은 relevance 의 성질에서 온다: 첨부에서만 걸린 행은 0점이고 공고 매치는 0보다
+	 * 크다(실측 최소 0.498). 그러니 공고 브랜치가 창을 채우면 첨부 전용 행은 상위에 못 온다.
+	 */
+	@Test
+	@DisplayName("관련도 정렬이면 공고 브랜치를 union 전에 자른다")
+	void prunesNoticeBranchBeforeUnion() {
+		String sql = BidNoticeIndexRepository.candidateSql(where(List.of("서버"), List.of()), true);
+
+		String noticeBranch = sql.split("UNION ALL")[0];
+		assertThat(noticeBranch).contains("LIMIT :innerLimit");
+		// 안쪽에 타이브레이커를 붙이면 107만 행의 id 를 함께 세운다 — 1.46s 가 9.63s 가 된다.
+		assertThat(noticeBranch).doesNotContain("fid ASC");
+	}
+
+	@Test
+	@DisplayName("관련도 정렬이 아니면 자르지 않는다 — 뒤쪽 공고가 페이지에서 사라진다")
+	void keepsFullBranchForOtherSorts() {
+		String sql = BidNoticeIndexRepository.candidateSql(where(List.of("서버"), List.of()), false);
+
+		assertThat(sql).doesNotContain("LIMIT :innerLimit");
+	}
+
+	@Test
+	@DisplayName("첨부 브랜치는 자르지 않는다 — 거기서 자르면 첨부 전용 매치가 사라진다")
+	void neverPrunesDocBranch() {
+		String sql = BidNoticeIndexRepository.candidateSql(where(List.of("서버"), List.of()), true);
+
+		String docBranch = sql.split("UNION ALL")[1];
+		assertThat(docBranch).contains("MATCH(d.body_text)");
+		assertThat(docBranch).doesNotContain("LIMIT");
+	}
 }

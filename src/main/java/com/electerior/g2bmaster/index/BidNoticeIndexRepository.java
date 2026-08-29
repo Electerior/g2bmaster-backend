@@ -516,7 +516,7 @@ public class BidNoticeIndexRepository {
 			}
 			sql = "SELECT " + LIST_COLUMNS
 					+ ", t.relevance AS relevance, t.notice_hit AS notice_hit, t.doc_hit AS doc_hit"
-					+ "\n  FROM (" + candidateSql(where) + innerOrder + ") t"
+					+ "\n  FROM (" + candidateSql(where, relevanceSorted) + innerOrder + ") t"
 					+ "\n  JOIN bid_notice n ON n.id = t.fid AND n.source = t.fsource"
 					+ "\n ORDER BY " + orderBy + "\n LIMIT :limit OFFSET :offset";
 		}
@@ -561,11 +561,37 @@ public class BidNoticeIndexRepository {
 	 * 접으려면 낱말마다 서브쿼리를 따로 걸어야 해서 비용이 낱말 수에 비례한다.
 	 */
 	static String candidateSql(BidNoticeQueryBuilder.Where where) {
+		return candidateSql(where, false);
+	}
+
+	/**
+	 * @param pruneNoticeBranch 공고 브랜치를 union 에 넣기 <b>전에</b> 관련도 상위
+	 *                          {@code :innerLimit} 건으로 자를 것인가. 관련도 정렬일 때만 참이다.
+	 */
+	static String candidateSql(BidNoticeQueryBuilder.Where where, boolean pruneNoticeBranch) {
 		String filters = where.filterSql().isEmpty() ? "" : "\n             AND " + where.filterSql();
 		String noticeBranch = "SELECT n.id AS fid, n.source AS fsource" + where.relevanceSelect()
 				+ ", 1 AS notice_hit, 0 AS doc_hit"
 				+ "\n             FROM bid_notice n"
 				+ "\n            WHERE " + where.keywordSql() + filters;
+		if (pruneNoticeBranch) {
+			/*
+			 * 공고 브랜치를 미리 자른다 — union 뒤에서 자르면 이미 다 세운 뒤다.
+			 *
+			 * 이것이 정확한 이유: 첨부에서만 걸린 행은 relevance 가 0 인데(관련도는 공고
+			 * 텍스트 점수만 쓴다) 공고 매치는 0 보다 크다(실측 최소 0.498, 0점 0건). 그러니
+			 * 공고 브랜치가 창을 채우면 첨부 전용 행은 상위에 올 수 없다. 실측으로도 자르기
+			 * 전후 상위 20건이 완전히 같았다.
+			 *
+			 * <b>안쪽에 타이브레이커를 붙이지 않는다.</b> `, fid ASC` 를 더하면 1,070,000 행의
+			 * id 를 함께 세워야 해서 1.46s → 9.63s 가 된다. 대신 경계에서 점수가 같은 행이
+			 * 걸치면 어느 쪽이 창에 들어올지는 엔진이 정한다 — 이 저장소가 fullTextSql 에서
+			 * 이미 같은 대가를 치르고 같은 이득을 얻기로 한 결정이다(그쪽 주석의 "31배").
+			 * 바깥이 타이브레이커를 걸어 페이지 안의 순서는 고정된다.
+			 */
+			noticeBranch = "(" + noticeBranch
+					+ "\n            ORDER BY relevance DESC\n            LIMIT :innerLimit)";
+		}
 		String docBranch = "SELECT n.id AS fid, n.source AS fsource, 0 AS relevance"
 				+ ", 0 AS notice_hit, 1 AS doc_hit"
 				+ "\n             FROM bid_notice_document d"
@@ -573,7 +599,7 @@ public class BidNoticeIndexRepository {
 				+ "\n            WHERE d.status = 'done'"
 				+ "\n              AND MATCH(d.body_text) AGAINST (:ftDocQuery IN BOOLEAN MODE)" + filters;
 
-		String union = "\n           " + noticeBranch + "\n           UNION ALL\n           " + docBranch;
+		String union = "\n           " + noticeBranch + "\n           UNION ALL\n           (" + docBranch + ")";
 		String antiJoin = "";
 		String antiWhere = "";
 		if (where.excludesByAttachment()) {
