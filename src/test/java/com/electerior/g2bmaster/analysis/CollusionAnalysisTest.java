@@ -39,6 +39,32 @@ class CollusionAnalysisTest {
 		return map;
 	}
 
+	/** 나라장터 개찰완료 원본 이름 그대로인 줄. 정규화를 거치지 않고 흘러든 경우다. */
+	private static Map<String, Object> upstreamParticipant(String name, String rank, String rate) {
+		Map<String, Object> map = new LinkedHashMap<>();
+		map.put("prcbdrNm", name);
+		map.put("opengRank", rank);
+		map.put("bidprcrt", rate);
+		map.put("bidprcAmt", "1000");
+		return map;
+	}
+
+	@Test
+	void 정규화되지_않은_원본_필드명으로도_짝을_만든다() {
+		// 값이 없으면 오류가 아니라 "짝 0건"으로 보인다 — 아무도 이상하다고 느끼지 않는 실패다.
+		CollusionMatrix matrix = CollusionAnalysis.buildCollusionMatrix(List.of(
+				bid("N1", "노트북",
+						upstreamParticipant("B사", "2", "88"),
+						upstreamParticipant("A사", "1", "90"))));
+
+		assertThat(matrix.pairs()).hasSize(1);
+		Pair pair = matrix.pairs().get(0);
+		assertThat(pair.cases().get(0).winner()).isEqualTo("A사");
+		assertThat(pair.cases().get(0).runnerUp()).isEqualTo("B사");
+		assertThat(pair.cases().get(0).winBidprcRt()).isEqualTo("90");
+		assertThat(matrix.companies()).extracting(Company::name).containsExactlyInAnyOrder("A사", "B사");
+	}
+
 	@Test
 	void 순위가_뒤섞여_와도_1위와_2위를_고른다() {
 		CollusionMatrix matrix = CollusionAnalysis.buildCollusionMatrix(List.of(

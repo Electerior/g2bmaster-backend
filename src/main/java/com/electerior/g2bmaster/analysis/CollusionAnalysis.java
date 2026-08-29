@@ -20,6 +20,10 @@ import java.util.Map;
  *       움직임을 잡는다.</li>
  * </ol>
  *
+ * <p>참여업체 한 줄의 이름은 두 벌이다 — 화면 계약({@code bdrNm}·{@code rank}·
+ * {@code bidprcRt})과 나라장터 개찰완료 원본({@code prcbdrNm}·{@code opengRank}·
+ * {@code bidprcrt}). 둘 다 읽는다({@code field}).
+ *
  * <p><b>여기서 나오는 점수는 고발 근거가 아니라 "들여다볼 순서"다.</b> 표본이 2~3건이면
  * 우연으로 만들어지는 패턴이므로, {@code suspicionScore} 에 건수를 곱해 둔 것도 그 이유다.
  */
@@ -94,16 +98,16 @@ public final class CollusionAnalysis {
 				continue;
 			}
 			Map<String, Object> winner = participants.get(0);
-			if (str(winner.get("bdrNm")).isEmpty()) {
+			if (name(winner).isEmpty()) {
 				continue;
 			}
-			recordCompany(companies, str(winner.get("bdrNm")), "낙찰", bid, winner);
+			recordCompany(companies, name(winner), "낙찰", bid, winner);
 
 			Map<String, Object> runnerUp = participants.size() > 1 ? participants.get(1) : null;
-			if (runnerUp == null || str(runnerUp.get("bdrNm")).isEmpty()) {
+			if (runnerUp == null || name(runnerUp).isEmpty()) {
 				continue;
 			}
-			recordCompany(companies, str(runnerUp.get("bdrNm")), "2위", bid, runnerUp);
+			recordCompany(companies, name(runnerUp), "2위", bid, runnerUp);
 			recordPair(pairs, bid, winner, runnerUp);
 		}
 
@@ -133,8 +137,30 @@ public final class CollusionAnalysis {
 			}
 		}
 		// 순위가 비었거나 숫자가 아니면 99 — 정렬 끝으로 밀어 1·2위 판정에서 빠지게 한다.
-		participants.sort(Comparator.comparingInt(p -> rank(p.get("rank"))));
+		// 실격 업체(규격서평가부적격 등)가 순위 없이 오므로 이 자리가 실제로 쓰인다.
+		participants.sort(Comparator.comparingInt(p -> rank(field(p, "rank", "opengRank"))));
 		return participants;
+	}
+
+	/**
+	 * 참여업체 한 줄에서 값을 꺼낸다. 앞이 화면 계약 이름, 뒤가 나라장터 개찰완료 원본 이름이다.
+	 *
+	 * <p>정상 경로에서는 {@code MarketIntelService} 가 이미 앞 이름으로 맞춰 준다. 뒤 이름까지
+	 * 보는 것은 <b>정규화를 거치지 않은 줄이 흘러들어도 매트릭스가 조용히 비지 않게</b> 하기
+	 * 위한 것이다 — 이 분석은 값이 없으면 오류가 아니라 "짝 0건"으로 보이고, 그건 아무도
+	 * 이상하다고 느끼지 않는 실패다.
+	 */
+	private static Object field(Map<String, Object> participant, String contract, String upstream) {
+		Object value = participant.get(contract);
+		if (value != null && !String.valueOf(value).isBlank()) {
+			return value;
+		}
+		Object raw = participant.get(upstream);
+		return raw == null || String.valueOf(raw).isBlank() ? null : raw;
+	}
+
+	private static String name(Map<String, Object> participant) {
+		return str(field(participant, "bdrNm", "prcbdrNm"));
 	}
 
 	private static int rank(Object value) {
@@ -152,19 +178,20 @@ public final class CollusionAnalysis {
 			record.runnerUp++;
 		}
 		record.appearances++;
-		BigDecimal rate = Numbers.toNumber(participant.get("bidprcRt"));
-		if (rate != null && !str(participant.get("bidprcRt")).isEmpty()) {
+		Object rateRaw = field(participant, "bidprcRt", "bidprcrt");
+		BigDecimal rate = Numbers.toNumber(rateRaw);
+		if (rate != null) {
 			record.bidRates.add(rate);
 		}
 		record.cases.add(new CompanyCase(role,
 				bid.get("bidNtceNo"), bid.get("bidNtceNm"),
-				participant.get("bidAmt"), participant.get("bidprcRt"), bid.get("opengDate")));
+				field(participant, "bidAmt", "bidprcAmt"), rateRaw, bid.get("opengDate")));
 	}
 
 	private static void recordPair(Map<String, PairRecord> records, Map<String, Object> bid,
 			Map<String, Object> winner, Map<String, Object> runnerUp) {
-		String winnerName = str(winner.get("bdrNm"));
-		String runnerName = str(runnerUp.get("bdrNm"));
+		String winnerName = name(winner);
+		String runnerName = name(runnerUp);
 		// 이름을 정렬해 키를 만든다 — (A,B) 와 (B,A) 가 다른 짝으로 세어지면 안 된다.
 		String a = winnerName.compareTo(runnerName) <= 0 ? winnerName : runnerName;
 		String b = winnerName.compareTo(runnerName) <= 0 ? runnerName : winnerName;
@@ -179,7 +206,8 @@ public final class CollusionAnalysis {
 		}
 		record.cases.add(new PairCase(bid.get("bidNtceNo"), bid.get("bidNtceNm"),
 				winnerName, runnerName,
-				winner.get("bidprcRt"), runnerUp.get("bidprcRt"), bid.get("opengDate")));
+				field(winner, "bidprcRt", "bidprcrt"), field(runnerUp, "bidprcRt", "bidprcrt"),
+				bid.get("opengDate")));
 	}
 
 	/**
