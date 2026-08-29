@@ -57,6 +57,9 @@ public class MarketIntelService {
 	/** 날짜범위 개찰결과 조회 페이지 크기. */
 	private static final int OPENING_RANGE_ROWS = 500;
 
+	/** 날짜범위 개찰결과의 조회구분 — 3(개찰일시). 1은 입력일시, 2는 공고일시라 이력의 축이 아니다. */
+	private static final int OPENING_RANGE_INQRY_DIV = 3;
+
 	/** 낙찰정보 조회 페이지 크기. */
 	private static final int RESULT_ROWS = 500;
 
@@ -177,41 +180,74 @@ public class MarketIntelService {
 	/**
 	 * 날짜범위 개찰결과.
 	 *
-	 * <p>파라미터 후보를 <b>순서대로 시도</b>한다. 개찰결과 API는 오퍼레이션마다 지원하는
-	 * 날짜 파라미터가 다르고, 문서에 나와 있지 않다. 개찰일 기준({@code opengBgnDt})이
-	 * 먼저인 것은 그쪽이 의미상 맞기 때문이고, 안 되면 조회일 기준으로 물러선다.
+	 * <p>예전에는 {@code opengBgnDt}·{@code inqryBgnDt} 두 벌을 순서대로 찔러 봤다. 그럴 필요가
+	 * 없다 — 이 오퍼레이션의 날짜 파라미터는 {@code inqryBgnDt}/{@code inqryEndDt} 한 벌이고
+	 * 무엇을 기준으로 볼지는 {@code inqryDiv} 가 정한다(1 입력일시 · 2 공고일시 · 3 개찰일시).
+	 * 업체 이력의 축은 개찰일시이므로 3이다.
+	 *
+	 * <p><b>여기서 오는 것은 참여업체 전수가 아니라 낙찰자 한 명</b>이다({@link #winnerOf}).
+	 * 그게 이 오퍼레이션이 주는 전부이고, 전수가 필요하면 공고별로
+	 * {@link #fetchOpeningResults} 를 불러야 한다.
 	 */
 	public List<Map<String, Object>> fetchOpeningByDateRange(String from, String to) {
-		List<Map<String, String>> candidates = List.of(
-				Map.of("opengBgnDt", ymd(from), "opengEndDt", ymd(to)),
-				Map.of("inqryBgnDt", from, "inqryEndDt", to));
-
 		List<Map.Entry<String, String>> urls = new ArrayList<>(endpoints.opengResult().entrySet());
 		return MapLimit.flatMap(urls, 3, entry -> {
-			for (Map<String, String> dateParams : candidates) {
-				try {
-					Map<String, Object> params = new LinkedHashMap<>();
-					params.put("inqryDiv", 1);
-					params.putAll(dateParams);
-					params.put("pageNo", 1);
-					params.put("numOfRows", OPENING_RANGE_ROWS);
-					var response = fetchService.callCached(entry.getValue(), params);
-					if (response.totalCount() > 0 || !response.items().isEmpty()) {
-						List<Map<String, Object>> typed = new ArrayList<>(response.items().size());
-						for (Map<String, Object> item : response.items()) {
-							Map<String, Object> copy = new LinkedHashMap<>(item);
-							copy.put("_type", entry.getKey());
-							typed.add(copy);
-						}
-						return typed;
-					}
+			Map<String, Object> params = new LinkedHashMap<>();
+			params.put("inqryDiv", OPENING_RANGE_INQRY_DIV);
+			params.put("inqryBgnDt", from);
+			params.put("inqryEndDt", to);
+			params.put("pageNo", 1);
+			params.put("numOfRows", OPENING_RANGE_ROWS);
+			try {
+				var response = fetchService.callCached(entry.getValue(), params);
+				if (response.totalCount() > response.items().size()) {
+					// 한 페이지만 본다. 하루치도 구분당 1000건을 넘으므로 전량을 훑으면 호출량이
+					// 쿼터를 태운다. 여기서 못 찾은 업체는 공고별 개별 조회로 물러서므로
+					// (companyHistory 의 2단 폴백) 잘림이 곧 누락은 아니다.
+					log.debug("개찰결과 날짜조회 {} — {}건 중 {}건만 본다(첫 페이지)",
+							entry.getKey(), response.totalCount(), response.items().size());
 				}
-				catch (RuntimeException ex) {
-					log.debug("개찰결과 날짜조회 실패 {}: {}", entry.getKey(), ex.getMessage());
+				List<Map<String, Object>> typed = new ArrayList<>(response.items().size());
+				for (Map<String, Object> item : response.items()) {
+					Map<String, Object> copy = winnerOf(item);
+					copy.put("_type", entry.getKey());
+					typed.add(copy);
 				}
+				return typed;
 			}
-			return List.<Map<String, Object>>of();
+			catch (RuntimeException ex) {
+				log.warn("개찰결과 날짜조회 실패 {} — {}", entry.getKey(), ex.getMessage());
+				return List.<Map<String, Object>>of();
+			}
 		});
+	}
+
+	/**
+	 * 날짜범위 개찰결과 한 줄에서 낙찰자를 참여업체 모양으로 꺼낸다.
+	 *
+	 * <p>이 오퍼레이션은 공고 한 건이 한 줄이고, 업체 정보는 {@code opengCorpInfo} 하나에
+	 * {@code 업체명^사업자번호^대표자명^투찰금액^투찰률} 로 접혀 있다.
+	 *
+	 * <p>유찰이면 이 칸이 통째로 비고, 협상에 의한 계약이면 금액·투찰률이 빠지며,
+	 * 낙찰예정자가 여럿이면 업체명 자리에 "낙찰예정자 다수"가 온다. 셋 다 그대로 싣는다 —
+	 * 없는 값을 지어내면 업체 이력의 투찰률 추세가 조용히 틀어진다.
+	 */
+	private static Map<String, Object> winnerOf(Map<String, Object> item) {
+		Map<String, Object> out = new LinkedHashMap<>(item);
+		String[] parts = str(item.get("opengCorpInfo")).split("\\^", -1);
+		String name = part(parts, 0);
+		out.put("bdrNm", name);
+		out.put("bdrBrn", part(parts, 1));
+		out.put("bidAmt", part(parts, 3));
+		out.put("bidprcRt", part(parts, 4));
+		out.put("rank", name.isEmpty() ? "" : "1");
+		out.put("sucsfbidYn", name.isEmpty() ? "N" : "Y");
+		out.put("_won", !name.isEmpty());
+		return out;
+	}
+
+	private static String part(String[] parts, int index) {
+		return index < parts.length ? parts[index].trim() : "";
 	}
 
 	// ── 업체 이력 ───────────────────────────────────────────────────────────
@@ -534,11 +570,6 @@ public class MarketIntelService {
 
 	private static String blankTo(String value, String fallback) {
 		return value == null || value.isBlank() ? fallback : value;
-	}
-
-	private static String ymd(String value) {
-		String digits = value == null ? "" : value.replaceAll("\\D", "");
-		return digits.length() >= 8 ? digits.substring(0, 8) : digits;
 	}
 
 	private static String str(Object value) {
