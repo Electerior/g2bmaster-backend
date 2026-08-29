@@ -52,6 +52,7 @@ public class G2bEndpoints {
 
 	private final Map<String, String> bidAnnounce;
 	private final Map<String, String> bidResult;
+	private final Map<String, String> bidResultByNo;
 	private final Map<String, String> opengResult;
 	private final String opengCompete;
 	private final Map<String, String> privateNotice;
@@ -78,6 +79,12 @@ public class G2bEndpoints {
 				"물품", base + OPENG_RESULT + "Thng",
 				"용역", base + OPENG_RESULT + "Servc",
 				"공사", base + OPENG_RESULT + "Cnstwk"));
+		// 공고번호 단건 조회는 PPSSrch 가 아닌 쪽이다 — 검색조건판(PPSSrch)은 inqryDiv=4 를
+		// 받지 않고 결과코드 08(필수값 입력 에러)을 낸다.
+		this.bidResultByNo = frozen(ordered(
+				"물품", base + BID_RESULT + "Thng",
+				"용역", base + BID_RESULT + "Servc",
+				"공사", base + BID_RESULT + "Cnstwk"));
 		this.opengCompete = base + OPENG_COMPETE;
 		// 누리장터는 '기타' 구분이 하나 더 있다 — 민간 공고에는 3분류에 안 들어가는 것이 섞인다.
 		Map<String, String> privateMap = ordered(
@@ -123,6 +130,17 @@ public class G2bEndpoints {
 	public String opengResultOf(String type) {
 		String url = opengResult.get(type);
 		return url != null ? url : opengResult.get("물품");
+	}
+
+	/**
+	 * 사업 구분 → 낙찰정보 <b>공고번호 단건</b> 조회 URL({@code inqryDiv=4}).
+	 *
+	 * <p>{@link #bidResult()} 와 오퍼레이션이 다르다. 그쪽은 검색조건판(PPSSrch)이라 날짜·기관
+	 * 같은 조건을 받는 대신 공고번호 조회를 거절한다(결과코드 08). 공고번호를 알고 묻는
+	 * 자리에서는 이쪽을 써야 날짜창 없이 그 한 건만 정확히 온다.
+	 */
+	public Map<String, String> bidResultByNo() {
+		return bidResultByNo;
 	}
 
 	/** 개찰완료 참여업체 전수 URL. 구분을 받지 않는다 — 물품·용역·공사가 한 오퍼레이션이다. */

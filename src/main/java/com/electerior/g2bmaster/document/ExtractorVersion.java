@@ -25,9 +25,13 @@ public final class ExtractorVersion {
 	 * <p>변경 이력:
 	 * <ul>
 	 *   <li>{@code 2026-08-11.1} — 최초. hwpxlib 1.0.5 / hwplib 1.1.1 / PDFBox 3.0.3 / POI 5.5.1</li>
+	 *   <li>{@code 2026-08-24.1} — 엑셀 수식 셀이 값으로 나온다(그전에는 수식 문자열이라
+	 *       산출내역서의 단가·금액이 통째로 비었다. 실측 재현율 54.5%). docx·pptx 를
+	 *       {@code zip} 컨테이너가 아니라 제 파서로 보낸다(그전에는 빈 본문이
+	 *       {@code done}+{@code needs_ocr} 로 남았다).</li>
 	 * </ul>
 	 */
-	public static final String CURRENT = "2026-08-11.1";
+	public static final String CURRENT = "2026-08-24.1";
 
 	private ExtractorVersion() {
 	}

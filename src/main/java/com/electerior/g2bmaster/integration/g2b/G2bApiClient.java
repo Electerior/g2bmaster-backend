@@ -190,7 +190,15 @@ public class G2bApiClient {
 			catch (RuntimeException error) {
 				// 레이트리밋·타임아웃만 물러섰다 재시도한다. 그 외(인증·파라미터 오류)는 즉시 포기 —
 				// 안 풀릴 요청을 세 번 더 보내면 남은 일일 쿼터만 태운다.
-				boolean retryable = translator.isRateLimitError(error) || translator.isTimeoutError(error);
+				//
+				// **일일 쿼터 소진(429 중 returnReasonCode 22)은 재시도하지 않는다.** 같은 429 라도
+				// 순간 제한은 몇 초 물러서면 풀리지만 이건 자정 초기화까지 안 풀린다 —
+				// G2bErrorTranslator.isQuotaError 주석이 그렇게 적어 두고도 여기서 걸러지지 않아,
+				// 안 풀릴 요청에 30초씩(2+4+6+8+10) 물러섰다 다섯 번을 더 보내고 있었다.
+				// 2026-08-27 실측: 참가가능지역 오퍼레이션이
+				// LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR 로 막힌 동안 회차마다 그랬다.
+				boolean retryable = (translator.isRateLimitError(error) && !translator.isQuotaError(error))
+						|| translator.isTimeoutError(error);
 				if (!retryable || attempt >= maxRetries) {
 					throw error;
 				}

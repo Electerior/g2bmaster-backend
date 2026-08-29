@@ -53,7 +53,7 @@ class SearchWiringSmokeTest {
 					new G2bProperties.Security("", ""),
 					new G2bProperties.Alert("", "", "", ""),
 					new G2bProperties.Sync(false),
-					new G2bProperties.Index(false, 300_000, 1_800_000, 300_000, 7,
+					new G2bProperties.Index(false, 300_000, 1_800_000, 300_000, 7, 1826, 300_000,
 							new G2bProperties.Night(23, 7, 6)),
 					new G2bProperties.Documents(false, 1_800_000, 200, 500, 4),
 					new G2bProperties.Search(true));
@@ -115,6 +115,11 @@ class SearchWiringSmokeTest {
 							+ "/as/ScsbidInfoService/getOpengResultListInfoServc");
 			// 알 수 없는 구분은 물품으로 떨어진다(원본과 같다).
 			assertThat(endpoints.opengResultOf("외자")).isEqualTo(endpoints.opengResult().get("물품"));
+			// 공고번호 단건 조회는 검색조건판(PPSSrch)이 아니다 — 그쪽은 inqryDiv=4 를 거절한다.
+			assertThat(endpoints.bidResultByNo().get("물품"))
+					.isEqualTo("https://apis.data.go.kr/1230000"
+							+ "/as/ScsbidInfoService/getScsbidListSttusThng");
+			assertThat(endpoints.bidResultByNo().values()).noneMatch(url -> url.endsWith("PPSSrch"));
 			// 참여업체 전수는 구분을 받지 않는 오퍼레이션 하나다 — 여기만 3중 팬아웃이 없다.
 			assertThat(endpoints.opengCompete())
 					.isEqualTo("https://apis.data.go.kr/1230000"

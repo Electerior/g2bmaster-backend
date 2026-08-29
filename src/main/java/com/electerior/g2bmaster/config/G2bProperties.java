@@ -90,10 +90,14 @@ public record G2bProperties(
 	 *                      운영계정으로 증량했다면 그때 내리면 된다
 	 * @param sweepMs       입찰 → 마감 전이 주기. 적재보다 훨씬 싼 UPDATE 하나라 자주 돌린다
 	 * @param backfillDays  워터마크가 없는 첫 회차에 거슬러 올라갈 기간(일)
+	 * @param historyDays   백필 지시에 기간이 없을 때 쓸 과거 범위(일). 기본 1826(5년)
+	 * @param backfillIntervalMs 과거 백필 줄기의 회차 간격. <b>머리 적재와 따로 두는 것이 요점</b>이다 —
+	 *                      한 주기에 묶으면 5년치를 갉는 동안 오늘 공고가 그만큼 늦는다.
+	 *                      상류 쿼터를 나눠 쓰므로 조달청 주기보다 촘촘하게 두지 않는다
 	 * @param night         심야에 주기를 늘리는 설정
 	 */
 	public record Index(boolean enabled, long intervalMs, long d2bIntervalMs, long sweepMs,
-			int backfillDays, Night night) {}
+			int backfillDays, int historyDays, long backfillIntervalMs, Night night) {}
 
 	/**
 	 * 심야 게이팅.

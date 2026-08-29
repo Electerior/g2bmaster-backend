@@ -30,6 +30,10 @@ public record ParsedDocument(
 		HWP,
 		PDF,
 		XLSX,
+		/** MS Word. 규격서가 .docx 로도 온다(실측 235건 중 규격서 14건). */
+		DOCX,
+		/** MS PowerPoint. 제안요청 설명자료가 이 형식으로 붙는다. */
+		PPTX,
 		/** 태그를 걷어낸 HTML 과 평문. 첨부에 실제로 섞여 온다(실측 htm 18건·txt 1건). */
 		TEXT
 	}

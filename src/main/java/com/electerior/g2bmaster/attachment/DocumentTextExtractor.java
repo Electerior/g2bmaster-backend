@@ -19,9 +19,15 @@ import kr.dogfoot.hwpxlib.tool.textextractor.TextMarks;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.poi.ooxml.extractor.POIXMLExtractorFactory;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.extractor.POITextExtractor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -78,6 +84,12 @@ public class DocumentTextExtractor {
 		if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
 			return extractXlsx(filename, bytes);
 		}
+		if (lower.endsWith(".docx")) {
+			return extractOoxml(filename, bytes, ParsedDocument.DocumentFormat.DOCX);
+		}
+		if (lower.endsWith(".pptx")) {
+			return extractOoxml(filename, bytes, ParsedDocument.DocumentFormat.PPTX);
+		}
 		if (lower.endsWith(".htm") || lower.endsWith(".html")) {
 			return extractHtml(filename, bytes);
 		}
@@ -88,13 +100,14 @@ public class DocumentTextExtractor {
 			return extractHml(filename, bytes);
 		}
 		throw new UnsupportedDocumentException(
-				"지원하지 않는 형식입니다(HWPX·HWP·HML·PDF·XLSX·HTML·TXT 만): " + filename);
+				"지원하지 않는 형식입니다(HWPX·HWP·HML·PDF·XLSX·DOCX·PPTX·HTML·TXT 만): " + filename);
 	}
 
 	public boolean supports(String filename) {
 		String lower = filename == null ? "" : filename.toLowerCase();
 		return lower.endsWith(".hwpx") || lower.endsWith(".hwp") || lower.endsWith(".pdf")
 				|| lower.endsWith(".xlsx") || lower.endsWith(".xls")
+				|| lower.endsWith(".docx") || lower.endsWith(".pptx")
 				|| lower.endsWith(".htm") || lower.endsWith(".html") || lower.endsWith(".txt")
 				|| lower.endsWith(".hml");
 	}
@@ -565,6 +578,8 @@ public class DocumentTextExtractor {
 	private ParsedDocument extractXlsx(String filename, byte[] bytes) {
 		try (Workbook wb = WorkbookFactory.create(new ByteArrayInputStream(bytes))) {
 			DataFormatter formatter = new DataFormatter();
+			FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
+			evaluator.setIgnoreMissingWorkbooks(true);
 			StringBuilder sb = new StringBuilder();
 			int sheetCount = wb.getNumberOfSheets();
 			for (int s = 0; s < sheetCount; s++) {
@@ -588,7 +603,7 @@ public class DocumentTextExtractor {
 						Cell cell = row.getCell(c);
 						if (cell != null) {
 							// 셀 안의 탭/줄바꿈은 공백으로 — 표 구조(탭=열, 줄=행)를 깨지 않게.
-							line.append(formatter.formatCellValue(cell).replace('\t', ' ').replace('\n', ' '));
+							line.append(cellText(cell, formatter, evaluator).replace('\t', ' ').replace('\n', ' '));
 						}
 					}
 					if (!line.toString().isBlank()) {
@@ -600,6 +615,70 @@ public class DocumentTextExtractor {
 		}
 		catch (IOException | RuntimeException e) {
 			throw new DocumentParseException("XLSX 파싱 실패: " + filename, e);
+		}
+	}
+
+	/**
+	 * 셀 하나를 텍스트로. <b>수식 셀은 수식이 아니라 값이 나와야 한다.</b>
+	 *
+	 * <p>{@code DataFormatter.formatCellValue(cell)} 는 수식 셀에서 계산값이 아니라 수식 문자열을
+	 * 돌려준다. 산출내역서가 여기에 정통으로 걸린다 — 단가·금액 칸이 전부 수식이라 추출 본문에
+	 * 숫자가 하나도 남지 않는다. 실측: 표본 12건에서 엑셀이 실제로 보여주는 숫자 3,502개 중
+	 * 1,910개(54.5%)만 복구됐고, 본문에는 {@code TRUNC(SUM(H6:H11),-2)} 같은 문자열이 남았다.
+	 *
+	 * <p><b>재평가보다 캐시된 값을 먼저 쓴다.</b> xlsx 는 수식과 함께 마지막 계산값을 저장하고,
+	 * 그것이 사람이 엑셀에서 보는 값이다. 재평가는 계산 비용이 들 뿐 아니라 사용자 정의 함수에서
+	 * 넘어진다 — 실측 파일에 {@code MA(230,0,300)} 같은 것이 있었다.
+	 */
+	private static String cellText(Cell cell, DataFormatter formatter, FormulaEvaluator evaluator) {
+		if (cell.getCellType() != CellType.FORMULA) {
+			return formatter.formatCellValue(cell);
+		}
+		try {
+			switch (cell.getCachedFormulaResultType()) {
+				case NUMERIC:
+					return formatter.formatRawCellContents(cell.getNumericCellValue(),
+							cell.getCellStyle().getDataFormat(), cell.getCellStyle().getDataFormatString());
+				case STRING:
+					String cached = cell.getRichStringCellValue().getString();
+					if (cached != null && !cached.isEmpty()) {
+						return cached;
+					}
+					break;
+				case BOOLEAN:
+					return String.valueOf(cell.getBooleanCellValue());
+				default:
+					break;
+			}
+		}
+		catch (RuntimeException e) {
+			// 캐시가 없거나 형식이 어긋난다 — 아래에서 직접 계산해 본다.
+		}
+		try {
+			return formatter.formatCellValue(cell, evaluator);
+		}
+		catch (RuntimeException e) {
+			// 사용자 정의 함수 등으로 계산이 안 되면 수식 문자열이라도 남긴다 — 빈칸보다 낫다.
+			return cell.getCellFormula();
+		}
+	}
+
+	/**
+	 * OOXML(docx·pptx) 본문.
+	 *
+	 * <p><b>왜 따로 필요한가.</b> 이 둘은 zip 이라 {@link DocumentSniffer} 가 컨테이너로 보고
+	 * {@link #expandArchive} 로 보냈다. 그 안에는 {@code word/document.xml} 밖에 없어 어떤 파서도
+	 * 걸리지 않고, 빈 결과가 <b>{@code done} + {@code needs_ocr}</b> 로 저장됐다 — 실측 docx 235건
+	 * (규격서 14건 포함)·pptx 56건이 그렇게 한 글자도 없이 "완료"로 남아 있었다.
+	 */
+	private ParsedDocument extractOoxml(String filename, byte[] bytes,
+			ParsedDocument.DocumentFormat format) {
+		try (OPCPackage pkg = OPCPackage.open(new ByteArrayInputStream(bytes));
+				POITextExtractor extractor = new POIXMLExtractorFactory().create(pkg)) {
+			return clampInto(filename, format, extractor.getText(), 0);
+		}
+		catch (IOException | InvalidFormatException | RuntimeException e) {
+			throw new DocumentParseException("OOXML 파싱 실패: " + filename, e);
 		}
 	}
 

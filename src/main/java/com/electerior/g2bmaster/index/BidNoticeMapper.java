@@ -53,6 +53,36 @@ public final class BidNoticeMapper {
 	 */
 	private static final BigDecimal RATE_LIMIT = new BigDecimal("100");
 
+	/**
+	 * {@code DECIMAL(20,4)} 금액이 담을 수 있는 최댓값 초과 기준.
+	 *
+	 * <p>생성 컬럼 {@code estimated_price}/{@code filter_amount} 은
+	 * {@code DECIMAL(20,4)}(정수 16자리, 최대 약 10^16). 원본에 10^17 이 넘는 이상 금액이
+	 * 섞이면(2021년 백필 실측: 10^20 대 금액) 그 캐스트가 {@code Data truncation:
+	 * Out of range value for column '(null)'} 으로 실패해 <b>배치 INSERT 통째가 죽는다</b> —
+	 * 한 건의 이상값 때문에 수천 건 배치를 잃지 않으므로 버린다.
+	 *
+	 * <p>실제 최대 금액은 조 원(10^12) 대이므로 10^15(천조)는 모든 실재 값을 살리면서
+	 * 이상값을 끊는다.
+	 */
+	private static final BigDecimal PRICE_LIMIT = new BigDecimal("1000000000000000");
+
+	/**
+	 * {@code close_date} 가 {@code created_date} 보다 이 값 이상 미래면 그 값을 믿지 않는다.
+	 *
+	 * <p>나라장터 원본에 실제로 섞여 들어오는 이상값이다(실측: 2037-12-26 마감, 2026-08
+	 * 등록 — 4145일 차). {@code date()} 가 정상 파싱을 해도 그런 값이 들어오면
+	 * '마감 임박' 정렬이 10년 뒤 공고를 상단에 올리고, '기한이 지났다' 판정
+	 * ({@code close_date < NOW}) 은 그 공고가 실제로 마감돼도 통째로 틀어진다.
+	 *
+	 * <p>3년(1095일)으로 선을 긋는 이유 — 현재 색인에서 {@code created_date + 1095일}
+	 * 을 넘는 {@code close_date} 는 26건뿐이고 전부 이상값이다(2029-10-12 ~ 2037-12-26,
+	 * gap 1159~4145일). 1095일 미만은 16건(190~747일)인데 전부 합법적인 장기 계약이다
+	 * (공사·다년 납품·2027학년도 교복). 선 아래로 잡으면 장기 계약을 지우고, 위로 잡으면
+	 * 2037 같은 값을 놓친다. 1095일 이 경계는 그 26건과 16건을 정확히 분리한다.
+	 */
+	private static final int MAX_PLAUSIBLE_CLOSE_DAYS_AFTER_CREATED = 1095;
+
 	private BidNoticeMapper() {}
 
 	// ── 입찰공고 ────────────────────────────────────────────────────────────
@@ -72,7 +102,8 @@ public final class BidNoticeMapper {
 			return null;
 		}
 
-		LocalDateTime closeDate = date(item.get("bidClseDt"));
+		LocalDateTime createdDate = date(item.get("bidNtceDt"));
+		LocalDateTime closeDate = plausibleCloseDate(date(item.get("bidClseDt")), createdDate);
 		// 마감일시를 모르는 공고는 '입찰'로 둔다. '마감'으로 접으면 아직 살아 있는 공고가
 		// '마감 전만 보기'에서 사라진다 — 모르는 것을 끝났다고 단정하지 않는다.
 		NoticeCategory category = (closeDate != null && closeDate.isBefore(now))
@@ -118,7 +149,7 @@ public final class BidNoticeMapper {
 						item.get("asignBdgtAmt"), item.get("presmptPrce"),
 						item.get("prdctUprc"), item.get("prdctQty"),
 						str(item.get("prdctUnit")), item.get("VAT")),
-				date(item.get("bidNtceDt")),
+				createdDate,
 				closeDate,
 				trimToNull(str(item.get("ntceInsttOfclNm"))),
 				trimToNull(str(item.get("ntceInsttOfclTelNo"))),
@@ -274,7 +305,8 @@ public final class BidNoticeMapper {
 			return null;
 		}
 
-		LocalDateTime closeDate = date(item.get("bidClseDt"));
+		LocalDateTime createdDate = date(firstNonBlankObject(item.get("nticeDt"), item.get("rgstDt")));
+		LocalDateTime closeDate = plausibleCloseDate(date(item.get("bidClseDt")), createdDate);
 		NoticeCategory category = (closeDate != null && closeDate.isBefore(now))
 				? NoticeCategory.마감
 				: NoticeCategory.입찰;
@@ -315,7 +347,7 @@ public final class BidNoticeMapper {
 				priceJsonNamed(
 						"assignedBudget", item.get("asignBdgtAmt"),
 						"referenceAmount", item.get("refAmt")),
-				date(firstNonBlankObject(item.get("nticeDt"), item.get("rgstDt"))),
+				createdDate,
 				closeDate,
 				trimToNull(str(item.get("ofclNm"))),
 				trimToNull(str(item.get("ofclTelNo"))),
@@ -353,7 +385,8 @@ public final class BidNoticeMapper {
 			return null;
 		}
 
-		LocalDateTime closeDate = date(item.get("bidClseDt"));
+		LocalDateTime createdDate = date(item.get("bidNtceDt"));
+		LocalDateTime closeDate = plausibleCloseDate(date(item.get("bidClseDt")), createdDate);
 		NoticeCategory category = (closeDate != null && closeDate.isBefore(now))
 				? NoticeCategory.마감
 				: NoticeCategory.입찰;
@@ -392,7 +425,7 @@ public final class BidNoticeMapper {
 				priceJsonNamed(
 						"basicExpectedPrice", item.get("bsicExpt"),
 						"assignedBudget", item.get("budgetAmount")),
-				date(item.get("bidNtceDt")),
+				createdDate,
 				closeDate,
 				null,
 				null,
@@ -501,9 +534,15 @@ public final class BidNoticeMapper {
 
 	private static void putNumber(ObjectNode node, String field, Object value) {
 		BigDecimal number = Numbers.toNumber(value);
-		if (number != null) {
-			node.put(field, number);
+		if (number == null) {
+			return;
 		}
+		// 생성 컬럼(DECIMAL(20,4)) 범위를 넘으면 배치가 통째로 죽으므로 버린다.
+		if (number.abs().compareTo(PRICE_LIMIT) >= 0) {
+			log.debug("금액이 DECIMAL(20,4) 범위를 벗어나 버립니다: {}={}", field, number);
+			return;
+		}
+		node.put(field, number);
 	}
 
 	/**
@@ -638,6 +677,32 @@ public final class BidNoticeMapper {
 			log.debug("날짜를 읽지 못했습니다: {}", raw);
 			return null;
 		}
+	}
+
+	/**
+	 * 마감일시 상식 필터. {@code closeDate} 가 {@code createdDate} 보다
+	 * {@link #MAX_PLAUSIBLE_CLOSE_DAYS_AFTER_CREATED} 일 이상 미래면 그 값을 믿지 않고
+	 * {@code null}(마감일시 미상)로 만든다 — 상술한 상수 주석 참고.
+	 *
+	 * <p>여기서 지우는 것은 <b>마감일시 하나</b>이지 공고가 아니다. 공고는 그대로 색인되고,
+	 * '마감' 분류는 {@code closeDate} 가 {@code null} 이면 {@code 입찰}로 놓인다(각 매퍼 주석).
+	 * 실제 마감이 지났다면 다음 적재의 정정·상세에서 정당한 값이 다시 들어온다.
+	 *
+	 * @param closeDate  파싱된 마감일시. {@code null} 이면 그대로(미상)
+	 * @param createdDate 등록·게시일시. 없으면 판정 불가 — 원값을 살린다
+	 */
+	static LocalDateTime plausibleCloseDate(LocalDateTime closeDate, LocalDateTime createdDate) {
+		if (closeDate == null || createdDate == null
+				|| closeDate.isBefore(createdDate)) {
+			return closeDate;
+		}
+		long daysAfterCreated = java.time.temporal.ChronoUnit.DAYS.between(createdDate, closeDate);
+		if (daysAfterCreated <= MAX_PLAUSIBLE_CLOSE_DAYS_AFTER_CREATED) {
+			return closeDate;
+		}
+		log.debug("이상한 마감일시를 믿지 않습니다: 등록 {}, 마감 {} ({}일 차)",
+				createdDate, closeDate, daysAfterCreated);
+		return null;
 	}
 
 	/** {@link #clip} 과 같되 빈 값을 {@code null} 로 만든다 — 빈 문자열 기관명은 '없음'이다. */
