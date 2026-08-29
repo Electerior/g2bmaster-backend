@@ -41,6 +41,8 @@ public class BidNoticeSyncScheduler {
 	private final BidNoticeIngestService ingestService;
 	private final BidNoticeIndexRepository repository;
 	private final G2bProperties.Index config;
+	private final BidOpeningBackfillService openingBackfill;
+	private final AtomicBoolean openingBackfillRunning = new AtomicBoolean(false);
 
 	/**
 	 * 두 묶음.
@@ -68,10 +70,12 @@ public class BidNoticeSyncScheduler {
 	private final Cycle backfill;
 
 	public BidNoticeSyncScheduler(BidNoticeIngestService ingestService,
-			BidNoticeIndexRepository repository, G2bProperties properties) {
+			BidNoticeIndexRepository repository, G2bProperties properties,
+			BidOpeningBackfillService openingBackfill) {
 		this.ingestService = ingestService;
 		this.repository = repository;
 		this.config = properties.index();
+		this.openingBackfill = openingBackfill;
 		this.procurement = new Cycle("조달청 주기", config.intervalMs(), ingestService::ingestProcurement);
 		this.d2b = new Cycle("D2B 주기", config.d2bIntervalMs(), ingestService::ingestD2b);
 		this.backfill = new Cycle("과거 백필", config.backfillIntervalMs(),
@@ -244,6 +248,39 @@ public class BidNoticeSyncScheduler {
 			return;
 		}
 		runBackfill();
+	}
+
+	/**
+	 * 개찰 참여업체 백필.
+	 *
+	 * <p>다른 주기와 갈라 둔 이유는 <b>단위가 다르기</b> 때문이다. 위의 것들은 날짜창을 훑어
+	 * 한 콜에 수백 건을 받지만, 참여업체 전수는 공고 하나당 한 콜이다(상류가 그 오퍼레이션만
+	 * 준다 — {@link BidOpeningBackfillService} 주석). 같은 회차에 묶으면 공고 30건을 받는
+	 * 동안 오늘 공고 적재가 그만큼 밀린다.
+	 *
+	 * <p>{@code initialDelay} 가 가장 뒤인 것도 같은 이유다 — 기동 직후 네 묶음이 한꺼번에
+	 * 상류를 두드리지 않게 한다.
+	 */
+	@Scheduled(fixedDelayString = "${g2b.index.opening-backfill-interval-ms:300000}",
+			initialDelay = 210_000)
+	public void backfillOpeningResults() {
+		if (!config.enabled()) {
+			return;
+		}
+		if (!openingBackfillRunning.compareAndSet(false, true)) {
+			log.info("개찰결과 백필을 건너뜁니다 — 이전 회차가 아직 돌고 있습니다.");
+			return;
+		}
+		try {
+			openingBackfill.runOnce();
+		}
+		catch (RuntimeException ex) {
+			// 한 회차가 죽어도 다음 회차는 돌아야 한다 — 스케줄러가 예외로 멈추지 않게 삼킨다.
+			log.warn("개찰결과 백필 회차 실패 — {}", ex.getMessage());
+		}
+		finally {
+			openingBackfillRunning.set(false);
+		}
 	}
 
 	/**
