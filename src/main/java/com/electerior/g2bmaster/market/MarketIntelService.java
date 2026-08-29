@@ -19,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,12 +75,14 @@ public class MarketIntelService {
 	private final G2bEndpoints endpoints;
 	private final G2bFetchService fetchService;
 	private final NoticeFetchSupport support;
+	private final BidOpeningResultRepository openingRepository;
 
 	public MarketIntelService(G2bEndpoints endpoints, G2bFetchService fetchService,
-			NoticeFetchSupport support) {
+			NoticeFetchSupport support, BidOpeningResultRepository openingRepository) {
 		this.endpoints = endpoints;
 		this.fetchService = fetchService;
 		this.support = support;
+		this.openingRepository = openingRepository;
 	}
 
 	// ── 개찰결과 ────────────────────────────────────────────────────────────
@@ -99,6 +102,16 @@ public class MarketIntelService {
 		if (no.isEmpty()) {
 			return List.of();
 		}
+		/*
+		 * 저장분이 먼저다. 이 경로는 오래 요청마다 상류를 쳤고 완충은 프로세스 메모리
+		 * 캐시뿐이라, 재기동 한 번에 통째로 날아가고 인스턴스 사이에 공유되지도 않았다.
+		 * 무엇을 저장하고 언제 다시 묻는지는 BidOpeningResultRepository 참고.
+		 */
+		Optional<List<Map<String, Object>>> stored = openingRepository.find(no);
+		if (stored.isPresent()) {
+			return present(stored.get(), bidNtceSqNo, type);
+		}
+
 		// 차수(bidNtceOrd)는 일부러 안 싣는다 — narrowToOrd 주석 참고.
 		Map<String, Object> params = new LinkedHashMap<>();
 		params.put("bidNtceNo", no);
@@ -109,15 +122,64 @@ public class MarketIntelService {
 					OPENING_ROWS, MAX_OPENING_PARTICIPANTS);
 		}
 		catch (RuntimeException ex) {
+			// 실패는 저장하지 않는다 — 빈 배열로 굳히면 상류가 살아난 뒤에도 계속 비어 보인다.
 			log.warn("개찰결과 조회 실패 {} — {}", no, ex.getMessage());
 			return List.of();
 		}
+		/*
+		 * 빈 결과도 저장한다. "받아 봤는데 개찰 전이었다"는 사실이 곧 다음 요청을 아끼는
+		 * 정보다. 저장소가 그것만 TTL 로 다시 묻는다.
+		 */
+		openingRepository.save(no, rows);
 		if (rows.isEmpty()) {
 			// resultCode 00 · totalCount 0 — 개찰 전이거나 유찰이라 참여업체가 없다(정상).
 			log.debug("개찰결과 미공개 {} — 개찰 전이거나 유찰", no);
 			return List.of();
 		}
 
+		return present(rows, bidNtceSqNo, type);
+	}
+
+	/**
+	 * 저장분이 없으면 받아 와 저장만 한다 — 백필이 쓴다.
+	 *
+	 * <p>화면 경로와 <b>같은 함수를 타야</b> 저장 모양이 갈리지 않으므로 조회·저장 부분을
+	 * 그대로 쓴다. 다른 점은 정규화를 하지 않는다는 것뿐이다 — 백필은 아무에게도 응답하지
+	 * 않으므로 화면 계약으로 옮길 이유가 없다.
+	 *
+	 * @return 저장한 참여업체 수. 이미 저장돼 있으면 {@code -1}(건너뜀), 실패는 {@code -2}
+	 */
+	public int storeOpeningResults(String bidNtceNo) {
+		String no = bidNtceNo == null ? "" : bidNtceNo.trim();
+		if (no.isEmpty()) {
+			return -2;
+		}
+		if (openingRepository.find(no).isPresent()) {
+			return -1;
+		}
+		Map<String, Object> params = new LinkedHashMap<>();
+		params.put("bidNtceNo", no);
+		List<Map<String, Object>> rows;
+		try {
+			rows = fetchService.fetchPaged(endpoints.opengCompete(), params,
+					OPENING_ROWS, MAX_OPENING_PARTICIPANTS);
+		}
+		catch (RuntimeException ex) {
+			log.warn("개찰결과 백필 실패 {} — {}", no, ex.getMessage());
+			return -2;
+		}
+		openingRepository.save(no, rows);
+		return rows.size();
+	}
+
+	/**
+	 * 저장분이든 방금 받아 온 것이든 화면에 나가는 모양으로 바꾼다.
+	 *
+	 * <p>저장은 <b>정규화 전 원본</b>이라 이 단계를 거쳐야 화면 계약(bdrNm·rank·bidAmt·
+	 * bidprcRt)이 된다. 두 경로가 같은 함수를 타야 "저장분만 필드가 다르다"가 생기지 않는다.
+	 */
+	private List<Map<String, Object>> present(List<Map<String, Object>> rows, String bidNtceSqNo,
+			String type) {
 		List<Map<String, Object>> scoped = narrowToOrd(rows, bidNtceSqNo);
 		List<Map<String, Object>> out = new ArrayList<>(scoped.size());
 		for (Map<String, Object> row : scoped) {

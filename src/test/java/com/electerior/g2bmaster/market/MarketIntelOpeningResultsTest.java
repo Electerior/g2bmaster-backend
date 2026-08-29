@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,6 +16,7 @@ import com.electerior.g2bmaster.notice.NoticeFetchSupport;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -29,15 +31,20 @@ import org.mockito.ArgumentCaptor;
 class MarketIntelOpeningResultsTest {
 
 	private G2bFetchService fetchService;
+	private BidOpeningResultRepository openingRepository;
 	private MarketIntelService service;
 
 	@BeforeEach
 	void setUp() {
 		fetchService = mock(G2bFetchService.class);
+		openingRepository = mock(BidOpeningResultRepository.class);
+		// 기본은 "저장분 없음" — 기존 시험들은 전부 상류 경로를 보는 것이다.
+		when(openingRepository.find(anyString())).thenReturn(Optional.empty());
 		service = new MarketIntelService(
 				new G2bEndpoints("https://apis.data.go.kr/1230000"),
 				fetchService,
-				mock(NoticeFetchSupport.class));
+				mock(NoticeFetchSupport.class),
+				openingRepository);
 	}
 
 	private static Map<String, Object> row(String ord, String rank, String name, String amt, String rate) {
@@ -150,5 +157,55 @@ class MarketIntelOpeningResultsTest {
 	void 공고번호가_없으면_상류를_두드리지_않는다() {
 		assertThat(service.fetchOpeningResults("  ", "000", "물품")).isEmpty();
 		verify(fetchService, org.mockito.Mockito.never()).fetchPaged(anyString(), any(), anyInt(), anyInt());
+	}
+
+	/*
+	 * ── 저장(2026-08-29) ────────────────────────────────────────────────────
+	 *
+	 * 이 경로는 오래 요청마다 상류를 쳤고 완충은 프로세스 메모리 캐시뿐이었다 — 재기동 한 번에
+	 * 통째로 날아가고 인스턴스 사이에 공유되지도 않는다. 아래 셋이 그 저장 계약이다.
+	 */
+
+	@Test
+	void 저장분이_있으면_상류를_치지_않는다() {
+		when(openingRepository.find("R26BK01629628")).thenReturn(Optional.of(
+				List.of(row("000", "1", "에프에스아일랜드학생복", "298000", "95.609"))));
+
+		List<Map<String, Object>> out = service.fetchOpeningResults("R26BK01629628", "000", "물품");
+
+		verify(fetchService, never()).fetchPaged(anyString(), any(), anyInt(), anyInt());
+		// 저장은 정규화 전 원본이므로 화면 계약명으로 옮겨져 나와야 한다.
+		assertThat(out).hasSize(1);
+		assertThat(out.get(0)).containsEntry("bdrNm", "에프에스아일랜드학생복");
+		assertThat(out.get(0)).containsEntry("rank", "1");
+	}
+
+	@Test
+	void 받아_온_것을_저장한다_빈_결과도() {
+		when(fetchService.fetchPaged(anyString(), any(), anyInt(), anyInt())).thenReturn(List.of());
+
+		service.fetchOpeningResults("R26BK01629628", "000", "물품");
+
+		// "받아 봤는데 개찰 전이었다"는 사실을 남기지 않으면 열 때마다 상류를 친다.
+		verify(openingRepository).save("R26BK01629628", List.of());
+	}
+
+	@Test
+	void 상류가_실패하면_저장하지_않는다() {
+		when(fetchService.fetchPaged(anyString(), any(), anyInt(), anyInt()))
+				.thenThrow(new G2bException("나라장터 점검 중"));
+
+		assertThat(service.fetchOpeningResults("R26BK01629628", "000", "물품")).isEmpty();
+
+		// 빈 배열로 굳히면 상류가 살아난 뒤에도 그 공고만 영영 비어 보인다.
+		verify(openingRepository, never()).save(anyString(), any());
+	}
+
+	@Test
+	void 백필은_이미_저장된_공고를_건너뛴다() {
+		when(openingRepository.find("R26BK01629628")).thenReturn(Optional.of(List.of()));
+
+		assertThat(service.storeOpeningResults("R26BK01629628")).isEqualTo(-1);
+		verify(fetchService, never()).fetchPaged(anyString(), any(), anyInt(), anyInt());
 	}
 }
